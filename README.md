@@ -11,3 +11,7 @@ CSS盒子模型：
 前端经典面试题：
 ------
 <a href="http://blog.csdn.net/simon9124/article/details/79080839" target="_blank">图文详解JS冒泡排序，看完秒懂！</a><br>
+
+vue全家桶：
+------
+<a href="https://blog.csdn.net/simon9124/article/details/80524843" target="_blank">vue从弃坑到抗战——动手搭建本地环境</a><br>
