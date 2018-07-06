@@ -15,3 +15,4 @@ CSS盒子模型：
 vue全家桶：
 ------
 <a href="https://blog.csdn.net/simon9124/article/details/80524843" target="_blank">vue从弃坑到抗战——动手搭建本地环境</a><br>
+<a href="https://blog.csdn.net/simon9124/article/details/80940338" target="_blank">.finally is not a function —— 解决低版本浏览器axios不支持finally</a><br>
