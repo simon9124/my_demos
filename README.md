@@ -26,3 +26,7 @@ vue全家桶：
 JS小demo：
 ------
 <a href="https://segmentfault.com/a/1190000017246671" target="_blank">vue项目如何做到每30秒刷新1次接口？</a><br>
+
+git攻略：
+------
+<a href="https://segmentfault.com/a/1190000019248056" target="_blank">git攻略：建立本地分支和远程分支，并使二者关联</a><br>
