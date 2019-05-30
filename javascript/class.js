@@ -1,9 +1,9 @@
 /*
   用构造函数，生成对象实例：
-  1. 使用构造函数， 并且new 构造函数(), 后台会隐式执行new Object() 创建对象
-  2. 将构造函数的作用域给新对象，（ 即new Object() 创建出的对象）， 函数体内的this代表new Object() 出来的对象
-  3. 执行构造函数的代码
-  4. 返回新对象（ 后台直接返回）
+  1.使用构造函数， 并且new 构造函数(), 后台会隐式执行new Object() 创建对象
+  2.将构造函数的作用域给新对象，（即new Object() 创建出的对象），函数体内的this代表new Object() 出来的对象
+  3.执行构造函数的代码
+  4.返回新对象（后台直接返回）
 */
 function Person1(name, age) {
   this.name = name
@@ -18,7 +18,7 @@ console.log(obj.say()); // My name is Simon, I'm 28 years old.
 
 /*
   用class改写上述代码：
-  1.通过class关键字定义类，使得在对象写法上更清晰， 让javascript更像一种面向对象的语言
+  1.通过class关键字定义类，使得在对象写法上更清晰，让javascript更像一种面向对象的语言
   2.在类中声明方法的时， 不可给方法加function关键字
 */
 class Person2 {
