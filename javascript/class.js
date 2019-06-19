@@ -3,7 +3,7 @@
   1.使用构造函数， 并且new 构造函数(), 后台会隐式执行new Object() 创建对象
   2.将构造函数的作用域给新对象，（即new Object() 创建出的对象），函数体内的this代表new Object() 出来的对象
   3.执行构造函数的代码
-  4.返回新对象（后台直接返回）
+  4. 返回新对象（后台直接返回）
 */
 function Person1(name, age) {
   this.name = name
