@@ -25,9 +25,10 @@ vue全家桶：
 <a href="https://segmentfault.com/a/1190000015550213" target="_blank">.finally is not a function —— 解决低版本浏览器axios不支持finally</a><br>
 <a href="https://segmentfault.com/a/1190000016512967" target="_blank">vue项目如何监听窗口变化，达到页面自适应？</a><br>
 
-JS小demo：
+javascript系列：
 ------
 <a href="https://segmentfault.com/a/1190000017246671" target="_blank">vue项目如何做到每30秒刷新1次接口？</a><br>
+<a href="https://segmentfault.com/a/1190000019342040" target="_blank">详解ES6中的class——基本概念</a><br>
 
 git攻略：
 ------
