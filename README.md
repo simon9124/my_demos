@@ -33,6 +33,7 @@ javascript系列：
 git攻略：
 ------
 <a href="https://segmentfault.com/a/1190000019248056" target="_blank">git攻略：建立本地分支和远程分支，并使二者关联</a><br>
+<a href="https://segmentfault.com/a/1190000019671850" target="_blank">获取不到Gist id？解决gist.github.com无法访问的办法</a><br>
 
 npm攻略：
 ------
