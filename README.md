@@ -38,3 +38,7 @@ git攻略：
 npm攻略：
 ------
 <a href="https://segmentfault.com/a/1190000019721030" target="_blank">如何解决npm run build后页面空白？</a><br>
+
+开发工具：
+------
+<a href="https://juejin.im/post/5d4133dcf265da03c502ec40" target="_blank">换开发设备了，如何同步vscode的插件？</a><br>
