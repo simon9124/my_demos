@@ -24,6 +24,7 @@ vue全家桶：
 <a href="https://segmentfault.com/a/1190000015167686" target="_blank">vue从弃坑到抗战——动手搭建本地环境</a><br>
 <a href="https://segmentfault.com/a/1190000015550213" target="_blank">.finally is not a function —— 解决低版本浏览器axios不支持finally</a><br>
 <a href="https://segmentfault.com/a/1190000016512967" target="_blank">vue项目如何监听窗口变化，达到页面自适应？</a><br>
+<a href="https://segmentfault.com/a/1190000020465443" target="_blank">配置代理，解决vue-cli 3.x的跨域问题</a><br>
 
 javascript系列：
 ------
