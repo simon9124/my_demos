@@ -43,3 +43,4 @@ npm攻略：
 开发工具：
 ------
 <a href="https://juejin.im/post/5d4133dcf265da03c502ec40" target="_blank">换开发设备了，如何同步vscode的插件？</a><br>
+<a href="https://juejin.im/post/5ddde0735188256eb358fa7c" target="_blank">vscode占用内存和cpu太高？几招帮你解决！</a><br>
