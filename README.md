@@ -26,6 +26,7 @@ vue全家桶：
 <a href="https://segmentfault.com/a/1190000016512967" target="_blank">vue项目如何监听窗口变化，达到页面自适应？</a><br>
 <a href="https://segmentfault.com/a/1190000020465443" target="_blank">配置代理，解决vue-cli 3.x的跨域问题</a><br>
 <a href="https://segmentfault.com/a/1190000021991082#shareToWeibo">vue动态渲染svg、添加点击事件</a><br>
+<a href="https://segmentfault.com/a/1190000022406208#shareToWeibo">解决 vue 开发环境中一直发http://localhost:8080/sockjs-node/info?t=xxx 请求</a><br>
 
 javascript系列：
 ------
