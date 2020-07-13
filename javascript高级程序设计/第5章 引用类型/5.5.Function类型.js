@@ -52,7 +52,7 @@ var result1 = callSomeFunction(add10, 10) // 访问函数的指针而不是执�
 console.log(result1) // 20
 
 function getGreeting(name) {
-  return 'Hello,' + name
+  return 'Hello,' + name // Hello,Nicholas
 }
 var result2 = callSomeFunction(getGreeting, 'Nicholas') // 访问函数的指针而不是执行函数
 console.log(result2)
@@ -108,8 +108,8 @@ console.log(trueFactorial(5)) // 120，已用arguments.callee解除函数体内�
 console.log(factorial(5)) // 0
 
 // 2.this对象
-// vscode是node运行环境无法识别全局对象window，为方便在编辑器测试做了微调
-// window.color = red
+// vscode是node运行环境，无法识别全局对象window，为方便在编辑器测试做了微调
+// window.color = 'red'
 // sayColor()
 var window = { color: 'red' }
 var o = { color: 'blue' }
@@ -139,3 +139,60 @@ function inner() {
   console.log(arguments.callee.caller) // 可以解除紧密耦合
 }
 outer() // 结果不变，打印outer()函数的源代码
+
+/* 函数属性和方法 length & prototype(apply() & call() & bind()) */
+
+// 1.length属性
+function nameLength(name) {
+  return name
+}
+function sumLength(sum1, sum2) {
+  return sum1 + sum2
+}
+function helloLength() {
+  return 'Hello'
+}
+console.log(nameLength.length, sumLength.length, helloLength.length) // 1,2,0
+
+// 2.prototype属性 —— apply()、call()、bind()
+function sumPrototype(num1, num2) {
+  return num1 + num2
+}
+
+// apply()
+function applySum1(num1, num2) {
+  return sumPrototype.apply(this, arguments) // 传入arguments对象
+}
+function applySum2(num1, num2) {
+  return sumPrototype.apply(this, [num1, num2]) // 传入数组实例
+}
+console.log(applySum1(10, 10))
+console.log(applySum2(10, 10))
+
+// call()
+function callSum(num1, num2) {
+  return sumPrototype.call(this, num1, num2) //分别传入每个参数
+}
+console.log(callSum(10, 10))
+
+// apply()和call()扩充函数运行的作用域
+// vscode是node运行环境，无法识别全局对象window，为方便在编辑器测试做了微调
+var windowCall = { color: 'red' }
+var oCall = { color: 'blue' }
+function callColor() {
+  console.log(this.color)
+}
+callColor() // undefined，此时找不到this指向的对象
+callColor.call(this) // undefined，此时找不到this指向的对象
+callColor.call(windowCall) // red，此时this指向对象window
+callColor.call(oCall) // blue，此时this指向对象o
+
+// bind()
+// vscode是node运行环境，无法识别全局对象window，为方便在编辑器测试做了微调
+var windowBind = { color: 'red' }
+var oBind = { color: 'blue' }
+function bindColor() {
+  console.log(this.color)
+}
+var bindColor = bindColor.bind(oBind) // 创建实例bindColor，bindColor的this被绑定给oBind
+bindColor() // blue，此时this被绑定给对象oBind
