@@ -184,8 +184,8 @@ function callColor() {
 }
 callColor() // undefined，此时找不到this指向的对象
 callColor.call(this) // undefined，此时找不到this指向的对象
-callColor.call(windowCall) // red，此时this指向对象window
-callColor.call(oCall) // blue，此时this指向对象o
+callColor.call(windowCall) // red，此时this指向对象windowCall
+callColor.call(oCall) // blue，此时this指向对象oCall
 
 // bind()
 // vscode是node运行环境，无法识别全局对象window，为方便在编辑器测试做了微调
