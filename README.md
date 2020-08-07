@@ -34,6 +34,10 @@
 <a href="https://segmentfault.com/a/1190000022406208#shareToWeibo">解决 vue 开发环境中一直发 http://localhost:8080/sockjs-node/info?t=xxx 请求</a><br>
 <a href="https://segmentfault.com/a/1190000023434447">手摸手，封装一个vue分页组件</a><br>
 
+#### 小程序：
+
+<a href="https://segmentfault.com/a/1190000023537329" target="_blank">解决 mpvue 经典 bug：同路由切换时，上次的数据会保留</a><br>
+
 #### javascript 系列：
 
 <a href="https://segmentfault.com/a/1190000017246671" target="_blank">vue 项目如何做到每 30 秒刷新 1 次接口？</a><br>
