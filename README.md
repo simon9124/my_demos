@@ -9,6 +9,7 @@
 
 - 第 5 章：引用类型
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/%E7%AC%AC5%E7%AB%A0%20%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B/5.5.Function%E7%B1%BB%E5%9E%8B.md" target="_blank">5.5 Function 类型</a><br>
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/%E7%AC%AC5%E7%AB%A0%20%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B/5.6.%E5%9F%BA%E6%9C%AC%E5%8C%85%E8%A3%85%E7%B1%BB%E5%9E%8B.md" target="_blank">5.6 基本包装类型</a><br>
 
 #### CSS 盒子模型：
 
