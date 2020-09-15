@@ -89,7 +89,7 @@ console.log(stringObject.slice(-3)) // "rld"，-3转换为11-3=8
 console.log(stringObject.substring(-3)) // "hello world"，-3转换为0
 console.log(stringObject.substr(-3)) // "rld"，-3转换为11-3=8
 console.log(stringObject.slice(3, -4)) // "lo w"，-4转换为11-3=7
-console.log(stringObject.substring(3, -4)) // "lo w"，-4转换为0，substring(3,0)再转换为substring(0,3)
+console.log(stringObject.substring(3, -4)) // "hel"，-4转换为0，substring(3,0)再转换为substring(0,3)
 console.log(stringObject.substr(3, -4)) // ""，-4转换为0，返回包含零个字符的字符串
 
 console.log(stringObject.indexOf('o')) // 4
@@ -162,7 +162,7 @@ console.log(htmlEscape('<p class="greeting">Hello world!</p>')) // "&lt;p class=
 
 console.log(text.split(',')) // [ 'cat', ' bat', ' sat', ' fat' ]
 console.log(text.split(',', 2)) // [ 'cat', ' bat' ]，第二个参数指定数组大小
-console.log(text.split(/[^\,]+/)) // [ '', ',', ',', ',', '' ]，通过正则获取包含都好字符的数组，正则指定分隔符出现在了字符串开头和末尾，因此首位是空字符串
+console.log(text.split(/[^\,]+/)) // [ '', ',', ',', ',', '' ]，通过正则获取包含都好字符的数组，正则指定分隔符出现在了字符串开头和末尾，因此首尾是空字符串
 
 // localeCompare()方法
 var stringCompare = 'yellow'
