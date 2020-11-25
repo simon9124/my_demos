@@ -132,3 +132,30 @@ console.log(descriptor2)
 console.log(descriptor2.value) // undefined，访问器属性不含value
 console.log(descriptor2.configurable) // false，非直接在对象上定义属性，默认值为false
 console.log(typeof descriptor2.get) // 'function'
+
+// 调用 Object.defineProperty()、Object.defineProperties()方法时，如果不指定，即非“直接在对象上定义属性”时，那么 configurable、enumerable、writable 均为 false
+var book4 = {
+  year: 2004,
+}
+var descriptorBook4 = Object.getOwnPropertyDescriptor(book4, 'year')
+console.log(
+  'book4',
+  descriptorBook4.configurable, // true
+  descriptorBook4.enumerable, // true
+  descriptorBook4.writable, // true
+  typeof descriptorBook4.set, // undefined
+  typeof descriptorBook4.get // undefined
+)
+var book5 = {}
+Object.defineProperty(book5, 'year', {
+  value: 2004,
+})
+var descriptorBook5 = Object.getOwnPropertyDescriptor(book5, 'year')
+console.log(
+  'book4',
+  descriptorBook5.configurable, // false
+  descriptorBook5.enumerable, // false
+  descriptorBook5.writable, // false
+  typeof descriptorBook4.set, // undefined
+  typeof descriptorBook4.get // undefined
+)
