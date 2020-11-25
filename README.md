@@ -5,7 +5,7 @@
 
 > markdown 暂不支持新标签打开，为了更好阅读体验请右键“新标签页”打开
 
-#### 《JavaScript 高级程序设计》学习笔记：
+#### 《JavaScript 高级程序设计（第三版）》学习笔记：
 
 - 第 5 章：引用类型
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1/%E7%AC%AC5%E7%AB%A0%20%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B/5.5.Function%E7%B1%BB%E5%9E%8B.md" target="_blank">5.5 Function 类型</a><br>
