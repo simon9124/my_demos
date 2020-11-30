@@ -67,6 +67,8 @@ function sayName() {
 var person4 = new Person('Nicholas', 29, 'Software Engineer')
 
 /* 原型模式 */
+
+// 构造函数的prototype属性，指向构造函数的原型对象
 function PersonPrototype() {}
 PersonPrototype.prototype.name = 'Nicholas' // 为PersonPrototype的原型对象添加属性
 PersonPrototype.prototype.age = 29 // 为PersonPrototype的原型对象添加属性
@@ -80,3 +82,22 @@ var person6 = new PersonPrototype()
 person5.sayName() // 'Nicholas'
 person6.sayName() // 'Nicholas'
 console.log(person5.sayName === person6.sayName) // true，prototype上创建的属性和方法，由新对象的所有实例共享
+
+// 原型对象的constructor属性，指向原型对象的构造函数
+console.log(PersonPrototype.prototype.constructor) // Function: PersonPrototype构造函数
+console.log(PersonPrototype === PersonPrototype.prototype.constructor) // true，都指向构造函数
+
+// 实例的[[Prototype]]属性，指向实例的构造函数的原型对象
+console.log(person5.__proto__) // PersonPrototype {name: 'Nicholas',age: 29,job: 'Software Engineer',sayName: [Function] }
+console.log(person5.__proto__ === PersonPrototype.prototype) // true，都指向原型对象
+console.log(person5.__proto__.constructor) // Function: PersonPrototype构造函数
+
+// isPrototypeOf()
+console.log(PersonPrototype.prototype.isPrototypeOf(person5)) // true，person5包含指向PersonPrototype的原型对象的指针
+
+// Object.getPrototypeOf()
+console.log(Object.getPrototypeOf(person5)) // 原型对象
+console.log(Object.getPrototypeOf(person5) === person5.__proto__) // true，都指向原型对象
+console.log(Object.getPrototypeOf(person5) === PersonPrototype.prototype) // true，都指向原型对象
+console.log(Object.getPrototypeOf(person5).name) // 'Nicholas'
+console.log(Object.getPrototypeOf(person5).constructor) // Function: PersonPrototype构造函数
