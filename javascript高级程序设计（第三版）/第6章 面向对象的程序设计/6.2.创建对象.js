@@ -88,12 +88,13 @@ console.log(PersonPrototype.prototype.constructor) // Function: PersonPrototype�
 console.log(PersonPrototype === PersonPrototype.prototype.constructor) // true，都指向构造函数
 
 // 实例的[[Prototype]]属性，指向实例的构造函数的原型对象
-console.log(person5.__proto__) // PersonPrototype {name: 'Nicholas',age: 29,job: 'Software Engineer',sayName: [Function] }
+console.log(person5.__proto__) // 原型对象，PersonPrototype {name: 'Nicholas',age: 29,job: 'Software Engineer',sayName: [Function] }
 console.log(person5.__proto__ === PersonPrototype.prototype) // true，都指向原型对象
 console.log(person5.__proto__.constructor) // Function: PersonPrototype构造函数
 
 // isPrototypeOf()
 console.log(PersonPrototype.prototype.isPrototypeOf(person5)) // true，person5包含指向PersonPrototype的原型对象的指针
+console.log(PersonPrototype.prototype.isPrototypeOf(person1)) // false，person1不包含指向PersonPrototype的原型对象的指针
 
 // Object.getPrototypeOf()
 console.log(Object.getPrototypeOf(person5)) // 原型对象
@@ -101,3 +102,30 @@ console.log(Object.getPrototypeOf(person5) === person5.__proto__) // true，都�
 console.log(Object.getPrototypeOf(person5) === PersonPrototype.prototype) // true，都指向原型对象
 console.log(Object.getPrototypeOf(person5).name) // 'Nicholas'
 console.log(Object.getPrototypeOf(person5).constructor) // Function: PersonPrototype构造函数
+
+// 实例同名属性 → 屏蔽原型的属性
+var person7 = new PersonPrototype()
+person7.name = 'Greg'
+console.log(person7.name) // 'Greg'，来自实例
+console.log(person5.name) // 'Nicholas'，来自原型
+
+// 删除同名的实例属性 → 恢复被屏蔽的原型的属性
+delete person7.name
+console.log(person7.name) // 'Nicholas'，来自原型
+
+// hasOwnProperty()
+var person8 = new PersonPrototype()
+var person9 = new PersonPrototype()
+console.log(person8.hasOwnProperty('name')) // false，name不存在在person8的实例中
+person8.name = 'Simon'
+console.log(person8.name) // 'Simon'，来自实例
+console.log(person8.hasOwnProperty('name')) // true，name存在在person8的实例中
+console.log(person9.name) // 'Nicholas'，来自原型
+console.log(person9.hasOwnProperty('name')) // false，name不存在在person8的实例中
+delete person8.name
+console.log(person8.name) // 'Nicholas'，来自原型
+console.log(person8.hasOwnProperty('name')) // false，person8实例的name属性已被删除
+
+// Object.getOwnPropertyDescriptor()
+console.log(Object.getOwnPropertyDescriptor(person8, 'name')) // undefined，person8实例上没有name属性
+console.log(Object.getOwnPropertyDescriptor(person8.__proto__, 'name')) // {value: 'Nicholas',writable: true,enumerable: true,configurable: true}，原型对象的name属性描述符
