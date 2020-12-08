@@ -190,3 +190,44 @@ var keys = Object.getOwnPropertyNames(PersonIn.prototype) // 原型对象的所�
 console.log(keys) // [ 'constructor', 'name', 'age', 'job', 'sayName' ]，原型对象都包含constructor属性，指向构造函数
 var p12keys = Object.getOwnPropertyNames(person12) // person12的所有属性，包含不可枚举
 console.log(p12keys) // [ 'name', 'age' ]
+
+// 对象字面量重写原型对象
+function PersonLiteral() {}
+PersonLiteral.prototype = {
+  name: 'Nicholas',
+  age: 29,
+  job: 'Software Engineer',
+  sayName: function () {
+    console.log(this.name)
+  },
+}
+var friend = new PersonLiteral()
+console.log(friend instanceof Object) // true，friend是Object的实例
+console.log(friend instanceof PersonLiteral) // true，friend是PersonLiteral的实例
+console.log(friend.constructor === PersonLiteral) // false，constructor属性变成了新对象——即对象字面量的constructor
+console.log(friend.constructor === Object) // true，新对象的constructor指向Object
+
+// 设置 constructor 属性，让其指向原构造函数
+function PersonLiteral2() {}
+PersonLiteral2.prototype = {
+  constructor: PersonLiteral2, // 直接在对象上定义constructor，指向原构造函数
+  name: 'Nicholas',
+  age: 29,
+  job: 'Software Engineer',
+  sayName: function () {
+    console.log(this.name)
+  },
+}
+var friend2 = new PersonLiteral2()
+console.log(friend2.constructor === PersonLiteral2) // true，constructor再次指向原构造函数
+console.log(friend2.constructor === Object) // false
+var keys = Object.keys(PersonLiteral2.prototype)
+console.log(keys) // [ 'constructor', 'name', 'age', 'job', 'sayName' ]，因为constructor是“直接在对象上定义的属性”
+
+// 兼容 ES5 的 javascript 引擎
+Object.defineProperty(PersonLiteral2.prototype, 'constructor', {
+  enumerable: false,
+  value: PersonLiteral2,
+})
+var keys = Object.keys(PersonLiteral2.prototype)
+console.log(keys) // [ 'name', 'age', 'job', 'sayName' ]，constructor的enumerable已被设置为false
