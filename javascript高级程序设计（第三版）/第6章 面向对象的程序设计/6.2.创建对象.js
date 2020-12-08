@@ -129,3 +129,64 @@ console.log(person8.hasOwnProperty('name')) // false，person8实例的name属�
 // Object.getOwnPropertyDescriptor()
 console.log(Object.getOwnPropertyDescriptor(person8, 'name')) // undefined，person8实例上没有name属性
 console.log(Object.getOwnPropertyDescriptor(person8.__proto__, 'name')) // {value: 'Nicholas',writable: true,enumerable: true,configurable: true}，原型对象的name属性描述符
+
+// in
+function PersonIn() {}
+PersonIn.prototype.name = 'Nicholas'
+PersonIn.prototype.age = 29
+PersonIn.prototype.job = 'Software Engineer'
+PersonIn.prototype.sayName = function () {
+  console.log(this.name)
+}
+var person9 = new PersonIn()
+var person10 = new PersonIn()
+console.log(person9.hasOwnProperty('name')) // false，实例person9中不含name属性
+console.log('name' in person9) // true，通过person9可以访问到name属性
+person9.name = 'Greg'
+console.log(person9.name) // 'Greg'，来自实例
+console.log(person9.hasOwnProperty('name')) // true，实例person9中包含name属性
+console.log('name' in person9) // true，通过person9可以访问到name属性
+console.log(person10.name) // 'Nicholas'，来自原型
+console.log(person10.hasOwnProperty('name')) // false，实例person10中不含name属性
+console.log('name' in person10) // true，通过person10可以访问到name属性
+delete person9.name
+console.log(person9.name) // 'Nicholas'，来自原型
+console.log(person9.hasOwnProperty('name')) // false，实例person9中不含name属性
+console.log('name' in person9) // true，通过person9可以访问到name属性
+
+// 同时使用 hasOwnProperty 和 in，判断属性存在于 对象 or 原型
+function hasPrototypeProperty(object, name) {
+  return !object.hasOwnProperty(name) && name in object
+}
+var person11 = new PersonIn()
+console.log(hasPrototypeProperty(person11, 'name')) // true，!false && true
+person11.name = 'Greg'
+console.log(hasPrototypeProperty(person11, 'name')) // false，!true && true
+
+// for-in
+for (var attr in person11) {
+  console.log(`${attr}:${person11[attr]}`)
+  /*  
+    name:Greg
+    age:29
+    job:Software Engineer
+    sayName:function () {
+      console.log(this.name)
+    } 
+  */
+}
+
+// Object.keys()
+var keys = Object.keys(PersonIn.prototype) // 原型对象的所有可枚举属性
+console.log(keys) // [ 'name', 'age', 'job', 'sayName' ]
+var person12 = new PersonIn()
+person12.name = 'Bob'
+person12.age = 31
+var p12keys = Object.keys(person12) // person12的所有可枚举属性
+console.log(p12keys) // [ 'name', 'age' ]
+
+// Object.getOwnPropertyNames()
+var keys = Object.getOwnPropertyNames(PersonIn.prototype) // 原型对象的所有属性，包含不可枚举
+console.log(keys) // [ 'constructor', 'name', 'age', 'job', 'sayName' ]，原型对象都包含constructor属性，指向构造函数
+var p12keys = Object.getOwnPropertyNames(person12) // person12的所有属性，包含不可枚举
+console.log(p12keys) // [ 'name', 'age' ]
