@@ -231,3 +231,24 @@ Object.defineProperty(PersonLiteral2.prototype, 'constructor', {
 })
 var keys = Object.keys(PersonLiteral2.prototype)
 console.log(keys) // [ 'name', 'age', 'job', 'sayName' ]，constructor的enumerable已被设置为false
+
+// 原型的动态性
+function Person4() {}
+var friend3 = new Person4()
+Person4.prototype.sayHi = function () {
+  console.log('Hi')
+}
+friend3.sayHi() // 'Hi'，先在friend3实例中搜索sayHi属性，没有找到则继续找原型对象
+
+Person4.prototype = {
+  constructor: Person4,
+  name: 'Nicholas',
+  age: 29,
+  job: 'Software Engineer',
+  sayName: function () {
+    console.log(this.name)
+  },
+}
+console.log(friend3.__proto__) // Person4 { sayHi: [Function] }，最初的原型对象
+console.log(friend3.__proto__ === Person4.prototype) // false，实例的__proto__指向最初的原型对象，重写整个原型切断了构造函数与最初原型之间的联系
+// friend3.sayName() // error:friend3.sayName is not a function
