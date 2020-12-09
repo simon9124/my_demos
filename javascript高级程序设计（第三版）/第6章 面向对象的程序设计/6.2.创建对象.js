@@ -252,3 +252,16 @@ Person4.prototype = {
 console.log(friend3.__proto__) // Person4 { sayHi: [Function] }，最初的原型对象
 console.log(friend3.__proto__ === Person4.prototype) // false，实例的__proto__指向最初的原型对象，重写整个原型切断了构造函数与最初原型之间的联系
 // friend3.sayName() // error:friend3.sayName is not a function
+
+// 原生对象的原型
+console.log(Array.prototype) // 在浏览器中查看Array的原型对象，包含sort()等方法
+console.log(String.prototype) // 在浏览器中查看Array的原型对象，包含substring()等方法
+String.prototype.startsWith = function (text) {
+  // 给String的原型对象添加startsWith方法
+  return this.indexOf(text) === 0
+}
+var msg = 'Hello World'
+console.log(msg.startsWith('Hello')) // true
+console.log(msg.startsWith('World')) // false
+delete String.prototype.startsWith
+// console.log(msg.startsWith('Hello')) // error
