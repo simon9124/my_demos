@@ -265,3 +265,30 @@ console.log(msg.startsWith('Hello')) // true
 console.log(msg.startsWith('World')) // false
 delete String.prototype.startsWith
 // console.log(msg.startsWith('Hello')) // error
+
+// 原型对象的问题
+function PersonProblem() {}
+PersonProblem.prototype = {
+  constructor: PersonProblem,
+  name: 'Nicholas',
+  age: 29,
+  job: 'Software Engineer',
+  friends: ['Shelby', 'Court'],
+  sayName: function () {
+    console.log(this.name)
+  },
+}
+var person13 = new PersonProblem()
+var person14 = new PersonProblem()
+person13.name = 'Greg' // 重新定义，在实例中屏蔽原型的属性
+person13.friends.push('Van') // 非重新定义，而是向原型的数组中添加一个字符串
+console.log(person13.name) // 'Greg'，从实例获得
+console.log(person14.name) // 'Nicholas'，从原型中获得
+console.log(person13.friends) // [ 'Shelby', 'Court', 'Van' ]，从原型中获得
+console.log(person14.friends) // [ 'Shelby', 'Court', 'Van' ]，从原型中获得
+console.log(person13.friends === person14.friends) // true
+var person15 = new PersonProblem()
+person15.friends = [] // 重新定义，在实例中屏蔽原型的属性
+console.log(person15.friends) // []，从实例获得
+console.log(person13.friends) // [ 'Shelby', 'Court', 'Van' ]，从原型中获得
+console.log(person14.friends) // [ 'Shelby', 'Court', 'Van' ]，从原型中获得
