@@ -292,3 +292,101 @@ person15.friends = [] // 重新定义，在实例中屏蔽原型的属性
 console.log(person15.friends) // []，从实例获得
 console.log(person13.friends) // [ 'Shelby', 'Court', 'Van' ]，从原型中获得
 console.log(person14.friends) // [ 'Shelby', 'Court', 'Van' ]，从原型中获得
+
+/* 组合使用构造函数模式和原型模式 */
+function PersonMix(name, age, job) {
+  // 在构造函数定义实例属性
+  this.name = name
+  this.age = age
+  this.job = job
+  this.friends = ['Shelby', 'Court']
+}
+PersonMix.prototype = {
+  // 在原型定义方法和共享的属性
+  constructor: PersonMix, // 直接在对象上定义constructor属性，指向构造函数，[[Enumerable]]为true
+  sayName: function () {
+    console.log(this.name)
+  },
+}
+var person16 = new PersonMix('Nicholas', 29, 'Software Engineer')
+var person17 = new PersonMix('Greg', 27, 'Doctor')
+person16.friends.push('Van') // 仅向person16实例本身的friends数组push数据
+console.log(person16.friends) // [ 'Shelby', 'Court', 'Van' ]
+console.log(person17.friends) // [ 'Shelby', 'Court' ]
+console.log(person16.friends === person17.friends) // false，person16实例的friends数组push了数据
+console.log(person16.sayName === person17.sayName) // true，共享方法sayName
+
+/* 动态原型模式 */
+function PersonDynamic(name, age, job) {
+  // 属性
+  this.name = name
+  this.age = age
+  this.job = job
+  // 方法：①只有方法不存在时才添加到原型；②只在初次调用构造函数时执行；③会立即在实例中体现
+  if (typeof this.sayName !== 'function') {
+    PersonDynamic.prototype.sayName = function () {
+      console.log(this.name)
+    }
+  }
+}
+var person18 = new PersonDynamic('Nicholas', 29, 'Software Engineer')
+person18.sayName() // 'Nicholas'
+console.log(person18 instanceof PersonDynamic) // true，person18是PersonDynamic的实例
+
+// 用对象字面量重写整个原型
+PersonDynamic.prototype = {
+  newName:
+    typeof this.newName !== 'function'
+      ? function () {
+          console.log('prototype:', this.name)
+        }
+      : this.newName,
+}
+// person18.newName() // error，person18指向最初的原型，没有newName方法
+var person19 = new PersonDynamic('Greg', 27, 'Doctor') // person19是重写原型后创建的实例
+person19.newName() // prototype: Greg
+person19.sayName() // Greg
+
+console.log(person18 instanceof PersonDynamic) // false，person18不是重写原型后的PersonDynamic的实例，person18指向最初的原型
+console.log(person19 instanceof PersonDynamic) // true，person19是重写原型后的PersonDynamic的实例
+
+/* 寄生构造函数模式 */
+function PersonParasitic(name, age, job) {
+  var o = new Object() // 用原生引用类型创建对象
+  o.name = name
+  o.age = age
+  o.job = job
+  o.sayName = function () {
+    console.log(this.name)
+  }
+  return o
+}
+var person20 = new PersonParasitic('Nicholas', 29, 'Software Engineer')
+person20.sayName() // 'Nicholas'
+
+function SpecialArray() {
+  var values = new Array() // 用原生引用类型创建数组
+  values.push.apply(values, arguments) // 添加值
+  // 添加方法
+  values.toPipedString = function () {
+    return this.join('|')
+  }
+  return values // 返回经过操作后的数组
+}
+var colors = new SpecialArray('red', 'blue', 'green')
+console.log(colors.toPipedString()) // red|blue|green
+console.log(SpecialArray.prototype) // SpecialArray{}，构造函数的原型对象
+console.log(colors.__proto__) // []，构造函数内部通过new Array()重新初始化，其原型对象是原生对象Array
+console.log(SpecialArray.prototype === colors.__proto__) // false，二者无关联
+console.log(colors instanceof SpecialArray) // false，二者无关联
+
+/* 稳妥构造函数 */
+function PersonSafe(name, age, job) {
+  var o = new Object() // 用原生引用类型创建对象
+  o.sayName = function () {
+    console.log(name)
+  }
+  return o
+}
+var person21 = new PersonParasitic('Nicholas', 29, 'Software Engineer')
+person21.sayName() // 'Nicholas'
