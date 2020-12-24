@@ -21,3 +21,6 @@ console.log(SuperType.prototype.hasOwnProperty('getSuperValue')) // true
 console.log(instance.__proto__) // SuperType实例，SubType的原型SubType.prototype已被SuperType的实例重写
 console.log(instance.constructor) // SuperType构造函数，constructor指向重写原型对象的constructor，即new SuperType()的constructor
 console.log(instance.constructor === SubType.prototype.constructor) // true，都指向SuperType构造函数
+
+console.log(SuperType.prototype.__proto__.constructor) // Object构造函数
+console.log(Object.getOwnPropertyNames(SuperType.prototype.__proto__))
