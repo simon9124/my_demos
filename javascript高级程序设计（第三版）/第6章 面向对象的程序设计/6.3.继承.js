@@ -22,5 +22,7 @@ console.log(instance.__proto__) // SuperType实例，SubType的原型SubType.pro
 console.log(instance.constructor) // SuperType构造函数，constructor指向重写原型对象的constructor，即new SuperType()的constructor
 console.log(instance.constructor === SubType.prototype.constructor) // true，都指向SuperType构造函数
 
+// 默认原型
+console.log(SuperType.prototype.__proto__ === Object.prototype) // true，SuperType的默认原型是Object的实例，默认原型内部的__proto__指向Object实例的原型
 console.log(SuperType.prototype.__proto__.constructor) // Object构造函数
-console.log(Object.getOwnPropertyNames(SuperType.prototype.__proto__))
+console.log(Object.getOwnPropertyNames(SuperType.prototype.__proto__)) // [ 'constructor','__defineGetter__','__defineSetter__','hasOwnProperty','__lookupGetter__','__lookupSetter__','isPrototypeOf','propertyIsEnumerable','toString','valueOf','__proto__','toLocaleString' ]，Object原型上的所有方法
