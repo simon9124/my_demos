@@ -379,6 +379,7 @@ console.log(SpecialArray.prototype) // SpecialArray{}，构造函数的原型对
 console.log(colors.__proto__) // []，构造函数内部通过new Array()重新初始化，其原型对象是原生对象Array
 console.log(SpecialArray.prototype === colors.__proto__) // false，二者无关联
 console.log(colors instanceof SpecialArray) // false，二者无关联
+console.log(colors instanceof Array) // true，colors是Array的实例
 
 /* 稳妥构造函数 */
 function PersonSafe(name, age, job) {
