@@ -23,7 +23,7 @@ console.log(instance.constructor) // SuperType构造函数，constructor指向�
 console.log(instance.constructor === SubType.prototype.constructor) // true，都指向SuperType构造函数
 
 // 默认原型
-console.log(SuperType.prototype.__proto__ === Object.prototype) // true，SuperType的默认原型是Object的实例，默认原型内部的__proto__指向Object实例的原型
+console.log(SuperType.prototype.__proto__ === Object.prototype) // true，SuperType的默认原型是Object的实例，Object实例的__proto__指向Object原型
 console.log(SuperType.prototype.__proto__.constructor) // Object构造函数
 console.log(Object.getOwnPropertyNames(SuperType.prototype.__proto__)) // [ 'constructor','__defineGetter__','__defineSetter__','hasOwnProperty','__lookupGetter__','__lookupSetter__','isPrototypeOf','propertyIsEnumerable','toString','valueOf','__proto__','toLocaleString' ]，Object原型上的所有方法
 
@@ -39,18 +39,18 @@ console.log(SubType.prototype.isPrototypeOf(instance)) // true，SubType.prototy
 
 // 替换原型语句之后添加方法
 SubType.prototype.getSubValue = function () {
-  // 给继承原型添加新方法
+  // 给子类型原型添加新方法
   return false
 }
 SubType.prototype.getSuperValue = function () {
-  // 在继承原型中重写被继承原型的方法
+  // 在子类型原型中重写超类型原型的方法
   return false
 }
 var instance2 = new SubType()
 console.log(instance2.getSubValue()) // false
 console.log(instance2.getSuperValue()) // false，方法被重写
 var instance3 = new SuperType()
-console.log(instance3.getSuperValue()) // true，不影响被继承原型中的方法
+console.log(instance3.getSuperValue()) // true，不影响超类型原型中的方法
 
 // 原型链实现继承时，不能使用对象字面量创建原型方法
 function SubType2() {}
@@ -63,3 +63,41 @@ SubType2.prototype = {
 }
 var instance4 = new SubType2()
 // console.log(instance4.getSuperValue()) // error，对象字面量重写了原型，继承关系已失效
+
+// 原型链的问题
+function SuperTypePro(name) {
+  this.nums = [1, 2, 3]
+  this.name = name
+}
+SuperTypePro.prototype.getSuperNums = function () {
+  return this.nums
+}
+function SubTypePro() {}
+SubTypePro.prototype = new SuperTypePro() // 继承
+
+var instance5 = new SubTypePro()
+instance5.nums.push(4) // 非重新定义，而是向超类型实例的数组中添加数据
+console.log(instance5.nums) // [1,2,3,4]
+var instance6 = new SubTypePro()
+console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组受到影响
+
+var person = new SuperTypePro('Simon')
+console.log(person.name) // 'Simon'
+var person2 = new SubTypePro('Simon') // 参数传递无意义
+console.log(person2.name) // undefined
+
+/* 借用构造函数 */
+function SuperTypeBorrow() {
+  this.nums = [1, 2, 3]
+}
+function SubTypeBorrow() {
+  console.log(this) // SubTypeBorrow构造函数内部的this，指向SubTypeBorrow的实例
+  SuperTypeBorrow.call(this) // 将SuperTypeBorrow的作用域绑定给this，也就是SubTypeBorrow的实例
+}
+var instance7 = new SubTypeBorrow()
+console.log(instance7.nums) // [ 1, 2, 3 ]
+
+instance7.nums.push(4)
+console.log(instance7.nums) // [ 1, 2, 3, 4 ]
+var instance8 = new SubTypeBorrow()
+console.log(instance8.nums) // [ 1, 2, 3 ]
