@@ -80,6 +80,10 @@ instance5.nums.push(4) // 非重新定义，而是向超类型实例的数组中
 console.log(instance5.nums) // [1,2,3,4]
 var instance6 = new SubTypePro()
 console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组受到影响
+var instance7 = new SubTypePro()
+instance7.nums = [] // 重新定义，覆盖超类型实例中的属性
+console.log(instance7.nums) // []
+console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组补受影响
 
 var person = new SuperTypePro('Simon')
 console.log(person.name) // 'Simon'
@@ -94,10 +98,49 @@ function SubTypeBorrow() {
   console.log(this) // SubTypeBorrow构造函数内部的this，指向SubTypeBorrow的实例
   SuperTypeBorrow.call(this) // 将SuperTypeBorrow的作用域绑定给this，也就是SubTypeBorrow的实例
 }
-var instance7 = new SubTypeBorrow()
-console.log(instance7.nums) // [ 1, 2, 3 ]
-
-instance7.nums.push(4)
-console.log(instance7.nums) // [ 1, 2, 3, 4 ]
 var instance8 = new SubTypeBorrow()
 console.log(instance8.nums) // [ 1, 2, 3 ]
+
+instance8.nums.push(4)
+console.log(instance8.nums) // [ 1, 2, 3, 4 ]
+var instance9 = new SubTypeBorrow()
+console.log(instance9.nums) // [ 1, 2, 3 ]
+
+// 传递参数
+function SuperTypeParam(name) {
+  this.name = name
+}
+function SubTypeParam() {
+  SuperTypeParam.call(this, 'Nicholas') // 继承，先调用超类型构造函数
+  this.age = 29 // 再添加子类型中定义的属性
+}
+var instance10 = new SubTypeParam()
+console.log(instance10.name, instance10.age) // Nicholas 29
+
+/* 组合继承 */
+function SuperTypeMix(name) {
+  this.name = name
+  this.nums = [1, 2, 3]
+}
+SuperTypeMix.prototype.sayName = function () {
+  console.log(this.name)
+}
+function SubTypeMix(name, age) {
+  SuperTypeMix.call(this) // 借用构造函数继承，继承属性
+  this.age = age
+}
+SubTypeMix.prototype = new SuperTypeMix() // 原型链继承，继承方法
+SubTypeMix.prototype.sayAge = function () {
+  console.log(this.age) // 子类型原型添加方法（须在替换原型语句之后）
+}
+
+var instance11 = new SubTypeMix('Nicholas', 29)
+instance11.nums.push(4)
+console.log(instance11.nums) // [ 1, 2, 3, 4 ]，借用构造函数继承而来，属性保存在超类型实例中
+console.log(instance11.sayName) // 'Nicholas'，原型链继承而来，方法保存在超类型原型中
+console.log(instance11.sayAge) // 29，非继承，方法保存在子类型原型中
+
+var instance12 = new SubTypeMix('Greg', 27)
+console.log(instance12.nums) // [ 1, 2, 3]
+console.log(instance12.sayName) // 'Greg'
+console.log(instance12.sayAge) // 27
