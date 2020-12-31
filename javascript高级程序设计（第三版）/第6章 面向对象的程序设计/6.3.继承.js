@@ -85,9 +85,9 @@ instance7.nums = [] // 重新定义，覆盖超类型实例中的属性
 console.log(instance7.nums) // []
 console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组补受影响
 
-var person = new SuperTypePro('Simon')
+var person = new SuperTypePro('Simon') // 创建超类型实例
 console.log(person.name) // 'Simon'
-var person2 = new SubTypePro('Simon') // 参数传递无意义
+var person2 = new SubTypePro('Simon') // 创建超类型实例，参数传递无意义
 console.log(person2.name) // undefined
 
 /* 借用构造函数 */
@@ -126,10 +126,10 @@ SuperTypeMix.prototype.sayName = function () {
   console.log(this.name)
 }
 function SubTypeMix(name, age) {
-  SuperTypeMix.call(this) // 借用构造函数继承，继承属性
+  SuperTypeMix.call(this, name) // 借用构造函数继承，继承属性（创建子类型实例时，第二次调用超类型构造函数）
   this.age = age
 }
-SubTypeMix.prototype = new SuperTypeMix() // 原型链继承，继承方法
+SubTypeMix.prototype = new SuperTypeMix() // 原型链继承，继承方法（第一次调用超类型构造函数）
 SubTypeMix.prototype.sayAge = function () {
   console.log(this.age) // 子类型原型添加方法（须在替换原型语句之后）
 }
@@ -137,10 +137,78 @@ SubTypeMix.prototype.sayAge = function () {
 var instance11 = new SubTypeMix('Nicholas', 29)
 instance11.nums.push(4)
 console.log(instance11.nums) // [ 1, 2, 3, 4 ]，借用构造函数继承而来，属性保存在超类型实例中
-console.log(instance11.sayName) // 'Nicholas'，原型链继承而来，方法保存在超类型原型中
-console.log(instance11.sayAge) // 29，非继承，方法保存在子类型原型中
+instance11.sayName() // 'Nicholas'，原型链继承而来，方法保存在超类型原型中
+instance11.sayAge() // 29，非继承，方法保存在子类型原型中
 
 var instance12 = new SubTypeMix('Greg', 27)
 console.log(instance12.nums) // [ 1, 2, 3]
-console.log(instance12.sayName) // 'Greg'
-console.log(instance12.sayAge) // 27
+instance12.sayName() // 'Greg'
+instance12.sayAge() // 27
+
+console.log(SubTypeMix.prototype) // SuperTypeMix { name: undefined, nums: [ 1, 2, 3 ], sayAge: [Function] }，子类型的原型
+console.log(instance11) // SuperTypeMix { name: 'Nicholas', nums: [ 1, 2, 3, 4 ], age: 29 }，子类型的实例
+delete instance11.name
+console.log(instance11)
+console.log(instance11.name)
+
+/* 原型式继承 */
+// function object(o) {
+//   function F() {} //函数内部创建临时构造函数
+//   F.prototype = o // 将传入的对象作为这个构造函数的原型
+//   return new F() // 返回这个构造函数的新实例
+// }
+
+// var person = {
+//   name: 'Nicholas',
+// }
+// var anotherPerson = object(person)
+// console.log(anotherPerson.name) // 'Nicholas'，来自person
+// anotherPerson.name = 'Greg' // 覆盖同名属性
+// console.log(anotherPerson.name) // 'Greg'，来自副本
+// console.log(person.name) // 'Nicholas'，来自person
+
+// // Object.create()
+// var anotherPerson2 = Object.create(person)
+// console.log(anotherPerson2.name) // 'Nicholas'，来自person
+
+// var anotherPerson3 = Object.create(person, {
+//   name: { value: 'Greg' }, // 描述符定义对象的属性，若有同名属性则覆盖
+// })
+// console.log(anotherPerson3.name) // 'Greg'，来自副本
+
+// var person2 = {
+//   nums: [1, 2, 3],
+// }
+// var anotherPerson4 = Object.create(person2)
+// anotherPerson4.nums.push(4) // 引用类型属性被修改，非重新定义
+// console.log(anotherPerson4.nums) // [1, 2, 3, 4]，来自person
+// console.log(person2.nums) // [1, 2, 3, 4]，作为原型的引用类型属性受到影响
+
+// /* 寄生式继承 */
+// function object(o) {
+//   // 原型式继承的函数封装
+//   function F() {}
+//   F.prototype = o
+//   return new F()
+// }
+// function createAnother(original) {
+//   var clone = object(original) // 将作为原型的对象传给object——封装原型式继承的函数
+//   console.log(clone) // {}，构造函数F的实例
+//   clone.sayHi = function () {
+//     console.log('Hi') // 给返回的实例对象添加方法
+//   }
+//   return clone
+// }
+
+// var person3 = {
+//   name: 'Nicholas',
+// }
+// var anotherPerson5 = createAnother(person3)
+
+// console.log(anotherPerson5.name) // 'Nicholas'
+// console.log(anotherPerson5.hasOwnProperty('name')) // false，name属性保存在作为原型的对象person3上
+// anotherPerson5.sayHi() // 'Hi'
+// console.log(anotherPerson5.hasOwnProperty('sayHi')) // true，sayHi方法保存在返回的实例对象上
+// console.log(anotherPerson5) // { sayHi: [Function] }
+
+/* 寄生组合式继承 */
