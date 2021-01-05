@@ -23,8 +23,10 @@ console.log(instance.constructor) // SuperType构造函数，constructor指向�
 console.log(instance.constructor === SubType.prototype.constructor) // true，都指向SuperType构造函数
 
 // 默认原型
+console.log(SuperType.prototype.__proto__) // {}，Object原型
 console.log(SuperType.prototype.__proto__ === Object.prototype) // true，SuperType的默认原型是Object的实例，Object实例的__proto__指向Object原型
 console.log(SuperType.prototype.__proto__.constructor) // Object构造函数
+console.log(Object.keys(SuperType.prototype.__proto__)) // []，Object原型上可枚举的方法
 console.log(Object.getOwnPropertyNames(SuperType.prototype.__proto__)) // [ 'constructor','__defineGetter__','__defineSetter__','hasOwnProperty','__lookupGetter__','__lookupSetter__','isPrototypeOf','propertyIsEnumerable','toString','valueOf','__proto__','toLocaleString' ]，Object原型上的所有方法
 
 // instanceof
@@ -83,11 +85,11 @@ console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组受到影响
 var instance7 = new SubTypePro()
 instance7.nums = [] // 重新定义，覆盖超类型实例中的属性
 console.log(instance7.nums) // []
-console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组补受影响
+console.log(instance6.nums) // [1,2,3,4]，超类型实例的数组不受影响
 
 var person = new SuperTypePro('Simon') // 创建超类型实例
 console.log(person.name) // 'Simon'
-var person2 = new SubTypePro('Simon') // 创建超类型实例，参数传递无意义
+var person2 = new SubTypePro('Simon') // 创建子类型实例，参数传递无意义
 console.log(person2.name) // undefined
 
 /* 借用构造函数 */
@@ -136,7 +138,7 @@ SubTypeMix.prototype.sayAge = function () {
 
 var instance11 = new SubTypeMix('Nicholas', 29)
 instance11.nums.push(4)
-console.log(instance11.nums) // [ 1, 2, 3, 4 ]，借用构造函数继承而来，属性保存在超类型实例中
+console.log(instance11.nums) // [ 1, 2, 3, 4 ]，借用构造函数继承而来，属性保存在超类型实例和子类型原型中
 instance11.sayName() // 'Nicholas'，原型链继承而来，方法保存在超类型原型中
 instance11.sayAge() // 29，非继承，方法保存在子类型原型中
 
