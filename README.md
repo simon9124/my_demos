@@ -18,6 +18,8 @@
 - 第 7 章：函数表达式
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89/%E7%AC%AC7%E7%AB%A0%20%E5%87%BD%E6%95%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F/7.1.%E9%80%92%E5%BD%92.md" target="_blank">7.1 递归</a><br>
 
+#### 《JavaScript 高级程序设计（第四版）》学习笔记：
+
 #### CSS 盒子模型：
 
 <a href="http://blog.csdn.net/simon9124/article/details/78935788" target="_blank">5 种方式实现 CSS 元素水平居中，实用又简单！</a><br>
