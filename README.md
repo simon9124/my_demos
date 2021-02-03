@@ -20,6 +20,9 @@
 
 #### 《JavaScript 高级程序设计（第四版）》学习笔记：
 
+- 第 3 章：语言基础
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC%E4%B8%89%E7%AB%A0%20%E8%AF%AD%E8%A8%80%E5%9F%BA%E7%A1%80/3.3.%E5%8F%98%E9%87%8F.md">3.3 变量</a><br>
+
 #### CSS 盒子模型：
 
 <a href="http://blog.csdn.net/simon9124/article/details/78935788" target="_blank">5 种方式实现 CSS 元素水平居中，实用又简单！</a><br>
