@@ -84,6 +84,39 @@ console.log(Array.of(1, 2, 3, 4)) // [ 1, 2, 3, 4 ]，将参数转换为数组
 console.log(Array.of(undefined, null)) // [ undefined, null ]，将参数转换为数组
 
 /* 数组空位 */
+let options = [, , , , ,] // 创建包含5个元素的数组
+console.log(options.length) // 5
+console.log(options) // [ <5 empty items> ]
+
+options = [1, , , , 5]
+console.log(options) // [ 1, <3 empty items>, 5 ]
+for (const option of options) {
+  console.log(option === undefined)
+  /*
+    false
+    true
+    true
+    true
+    false
+  */
+}
+for (const [index, value] of options.entries()) {
+  console.log(value)
+  /*
+    1
+    undefined
+    undefined
+    undefined
+    5
+  */
+}
+
+console.log([, , ,]) // [ <3 empty items> ]
+console.log(Array.from([, , ,])) // [ undefined, undefined, undefined ]
+console.log(Array.of(...[, , ,])) // [(undefined, undefined, undefined)]
+
+console.log(options.map(() => 6)) // [ 6, <3 empty items>, 6 ]，map会跳过空位置
+console.log(options.join('-')) // '1----5'，join视空位置为空字符串
 
 /* 数组索引 */
 
