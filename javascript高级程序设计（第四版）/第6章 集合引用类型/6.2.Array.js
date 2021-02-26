@@ -119,8 +119,44 @@ console.log(options.map(() => 6)) // [ 6, <3 empty items>, 6 ]，map会跳过空
 console.log(options.join('-')) // '1----5'，join视空位置为空字符串
 
 /* 数组索引 */
+colors = ['red', 'blue', 'green']
+console.log(colors[0]) // 'red'，数组第1项
+colors[2] = 'black' // 设置数组第3项，重设数组原有的值
+console.log(colors) // [ 'red', 'blue', 'black' ]
+colors[3] = 'brown' // 设置数组第4项，扩展数组
+console.log(colors) // [ 'red', 'blue', 'black', 'brown' ]
+
+console.log(colors.length) // 4，数组的长度是4
+
+colors.length = 3 // 将数组的长度设置为3，自动删除末尾'brown'
+console.log(colors[3]) // undefined
+colors.length = 5 // 将数组长度设置为5，新添加的元素以undefined填充
+console.log(colors[5]) // undefined
+
+colors = ['red', 'blue', 'green']
+colors[colors.length] = 'black' // 向数组末尾添加'black'
+colors[colors.length] = 'brown' // 向数组末尾添加'brown'
+console.log(colors) // [ 'red', 'blue', 'green', 'black', 'brown' ]
 
 /* 检测数组 */
+
+colors = ['red', 'blue', 'green']
+console.log(Array.from(colors.keys())) // [ 0, 1, 2 ]
+console.log(Array.from(colors.values())) // [ 'red', 'blue', 'green' ]
+console.log(Array.from(colors.entries())) // [ [ 0, 'red' ], [ 1, 'blue' ], [ 2, 'green' ] ]
+
+for (const [i, el] of colors.entries()) {
+  console.log(i)
+  console.log(el)
+  /* 
+    0
+    red
+    1
+    blue
+    2
+    green
+  */
+}
 
 /* 迭代器方法 */
 
