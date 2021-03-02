@@ -138,7 +138,7 @@ colors[colors.length] = 'black' // 向数组末尾添加'black'
 colors[colors.length] = 'brown' // 向数组末尾添加'brown'
 console.log(colors) // [ 'red', 'blue', 'green', 'black', 'brown' ]
 
-/* 检测数组 */
+/* 迭代器方法 */
 
 colors = ['red', 'blue', 'green']
 console.log(Array.from(colors.keys())) // [ 0, 1, 2 ]
@@ -158,9 +158,49 @@ for (const [i, el] of colors.entries()) {
   */
 }
 
-/* 迭代器方法 */
-
 /* 复制和填充方法 */
+
+// fill()
+let zeros = [0, 0, 0, 0, 0]
+
+zeros.fill(5) // 用5填充整个数组，省略了开始索引和结束索引
+console.log(zeros) // [ 5, 5, 5, 5, 5 ]
+zeros.fill(0) // 重置
+
+zeros.fill(6, 3) // 用6填充索引大于等于3的元素，省略了结束索引
+console.log(zeros) // [ 0, 0, 0, 6, 6 ]
+zeros.fill(0) // 重置
+
+zeros.fill(7, 1, 3) // 用7填充索引值大于等于1且小于3的元素
+console.log(zeros) // [ 0, 7, 7, 0, 0 ]
+zeros.fill(0) // 重置
+
+zeros.fill(8, -4, 3) // 相当于zeros.fill(8, 5-4, 3)，用8填充索引值大于等于1且小于3的元素
+console.log(zeros) // [ 0, 8, 8, 0, 0 ]
+zeros.fill(0) // 重置
+
+zeros.fill(1, -10, -6) // 相当于zeros.fill(1, 5-10, 5-6)，超出数组边界，忽略
+console.log(zeros) // [ 0, 0, 0, 0, 0 ]
+zeros.fill(0) // 重置
+
+zeros.fill(1, 10, 15) // 超出数组边界，忽略
+console.log(zeros) // [ 0, 0, 0, 0, 0 ]
+zeros.fill(0) // 重置
+
+zeros.fill(2, 4, 2) // 索引反向，忽略
+console.log(zeros) // [ 0, 0, 0, 0, 0 ]
+zeros.fill(0) // 重置
+
+zeros.fill(4, 3, 10) // 索引部分可用，填充可用部分
+console.log(zeros) // [ 0, 0, 0, 4, 4 ]
+zeros.fill(0) // 重置
+
+// coppWithin()
+zeros = [1, 2, 3, 4, 5]
+
+zeros.copyWithin(2) // 浅复制整个数组，从索引为2开始替换（直到数组边界），省略了开始索引和结束索引
+console.log(zeros) // [ 1, 2, 1, 2, 3 ]
+zeros = [1, 2, 3, 4, 5] // 重置
 
 /* 转换方法 */
 
