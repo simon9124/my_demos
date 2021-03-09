@@ -52,6 +52,7 @@
 <a href="https://segmentfault.com/a/1190000021991082#shareToWeibo">vue 动态渲染 svg、添加点击事件</a><br>
 <a href="https://segmentfault.com/a/1190000022406208#shareToWeibo">解决 vue 开发环境中一直发 http://localhost:8080/sockjs-node/info?t=xxx 请求</a><br>
 <a href="https://segmentfault.com/a/1190000023434447">手摸手，封装一个vue分页组件</a><br>
+<a href="https://segmentfault.com/a/1190000039375540">实战：vue仿dos命令界面</a><br>
 
 #### 小程序：
 
