@@ -202,11 +202,87 @@ zeros.copyWithin(2) // 浅复制整个数组，从索引为2开始替换（直�
 console.log(zeros) // [ 1, 2, 1, 2, 3 ]
 zeros = [1, 2, 3, 4, 5] // 重置
 
+zeros.copyWithin(4, 3) // 浅复制索引大于等于3到数组结束的元素，从索引为4开始替换（直到数组边界），省略了结束索引
+console.log(zeros) // [ 1, 2, 3, 4, 4 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
+zeros.copyWithin(3, 1, 3) // 浅复制索引大于等于1且小于3的元素，从索引为3开始替换（直到数组边界）
+console.log(zeros) // [ 1, 2, 3, 2, 3 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
+zeros.copyWithin(2, -4, -1) // 相当于zeros.copyWithin(2, 5-4, 5-1)，浅复制索引大于等于1且小于4的元素，从索引为2开始替换（直到数组边界）
+console.log(zeros) // [ 1, 2, 2, 3, 4 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
+zeros.copyWithin(2, -15, -12) // 相当于zeros.copyWithin(2, 5-15, 5-12)，超出数组边界，忽略
+console.log(zeros) // [ 1, 2, 3, 4, 5 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
+zeros.copyWithin(2, 12, 15) // 超出数组边界，忽略
+console.log(zeros) // [ 1, 2, 3, 4, 5 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
+zeros.copyWithin(2, 3, 1) // 索引反向，忽略
+console.log(zeros) // [ 1, 2, 3, 4, 5 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
+zeros.copyWithin(2, 3, 6) // 索引部分可用，填充可用部分
+console.log(zeros) // [ 1, 2, 4, 5, 5 ]
+zeros = [1, 2, 3, 4, 5] // 重置
+
 /* 转换方法 */
+colors = ['red', 'blue', 'green']
+console.log(colors) // [ 'red', 'blue', 'green' ]
+console.log(colors.valueOf()) // [ 'red', 'blue', 'green' ]
+console.log(colors.toString()) // red,blue,green
+console.log(colors.toLocaleString()) // red,blue,green
+
+// toLocaleString() vs toString()
+let person1 = {
+  toLocaleString() {
+    return 'Nikalaos'
+  },
+  toString() {
+    return 'Nicholas'
+  },
+}
+let person2 = {
+  toLocaleString() {
+    return 'Grigorios'
+  },
+  toString() {
+    return 'Greg'
+  },
+}
+let people = [person1, person2]
+console.log(people.toString()) // Nicholas,Greg
+console.log(people.toLocaleString()) // Nikalaos,Grigorios
+
+// join()
+console.log(colors.join()) // red,blue,green，默认用逗号拼接
+console.log(colors.join(undefined)) // red,blue,green，默认用逗号拼接
+console.log(colors.join('|')) // red|blue|green
+console.log([undefined, 1, 2].join()) // ,1,2
 
 /* 栈方法 */
 
+// push()
+colors = new Array()
+console.log(colors.push('red', 'blue')) //2，返回数组的长度
+
+// pop()
+console.log(colors.pop()) // 'blue'，返回被删除的项
+
 /* 队列方法 */
+
+// shift()
+colors = new Array()
+colors.push('red', 'blue')
+console.log(colors.shift()) // 'red'，返回被删除的项
+
+// unshift()
+console.log(colors.unshift('green', 'black')) // 3，返回数组的长度
+console.log(colors) // [ 'green', 'black', 'blue' ]
 
 /* 排序方法 */
 
