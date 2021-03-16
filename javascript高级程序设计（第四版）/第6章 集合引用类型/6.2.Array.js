@@ -286,6 +286,50 @@ console.log(colors) // [ 'green', 'black', 'blue' ]
 
 /* 排序方法 */
 
+// reverse()
+let values = [1, 2, 3, 4, 5]
+values.reverse()
+console.log(values) // [ 5, 4, 3, 2, 1 ]
+
+// sort()
+values = [10, 15, 0, 5, 1]
+values.sort()
+console.log(values) // [ 0, 1, 10, 15, 5 ]，比较字符串大小而不是数字大小
+
+// 比较函数
+function compareAsc(val1, val2) {
+  if (val1 < val2) {
+    return -1
+  } else if (val1 > val2) {
+    return 1
+  } else {
+    return 0
+  }
+}
+values = [10, 15, 0, 5, 1]
+values.sort(compareAsc) // 接收参数：正序比较函数
+console.log(values) // [ 0, 1, 5, 10, 15 ]
+
+function compareDesc(val1, val2) {
+  if (val1 < val2) {
+    return 1 // 降序
+  } else if (val1 > val2) {
+    return -1 // 降序
+  } else {
+    return 0
+  }
+}
+values.sort(compareDesc) // 接收参数：降序比较函数
+console.log(values) // [ 15, 10, 5, 1, 0 ]
+
+values.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)) // 升序
+console.log(values) // [ 0, 1, 5, 10, 15 ]
+
+values.sort((a, b) => a - b) // 升序
+console.log(values) // [ 0, 1, 5, 10, 15 ]
+values.sort((a, b) => b - a) // 降序
+console.log(values) // [ 15, 10, 5, 1, 0 ]
+
 /* 操作方法 */
 
 /* 搜索和位置方法 */
