@@ -332,6 +332,50 @@ console.log(values) // [ 15, 10, 5, 1, 0 ]
 
 /* 操作方法 */
 
+// concat()
+colors = ['red', 'green', 'blue']
+let colors2 = colors.concat('yellow', ['black', 'brown'])
+console.log(colors) // [ 'red', 'green', 'blue' ]，不改变原数组
+console.log(colors2) // [ 'red', 'green', 'blue', 'yellow', 'black', 'brown' ]
+let colors3 = colors.concat('yellow', ['black', 'brown', ['orange']]) // [ 'red', 'green', 'blue', 'yellow', 'black', 'brown', [ 'orange' ] ]
+console.log(colors3)
+
+// Symbol.isConcatSpreadable
+let newColors = ['black', 'brown'] // 数组
+let moreNewColors = {
+  // 类数组对象
+  0: 'pink',
+  1: 'cyan',
+  length: 2,
+}
+console.log(colors.concat(newColors)) // [ 'red', 'green', 'blue', 'black', 'brown' ]，数组默认打平
+console.log(colors.concat(moreNewColors)) // [ 'red', 'green', 'blue', { '0': 'pink', '1': 'cyan' } ]，类数组对象默认不打平
+
+newColors[Symbol.isConcatSpreadable] = false // 阻止打平数组
+moreNewColors[Symbol.isConcatSpreadable] = true // 强制打平类数组对象
+
+console.log(colors.concat(newColors)) // [ 'red', 'green', 'blue',[ 'black', 'brown', [Symbol(Symbol.isConcatSpreadable)]: false] ]
+console.log(colors.concat(moreNewColors)) // [ 'red', 'green', 'blue', 'pink', 'cyan' ]
+
+// slice()
+colors = ['red', 'green', 'blue', 'black', 'brown']
+console.log(colors.slice(1)) // [ 'green', 'blue', 'black', 'brown' ]，索引大于等于1到末尾的元素
+console.log(colors.slice(1, 4)) // [ 'green', 'blue', 'black' ]，索引大于等于1小于4的元素
+
+// splice()
+colors = ['red', 'green', 'blue']
+let removed = colors.splice(0, 1) // 从索引0开始，删除1项
+console.log(removed) // [ 'red' ]，返回被删除元素组成的数组
+console.log(colors) // [ 'green', 'blue' ]，改变原数组
+
+removed = colors.splice(1, 0, 'yellow', 'orange') // 从索引1开始，删除0项，插入'yellow'、'orange'
+console.log(removed) // []，没有被删除的元素
+console.log(colors) // [ 'green', 'yellow', 'orange', 'blue' ]
+
+removed = colors.splice(1, 1, 'black', 'purple') // 从索引1开始，删除1项，插入'black'、'purple'
+console.log(removed) // [ 'yellow' ]
+console.log(colors) // [ 'green', 'black', 'purple', 'orange', 'blue' ]
+
 /* 搜索和位置方法 */
 
 /* 迭代方法 */
