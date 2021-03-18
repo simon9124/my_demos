@@ -378,6 +378,57 @@ console.log(colors) // [ 'green', 'black', 'purple', 'orange', 'blue' ]
 
 /* 搜索和位置方法 */
 
+// indexOf()、lastIndexOf()、includes()
+let numbers = [1, 2, 3, 4, 5, 4, 3, 2, 1]
+
+console.log(numbers.indexOf(4)) // 3，从前向后，数组首次出现4的索引
+console.log(numbers.lastIndexOf(4)) // 5，从后向前，数组首次出现4的索引
+console.log(numbers.includes(4)) // true，从前向后，数组中是否包含4
+
+console.log(numbers.indexOf(4, 4)) // 5，从前向后，从数组索引4开始首次出现4的索引
+console.log(numbers.lastIndexOf(4, 4)) // 3，从后向前，从数组索引4开始首次出现4的索引
+console.log(numbers.includes(4, 7)) // false，从前向后，从数组索引7开始是否包含4
+
+let man = { name: 'Nicholas' }
+let human = [{ name: 'Nicholas' }] // 不全等，human数组中的对象和对象man来自不同的引用
+let human2 = [man] // 全等，将对象man放入human2数组
+
+console.log(human.indexOf(man)) // -1
+console.log(human2.indexOf(man)) // 0
+console.log(human.includes(man)) // false
+console.log(human2.includes(man)) // true
+
+// find()、findIndex()
+people = [
+  { name: 'Matt', age: 27 },
+  { name: 'Nicholas', age: 29 },
+]
+console.log(people.find((e, i, arr) => e.age > 28)) // { name: 'Nicholas', age: 29 }，返回元素
+console.log(people.findIndex((e, i, arr) => e.age > 28)) // 1，返回索引
+console.log(people.find((e, i, arr) => e.age > 30)) // undefined，无匹配
+console.log(people.findIndex((e, i, arr) => e.age > 30)) // -1，无匹配
+
+numbers = [3, 6, 9]
+numbers.find((e, i, arr) => {
+  console.log(e)
+  console.log(i)
+  console.log(arr)
+  return e % 2 === 0 // 匹配条件：元素能被2整除
+  /* 
+    开始搜索：
+    3，不符合匹配条件
+    0，此时的索引
+    [ 3, 6, 9 ]，此时的数组
+
+    继续搜索：
+    6，符合匹配条件
+    1，此时的索引
+    [ 3, 6, 9 ]，次数的数组
+    
+    不再继续搜索
+  */
+})
+
 /* 迭代方法 */
 
 /* 归并方法 */
