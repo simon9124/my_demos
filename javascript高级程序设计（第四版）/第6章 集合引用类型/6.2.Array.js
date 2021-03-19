@@ -431,4 +431,96 @@ numbers.find((e, i, arr) => {
 
 /* 迭代方法 */
 
+numbers = [1, 2, 3, 4, 5, 4, 3, 2, 1]
+
+// some()
+let everyResult = numbers.every((item, index, array) => item > 2) // 是否每项都大于2
+console.log(everyResult) // false
+
+let someResult = numbers.some((item, index, array) => item > 2) // 是否有1项大于2
+console.log(someResult) // true
+
+// filter()
+let filterResult = numbers.filter((item, index, array) => item > 2) // 筛选出大于2的元素
+console.log(filterResult) // [ 3, 4, 5, 4, 3 ]
+
+// map()
+let mapResult = numbers.map((item, index, array) => item * 2) // 返回每项调用函数的结果
+console.log(mapResult) // [ 2, 4, 6, 8, 10, 8, 6, 4, 2 ]
+
+// forEach()
+let forEachResult = numbers.forEach((item, index, array) => {
+  item = item * 2
+})
+console.log(forEachResult) // undefined，forEach没有返回值
+numbers.forEach((item, index, array) => {
+  // 在函数内执行操作，相当于使用for循环遍历
+  console.log(item * 2)
+  /* 
+    2
+    4
+    6
+    8
+    10
+    8
+    6
+    4
+    2 
+  */
+})
+
 /* 归并方法 */
+
+values = [1, 2, 3, 4, 5]
+
+// reduce()
+let sum1 = values.reduce((pre, cur, index, arr) => {
+  console.log(pre, cur, index)
+  /* 
+    1 2 1
+    3 3 2
+    6 4 3
+    10 5 4
+  */
+  return pre + cur
+}) // 省略归并起点值，归并函数第1个参数为数组第2项，第2个参数为数组第2项
+console.log(sum1) // 15
+
+let sum2 = values.reduce((pre, cur, index, arr) => {
+  console.log(pre, cur, index)
+  /* 
+    10 1 0
+    11 2 1
+    13 3 2
+    16 4 3
+    20 5 4
+  */
+  return pre + cur
+}, 10) // 归并起点值为10，归并函数第1个参数为10，第2个参数为数组第1项
+console.log(sum2) // 25
+
+// reduceRight
+let sum3 = values.reduceRight((pre, cur, index, arr) => {
+  console.log(pre, cur, index)
+  /* 
+    5 4 3
+    9 3 2
+    12 2 1
+    14 1 0
+  */
+  return pre + cur
+})
+console.log(sum3) // 15
+
+let sum4 = values.reduceRight((pre, cur, index, arr) => {
+  console.log(pre, cur, index)
+  /* 
+    10 5 4
+    15 4 3
+    19 3 2
+    22 2 1
+    24 1 0
+  */
+  return pre + cur
+}, 10) // 归并起点值为10，归并函数第1个参数为10，第2个参数为数组最后1项
+console.log(sum4) // 25
