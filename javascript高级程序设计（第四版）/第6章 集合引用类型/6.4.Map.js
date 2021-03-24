@@ -136,3 +136,32 @@ for (let value of m7.values()) {
     val3
   */
 }
+
+// 遍历时修改键或值
+const m8 = new Map([['key1', 'val1']]) // 字符串原始值作为键或值
+
+for (let key of m8.keys()) {
+  key = 'newKey' // 修改键
+  console.log(key) // 'newKey'
+  console.log(m8.get('key1')) // 'val1'，映射内部的引用无法修改
+  console.log(m8.get('newKey')) // undefined
+  console.log(m8.get(key)) // undefined
+}
+console.log(m8) // Map(1) { 'key1' => 'val1' }，映射不受影响
+
+const keyObj = { id: 1 }
+const m9 = new Map([[keyObj, 'val2']]) // 引用值作为键或值
+
+for (let key of m9.keys()) {
+  key.id = 2 // 修改键的属性
+  console.log(key) // { id: 2 }
+  console.log(m9.get(key)) // val2，映射内部的引用未改变，对象在映射内部仍然引用相同的值
+}
+console.log(m9) // Map(1) { { id: 2 } => 'val2' }，映射受影响
+
+for (let key of m9.keys()) {
+  key = { id: 3 } // 重写键
+  console.log(key) // { id: 3 }
+  console.log(m9.get(key)) // undefined，映射内部的引用无法修改
+}
+console.log(m9) // Map(1) { { id: 2 } => 'val2' }，映射不受影响
