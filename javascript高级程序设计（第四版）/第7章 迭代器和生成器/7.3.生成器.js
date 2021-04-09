@@ -98,8 +98,112 @@ function* validGeneratorFn() {
 // }
 
 // 生成器对象作为可迭代对象
+function* generatorFn7() {
+  // 生成器函数
+  yield 1
+  yield 2
+  yield 3
+}
+for (const x of generatorFn7()) {
+  // 调用生成器函数generatorFn7，generatorFn7()是生成器对象
+  console.log(x)
+  /* 
+    1
+    2
+    3
+  */
+}
+
+function* nTimes(n) {
+  while (n--) {
+    console.log(n)
+    yield
+  }
+}
+for (let _ of nTimes(3)) {
+  console.log(_)
+  /* 
+    2，第1次循环n
+    undefined，第1次循环yield
+    1，第2次循环n
+    undefined，第2次循环yield
+    0，第3次循环n
+    undefined，第3次循环yield
+  */
+}
 
 // 使用 yield 实现输入和输出
+
+// yield作为函数的中间参数
+function* generatorFn8() {
+  console.log(yield)
+  console.log(yield)
+  console.log(yield)
+}
+let g9 = generatorFn8() // 调用生成器函数，产生生成器对象
+g9.next('bar') // 第一次调用next()的值不会被使用，仅作为开始执行生成器函数
+g9.next('baz') // 'baz'，调用next()传入baz，参数作为交给同一个yield的值
+g9.next('qux') // 'qux'，调用next()传入qux，参数作为交给同一个yield的值
+
+// yield同时用于输入和输出
+function* generatorFn9() {
+  return yield 'foo'
+}
+let g10 = generatorFn9()
+console.log(g10.next()) // { value: 'foo', done: false }，next()没有参数，遇到yield关键字暂停执行，并计算要产生的值
+console.log(g10.next('bar')) // { value: 'bar', done: true }，next()有参数，参数作为交给同一个yield的值，相当于return 'bar'
+
+// yield多次使用
+function* generatorFn10() {
+  for (let i = 0; ; i++) {
+    yield i
+  }
+}
+let g11 = generatorFn10()
+console.log(g11.next()) // { value: 0, done: false }
+console.log(g11.next()) // { value: 1, done: false }
+console.log(g11.next()) // { value: 2, done: false }
+console.log(g11.next()) // { value: 3, done: false }
+
+// yield根据迭代次数产生相应索引
+function* nTimes(n) {
+  let i = 0
+  while (n--) {
+    yield i++
+  }
+}
+for (let x of nTimes(3)) {
+  console.log(x)
+  /* 
+    0
+    1
+    2
+  */
+}
+
+// 使用生成器实现范围
+function* range(start, end) {
+  while (end > start) {
+    yield start++
+  }
+}
+for (const x of range(4, 7)) {
+  console.log(x)
+  /* 
+    4
+    5
+    6
+  */
+}
+
+// 使用生成器填充数组
+function* zeros(n) {
+  while (n--) {
+    yield 0
+  }
+}
+console.log(zeros(8)) // zeros {<suspended>}，生成器对象
+console.log(Array.from(zeros(8))) // [0, 0, 0, 0, 0, 0, 0, 0]，生成器对象作为可迭代对象
 
 // 产生可迭代对象
 
