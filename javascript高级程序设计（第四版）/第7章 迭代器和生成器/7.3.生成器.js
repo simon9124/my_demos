@@ -205,9 +205,94 @@ function* zeros(n) {
 console.log(zeros(8)) // zeros {<suspended>}，生成器对象
 console.log(Array.from(zeros(8))) // [0, 0, 0, 0, 0, 0, 0, 0]，生成器对象作为可迭代对象
 
+// 斐波那契数列
+function* fibonacci() {
+  let arr = [0, 1]
+  let [prev, curr] = arr
+  while (true) {
+    ;[prev, curr] = [curr, prev + curr]
+    arr.push(curr)
+    yield arr
+  }
+}
+function Fibonacci(n) {
+  if (n === 1) {
+    // 第1项
+    return 0
+  } else if (n === 2 || n === 3) {
+    // 第2、3项
+    return 1
+  } else {
+    // 第4项或之后
+    let num = 0
+    const fibo = fibonacci()
+    for (let i = 3; i <= n; i++) {
+      num = fibo.next().value
+    }
+    return num
+  }
+}
+console.log(Fibonacci(8).join()) // 0,1,1,2,3,5,8,13
+
 // 产生可迭代对象
+function* generatorFn11() {
+  yield* [1, 2, 3]
+}
+let g12 = generatorFn11()
+for (const x of generatorFn11()) {
+  console.log(x)
+  /* 
+    1
+    2
+    3
+  */
+}
+
+// yield*对于普通迭代器
+function* generatorFn12() {
+  console.log('iterValue', yield* [1, 2, 3])
+}
+for (const x of generatorFn12()) {
+  console.log('value', x)
+  /* 
+    value 1
+    value 2
+    value 3
+    iterValue undefined
+  */
+}
+
+// yield*对于生成器函数产生的迭代器
+function* innerGeneratorFn() {
+  yield 'foo'
+  return 'bar'
+}
+function* outerGeneratorFn() {
+  console.log('iterValue', yield* innerGeneratorFn())
+}
+for (const x of outerGeneratorFn()) {
+  console.log('value', x)
+  /* 
+    value foo
+    iterValue bar
+  */
+}
 
 // 使用 yield*实现递归算法
+function* nTimes(n) {
+  if (n > 0) {
+    yield* nTimes(n - 1) // 生成器产生自身，实例化另一个生成器对象
+    yield n
+  }
+}
+for (const x of nTimes(3)) {
+  console.log(x)
+  /*
+    1
+    2
+    3
+  */
+}
 
 /* 生成器作为默认迭代器 */
 
