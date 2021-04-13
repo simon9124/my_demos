@@ -295,5 +295,86 @@ for (const x of nTimes(3)) {
 }
 
 /* 生成器作为默认迭代器 */
+class Foo2 {
+  // Foo既是迭代器，又是生成器函数
+  constructor() {
+    this.values = [1, 2, 3]
+  }
+  *[Symbol.iterator]() {
+    yield* this.values
+  }
+}
+const f = new Foo2() // 产生可迭代的生成器对象
+for (const x of f) {
+  console.log(x)
+  /* 
+    1
+    2
+    3
+  */
+}
 
 /* 提前终止生成器 */
+
+function* generatorFn13() {}
+let g13 = generatorFn13() // 生成器对象
+
+console.log(g13.next) // ƒ next() { [native code] }
+console.log(g13.return) // ƒ return() { [native code] }
+console.log(g13.throw) // ƒ throw() { [native code] }
+
+// return()
+function* generatorFn14() {
+  yield* [1, 2, 3]
+}
+let g14 = generatorFn14()
+
+console.log(g14) // generatorFn14 {<suspended>}
+console.log(g14.return(5)) // {value: 5, done: true}
+console.log(g14) // generatorFn14 {<closed>}
+
+console.log(g14.next()) // { value: undefined, done: true }，已经调用过return()
+console.log(g14.next()) // { value: undefined, done: true }
+console.log(g14.next()) // { value: undefined, done: true }
+
+let g15 = generatorFn14()
+for (const x of g15) {
+  x > 1 && g15.return() // x大于1则停止生成器
+  console.log(x)
+  /* 
+    1
+    2
+    自动忽略done:true返回的value(undefined)
+  */
+}
+
+// throw()
+function* generatorFn15() {
+  yield* [1, 2, 3]
+}
+let g16 = generatorFn15()
+
+console.log(g16) // generatorFn15 {<suspended>}
+try {
+  g16.throw('foo') // 注入错误
+} catch (err) {
+  console.log(err) // 'foo'
+}
+console.log(g16) // generatorFn15 {<closed>}，错误未被处理，生成器关闭
+
+function* generatorFn16() {
+  for (const x of [1, 2, 3]) {
+    // 错误在生成器的try/catch块中抛出 -> （生成器对象已开始执行）在生成器内部被捕获
+    // 若生成器对象未开始执行，则throw()抛出的错误不会在生成器内部被捕获
+    try {
+      yield x // 在yield关键字处暂停执行
+    } catch (err) {
+      console.log(err) // 'foo'
+    }
+  }
+}
+let g17 = generatorFn16()
+
+console.log(g17.next()) // { value: 1, done: false }
+g17.throw('foo') // 注入错误
+console.log(g17.next()) // { value: 3, done: false }，跳过对应的yield
