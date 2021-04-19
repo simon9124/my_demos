@@ -255,3 +255,144 @@ dest = Object.assign(src)
 console.log(dest) // { a: 1 }
 dest.a = 2
 console.log(src) // { a: 2 }
+
+// Object.assign()不会回滚
+dest = {}
+src = {
+  a: 'foo', // 没遇到错误，执行复制
+  get b() {
+    throw new Error() // 注入错误，操作终止
+  },
+  c: 'bar', // 已遇到错误，不会执行
+}
+try {
+  Object.assign(dest, src)
+} catch (e) {}
+console.log(dest) // { a: 'foo' }，遇到错误前已经完成的修改被保留
+
+/* 8.1.5 对象标识及相等判定 */
+
+// 两个值都是 null
+//   - 两个值都是 true 或者都是 false
+//   - 两个值是由相同个数的字符按照相同的顺序组成的字符串
+//   - 两个值指向同一个对象
+//   - 两个值都是数字并且
+//   - 都是正零 +0
+//   - 都是负零 -0
+//   - 都是 NaN
+//   - 都是除零和 NaN 外的其它同一个数字
+
+console.log(undefined === undefined) // true
+console.log(null === null) // true
+console.log(+0 === 0) // true
+console.log(+0 === -0) // true // true
+console.log(-0 === 0) // true
+console.log(NaN === NaN) // false
+
+// Object.is()
+console.log(Object.is(undefined, undefined)) // true
+console.log(Object.is(null, null)) // true
+console.log(Object.is(+0, 0)) // true
+console.log(Object.is(+0, -0)) // false
+console.log(Object.is(-0, 0)) // false
+console.log(Object.is(NaN, NaN)) // true
+
+/* 8.1.6 增强的对象语法 */
+
+// 属性值简写
+var name = 'Matt'
+var person = {
+  name: name,
+}
+var person = { name }
+
+// 可计算属性
+var nameKey = 'name'
+var ageKey = 'age'
+var jobKey = 'job'
+var person = {
+  [nameKey]: 'Matt',
+  [ageKey]: 27,
+  [jobKey]: 'Software engineer',
+}
+console.log(person) // { name: 'Matt', age: 27, job: 'Software engineer' }
+
+var uniqueToken = 0
+function getUniqueKey(key) {
+  return `${key}_${uniqueToken++}`
+}
+var person = {
+  [getUniqueKey(nameKey)]: 'Matt',
+  [getUniqueKey(ageKey)]: 27,
+  [getUniqueKey(jobKey)]: 'Software engineer',
+}
+console.log(person) // { name_0: 'Matt', age_1: 27, job_2: 'Software engineer' }
+
+// 简写方法名
+var person = {
+  sayName: function (name) {
+    console.log(`My name is ${name}`)
+  },
+}
+var person = {
+  sayName(name) {
+    console.log(`My name is ${name}`)
+  },
+}
+
+var person = {
+  name_: '',
+  get name() {
+    return this.name_
+  },
+  set name(name) {
+    this.name_ = name
+  },
+  sayName() {
+    console.log(`My name is ${this.name_}`)
+  },
+}
+person.name = 'Matt'
+person.sayName() // 'My name is Matt'
+
+var methodKey = 'sayName'
+var person = {
+  [methodKey](name) {
+    console.log(`My name is ${name}`)
+  },
+}
+person.sayName('Matt') // 'My name is Matt'
+
+/* 8.1.7 对象解构 */
+var person = {
+  name: 'Matt',
+  age: 27,
+}
+var { name: personName, age: personAge } = person
+console.log(personName, personAge) // 'Matt' 27
+
+var { name, age } = person // 变量直接使用属性名称
+console.log(name, age) // 'Matt' 27
+
+var { name, job } = person // job不存在
+console.log(name, job) // 'Matt' undefined
+
+var { name, job = 'Sofrware engineer' } = person // 定义job的默认值
+console.log(name, job) // 'Matt' 'Sofrware engineer'
+
+var { length } = 'foobar' // 'foobar'转换为String包装对象
+console.log(length) // 6，字符串长度
+var { constructor: c } = 4 // 4转换为Number包装对象
+console.log(c === Number) // true，constructor指向构造函数
+
+// var { _ } = null // TypeError
+// var { _ } = undefined // TypeError
+
+var person = {
+  name: 'Matt',
+  age: 27,
+}
+let personName2,
+  personAge2 // 事先声明的变量
+;({ name: personName2, age: personAge2 } = person) // 给实现声明的变量赋值，赋值表达式必须包含在一对括号中
+console.log(personName, personAge) // 'Matt' 27
