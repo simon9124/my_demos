@@ -396,3 +396,73 @@ let personName2,
   personAge2 // 事先声明的变量
 ;({ name: personName2, age: personAge2 } = person) // 给实现声明的变量赋值，赋值表达式必须包含在一对括号中
 console.log(personName, personAge) // 'Matt' 27
+
+// 嵌套解构
+var person = {
+  name: 'Matt',
+  age: 27,
+  job: {
+    title: 'Software engineer',
+  },
+}
+var personCopy = {}
+;({ name: personCopy.name, age: personCopy.age, job: personCopy.job } = person) // 解构赋值，复制对象属性
+
+person.job.title = 'Hacker' // 修改属性，源对象和赋值对象都受影响
+console.log(person) // { name: 'Matt', age: 27, job: { title: 'Hacker' } }
+console.log(personCopy) // { name: 'Matt', age: 27, job: { title: 'Hacker' } }
+
+var {
+  job: { title },
+} = person
+console.log(title) // 'Hacker'，嵌套解构，title = person.job.title
+
+var person = {
+  job: {
+    title: 'Software engineer',
+  },
+}
+var personCopy = {}
+// ;({
+//   foo: { bar: personCopy.bar },
+//   // personCopy.bar = person.foo.bar，foo在源对象person上是undefined
+// } = person) // TypeError: Cannot read property 'bar' of undefined
+// ;({
+//   job: { title: personCopy.job.title },
+//   // personCopy.job.title = person.job.title，job在目标对象persoCopy上是undefined
+// } = person) // TypeError: Cannot set property 'title' of undefined
+
+// 部分解构
+var person = {
+  name: 'Matt',
+  age: 27,
+}
+var personName, personBar, personAge
+try {
+  ;({
+    name: personName, // personName = person.name，赋值成功，
+    foo: { bar: personBar }, // personBar = person.foo.bar，foo未在person定义，赋值失败操作中断
+    age: personAge, // 操作已中断，赋值失败
+  } = person)
+} catch (e) {}
+console.log(personName, personBar, personAge) // 'Matt' undefined undefined
+
+// 参数上下文匹配
+var person = {
+  name: 'Matt',
+  age: 27,
+}
+function printPerson(foo, { name, age }, bar) {
+  console.log(arguments)
+  console.log(name, age)
+}
+printPerson('1st', person, '2nd')
+// ["1st", {name: "Matt", age: 27}, "2nd"]
+// 'Matt' 27
+function printPerson2(foo, { name: personName, age: personAge }, bar) {
+  console.log(arguments)
+  console.log(name, age)
+}
+printPerson2('1st', person, '2nd')
+// ["1st", {name: "Matt", age: 27}, "2nd"]
+// 'Matt' 27
