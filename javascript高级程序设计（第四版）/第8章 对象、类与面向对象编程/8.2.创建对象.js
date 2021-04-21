@@ -34,14 +34,14 @@ console.log(person1 instanceof Person) // true，person1是Person的实例
 console.log(person2 instanceof Object) // true，person2是Object的实例
 console.log(person2 instanceof Person) // true，person2是Person的实例
 
-var Person2 = function () {
+var PersonExpression = function () {
   // 构造函数的函数表达式
   this.name = 'Jake'
   this.sayName = function () {
     console.log(this.name)
   }
 }
-var person1 = new Person2() // 实例化不传参数，可不加括号
+var personNoBrackets = new PersonExpression() // 实例化不传参数，可不加括号
 
 // 构造函数也是函数
 var person3 = new Person('Nicholas', 29, 'Software Engineer') // 用构造函数创建对象
@@ -78,9 +78,7 @@ function sayName() {
 }
 var person4 = new Person('Nicholas', 29, 'Software Engineer')
 
-/* 原型模式 */
-
-// 构造函数的prototype属性，指向构造函数的原型对象
+/* 8.2.4 原型模式 */
 function PersonPrototype() {}
 PersonPrototype.prototype.name = 'Nicholas' // 为PersonPrototype的原型对象添加属性
 PersonPrototype.prototype.age = 29 // 为PersonPrototype的原型对象添加属性
@@ -93,16 +91,22 @@ var person5 = new PersonPrototype()
 var person6 = new PersonPrototype()
 person5.sayName() // 'Nicholas'
 person6.sayName() // 'Nicholas'
-console.log(person5.sayName === person6.sayName) // true，prototype上创建的属性和方法，由新对象的所有实例共享
+console.log(person5.sayName === person6.sayName) // true，原型对象上创建的属性和方法，由所有实例共享
 
-// 原型对象的constructor属性，指向原型对象的构造函数
-console.log(PersonPrototype.prototype.constructor) // Function: PersonPrototype构造函数
+/* 理解原型对象 */
+console.log(PersonPrototype.prototype.constructor) // PersonPrototype构造函数，原型对象的constructor属性指向与之关联的构造函数
 console.log(PersonPrototype === PersonPrototype.prototype.constructor) // true，都指向构造函数
 
-// 实例的[[Prototype]]属性，指向实例的构造函数的原型对象
+// [[Prototype]] & __proto__
 console.log(person5.__proto__) // 原型对象，PersonPrototype {name: 'Nicholas',age: 29,job: 'Software Engineer',sayName: [Function] }
 console.log(person5.__proto__ === PersonPrototype.prototype) // true，都指向原型对象
 console.log(person5.__proto__.constructor) // Function: PersonPrototype构造函数
+console.log(person5.__proto__ === person6.__proto__) // true，共享同一个原型对象
+
+// instanceof
+console.log(person5 instanceof PersonPrototype) // true，person5是PersonPrototype的实例
+console.log(person5 instanceof Object) // true，person5是Object的实例
+console.log(PersonPrototype.prototype instanceof Object) // true，所有实例对象和原型对象都是Object的实例
 
 // isPrototypeOf()
 console.log(PersonPrototype.prototype.isPrototypeOf(person5)) // true，person5包含指向PersonPrototype的原型对象的指针
@@ -114,6 +118,38 @@ console.log(Object.getPrototypeOf(person5) === person5.__proto__) // true，都�
 console.log(Object.getPrototypeOf(person5) === PersonPrototype.prototype) // true，都指向原型对象
 console.log(Object.getPrototypeOf(person5).name) // 'Nicholas'
 console.log(Object.getPrototypeOf(person5).constructor) // Function: PersonPrototype构造函数
+
+// Object.setPrototypeOf()
+var biped = {
+  numLegs: 2,
+}
+var person = {
+  name: 'Matt',
+}
+Object.setPrototypeOf(person, biped)
+console.log(person.name) // 'Matt'
+console.log(person.numLegs) // 2
+console.log(person.__proto__) // { numLegs: 2 }，person的[[Prototype]]指针指向biped
+
+// Object.create()
+var biped2 = {
+  numLegs: 3,
+}
+var person = Object.create(biped2)
+console.log(person.numLegs) // 3
+console.log(person.__proto__) // { numLegs: 3 }，person的[[Prototype]]指针指向biped2
+
+/* 原型层级 */
+
+// 原型与 in 操作符
+
+// 更简单的原型语法
+
+// 原型的动态性
+
+// 原生对象的原型
+
+// 原型对象的问题
 
 // 实例同名属性 → 屏蔽原型的属性
 var person7 = new PersonPrototype()
