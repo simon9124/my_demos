@@ -128,7 +128,7 @@ function SubTypeParam() {
 var instance10 = new SubTypeParam()
 console.log(instance10.name, instance10.age) // 'Nicholas' 29
 
-/* 组合继承 */
+/* 8.3.3 组合继承 */
 function SuperTypeMix(name) {
   this.name = name
   this.nums = [1, 2, 3]
@@ -137,7 +137,7 @@ SuperTypeMix.prototype.sayName = function () {
   console.log(this.name)
 }
 function SubTypeMix(name, age) {
-  SuperTypeMix.call(this, name) // 盗用构造函数继承，继承实例属性（创建子类实例时，第二次调用超类构造函数，子类实例重新继承超类实例属性）
+  SuperTypeMix.call(this, name) // 盗用构造函数继承，继承实例属性（创建子类实例时，第二次调用超类构造函数，子类实例继承超类实例属性）
   this.age = age
 }
 SubTypeMix.prototype = new SuperTypeMix() // 原型链继承，继承原型方法（第一次调用超类构造函数，子类原型已经继承了超类实例和原型中的方法和属性）
@@ -162,9 +162,9 @@ delete instance11.nums // 从子类实例中删除（继承自超类实例的）
 console.log(instance11) // SuperTypeMix { name: 'Nicholas', age: 29 }，子类实例
 console.log(instance11.nums) // [ 1, 2, 3 ]，仍然可以（从子类原型中）访问到该属性
 
-/* 原型式继承 */
+/* 8.3.4 原型式继承 */
 function object(o) {
-  function F() {} //函数内部创建临时构造函数
+  function F() {} // 函数内部创建临时构造函数
   F.prototype = o // 将传入的对象作为这个构造函数的原型
   return new F() // 返回这个构造函数的新实例
 }
@@ -197,12 +197,12 @@ anotherPerson4.nums.push(4) // 引用类型属性被修改，非重新定义
 console.log(anotherPerson4.nums) // [1, 2, 3, 4]，来自person
 console.log(person2.nums) // [1, 2, 3, 4]，作为原型的引用类型属性受到影响
 
-/* 寄生式继承 */
+/* 8.3.5 寄生式继承 */
 function createAnother(original) {
   var clone = Object.create(original) // 进行原型式继承，返回一个空实例
-  console.log(clone) // {}，构造函数F的实例
+  console.log(clone) // {}，空实例，其原型是orginal对象
   clone.sayHi = function () {
-    console.log('Hi') // 给返回的实例对象添加方法
+    console.log('Hi') // 给返回的实例对象添加方法（每个实例重新创建方法）
   }
   return clone
 }
@@ -218,13 +218,22 @@ anotherPerson5.sayHi() // 'Hi'
 console.log(anotherPerson5.hasOwnProperty('sayHi')) // true，sayHi方法保存在返回的实例对象上
 console.log(anotherPerson5) // { sayHi: [Function] }
 
-/* 寄生组合式继承 */
+/* 8.3.6 寄生组合式继承 */
 function inherit(subType, superType) {
-  // 封装：原型链的混成形式
-  var prototype = Object.create(superType.prototype) // 1.创建超类型原型的副本，进行原型式继承
-  console.log(prototype.constructor) // 此时constructor指向超类型构造函数
-  prototype.constructor = subType // 2.让constructor指向子类型构造函数
-  subType.prototype = prototype // 3.将副本赋给子类型原型——原型链的混成形式，继承方法
+  /* 封装：原型链的混成形式 */
+
+  // 1.创建对象，继承超类的原型
+  var superPrototype = Object.create(superType.prototype) // superPrototype的原型是超类原型
+  console.log(superPrototype.__proto__) // 指向superType.prototype超类原型
+  console.log(superPrototype.__proto__ === superType.prototype) // true
+  console.log(superPrototype.constructor) // 此时constructor指向超类构造函数
+
+  // 2.让constructor指向子类构造函数
+  superPrototype.constructor = subType
+
+  // 3.将创建的对象赋给子类的原型
+  subType.prototype = superPrototype
+  console.log(subType.prototype.__proto__ === superType.prototype) // true，子类原型继承超类原型
 }
 
 function SuperTypeMixParasitic(name) {
@@ -235,7 +244,7 @@ SuperTypeMixParasitic.prototype.sayName = function () {
   console.log(this.name)
 }
 function SubTypeMixParasitic(name, age) {
-  SuperTypeMixParasitic.call(this, name) // 盗用构造函数，继承属性（只调用1次超类型构造函数）
+  SuperTypeMixParasitic.call(this, name) // 盗用构造函数，继承属性（只调用1次超类构造函数）
   this.age = age
 }
 
@@ -246,8 +255,8 @@ SubTypeMixParasitic.sayAge = function () {
 
 var instance13 = new SubTypeMixParasitic('Nicholas', 29)
 instance13.nums.push(4)
-console.log(instance13.nums) // [ 1, 2, 3, 4 ]，盗用构造函数继承而来，属性保存在超类型实例中
-console.log(SubTypeMixParasitic.prototype) // SubTypeMixParasitic { constructor: { [Function: SubTypeMixParasitic] sayAge: [Function] } }，子类型原型，不包含多余属性
+console.log(instance13.nums) // [ 1, 2, 3, 4 ]，盗用构造函数继承而来，属性保存在子类实例（[ 1, 2, 3, 4 ]）和超类实例（[ 1, 2, 3 ]）中
+console.log(SubTypeMixParasitic.prototype) // SubTypeMixParasitic { constructor: { [Function: SubTypeMixParasitic] sayAge: [Function] } }，子类原型不含多余属性，只继承超类原型的方法，且constructor指向子类构造函数
 
 console.log(SubTypeMixParasitic.prototype.constructor) // SubTypeMixParasitic构造函数
 console.log(instance13.__proto__ === SubTypeMixParasitic.prototype) // true
