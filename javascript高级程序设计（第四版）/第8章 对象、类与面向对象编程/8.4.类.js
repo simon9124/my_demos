@@ -37,7 +37,7 @@ var Person2 = class PersonName {
 var p = new Person2()
 p.identify()
 console.log(Person2.name) // PersonName
-// console.log(PersonName) // ReferenceError: PersonName is not defined，类表达式作用与外部，无法访问类表达式
+// console.log(PersonName) // ReferenceError: PersonName is not defined，类表达式作用域外部，无法访问类表达式
 
 /* 8.4.2 类构造函数 */
 
@@ -163,5 +163,139 @@ console.log(p9) // Foo2 {}，类实例
 console.log(p9.constructor) // [class Foo2]，类本身
 
 /* 8.4.3 实例、原型和类成员 */
+
+/* 实例成员 */
+class Person10 {
+  constructor() {
+    this.name = new String('Jack')
+    this.sayName = function () {
+      console.log(this.name)
+    }
+    this.nickNames = ['Jake', 'J-Dog']
+  }
+}
+var p10 = new Person10()
+var p11 = new Person10()
+
+console.log(p10.name) // [String: 'Jack']，字符串包装对象
+console.log(p11.name) // [String: 'Jack']，字符串包装对象
+console.log(p10.name === p11.name) // false，非同一个对象（不共享）
+console.log(p10.sayName) // ƒ () { console.log(this.name) }，function对象
+console.log(p11.sayName) // ƒ () { console.log(this.name) }，function对象
+console.log(p10.sayName === p11.sayName) // false，非同一个对象（同理，不共享）
+console.log(p10.nickNames === p11.nickNames) // false，同理↑
+
+p10.name = p10.nickNames[0]
+p11.name = p10.nickNames[1]
+p10.sayName() // 'Jake'，实例成员互不影响
+p11.sayName() // 'J-Dog'，实例成员互不影响
+
+/* 原型方法与访问器 */
+
+class Person11 {
+  constructor() {
+    // 实例方法
+    this.locate = () => {
+      console.log('instance')
+    }
+  }
+  locate() {
+    // 原型方法
+    console.log('prototype')
+  }
+  locate2() {
+    // 原型方法
+    console.log('prototype2')
+  }
+}
+var p12 = new Person11()
+p12.locate() // 'instance'，实例方法遮盖原型方法
+p12.__proto__.locate() // 'prototype'
+p12.locate2() // 'prototype2'
+
+// 属性不能定义在类块中
+class Person12 {
+  // name: 'jack' // Uncaught SyntaxError: Unexpected identifier
+}
+
+// 使用字符串、符号或计算的值，作为类方法的键
+const symbolKey = Symbol('symbolKey')
+class Person13 {
+  stringKey() {
+    // 字符串作为键
+    console.log('stringKey')
+  }
+  [symbolKey]() {
+    // 符号作为键
+    console.log('symbolKey')
+  }
+  ['computed' + 'Key']() {
+    // 计算的值作为建
+    console.log('computedKey')
+  }
+}
+
+// 获取和设置访问器
+class Person14 {
+  set setName(newName) {
+    this._name = newName
+  }
+  get getName() {
+    return this._name
+  }
+}
+var p13 = new Person14()
+p13.setName = 'Jake'
+console.log(p13.getName) // 'Jake'
+
+/* 静态类方法 */
+class Person15 {
+  constructor() {
+    // 添加到this的内容存在于不同实例上
+    this.locate = () => {
+      console.log('instance', this) // 此处的this为类实例
+    }
+  }
+  locate() {
+    // 定义在类的原型对象上
+    console.log('prototype', this) // 此处的this为类原型
+  }
+  static locate() {
+    // 定义在类本身上
+    console.log('class', this) // 此处的this为类本身
+  }
+}
+var p14 = new Person15()
+
+p14.locate() // 'instance' Person15 { locate: [Function (anonymous)] }
+p14.__proto__.locate() // 'prototype' {}
+Person15.locate() // 'class' [class Person15]
+
+// 作为实例工厂
+class Person16 {
+  constructor(age) {
+    this._age = age
+  }
+  sayAge() {
+    console.log(this._age)
+  }
+  static create() {
+    return new Person16(Math.floor(Math.random() * 100))
+  }
+}
+console.log(Person16.create()) // Person16 { _age: ... }
+
+/* 非函数原型和类成员 */
+class Person17 {
+  sayName() {
+    console.log(`${Person17.greeting} ${this.name}`)
+  }
+}
+var p15 = new Person17()
+Person17.greeting = 'My name is' // 在类上定义数据
+Person17.prototype.name = 'Jake' // 在原型上定义数据
+p15.sayName() // 'My name is Jake'
+
+/* 迭代器与生成器方法 */
 
 /* 8.4.4 继承 */
