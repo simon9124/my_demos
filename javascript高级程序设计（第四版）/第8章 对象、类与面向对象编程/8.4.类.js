@@ -298,4 +298,6 @@ p15.sayName() // 'My name is Jake'
 
 /* 迭代器与生成器方法 */
 
+class 
+
 /* 8.4.4 继承 */
