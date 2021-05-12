@@ -298,6 +298,152 @@ p15.sayName() // 'My name is Jake'
 
 /* 迭代器与生成器方法 */
 
-class 
+class Person18 {
+  *createNicknameIterator() {
+    // 在原型上定义生成器方法
+    yield 'Jack'
+    yield 'Jake'
+    yield 'J-Dog'
+  }
+  static *createJobIterator() {
+    // 在类本身定义生成器方法
+    yield 'Butcher'
+    yield 'Baker'
+    yield 'Candlestick maker'
+  }
+}
+
+var jobIter = Person18.createJobIterator() // 调用生成器函数，产生生成器对象
+console.log(jobIter.next().value) // 'Butcher'
+console.log(jobIter.next().value) // 'Baker'
+console.log(jobIter.next().value) // 'Candlestick maker'
+
+var p16 = new Person18()
+var nicknameIter = p16.createNicknameIterator() // 调用生成器函数，产生生成器对象
+console.log(nicknameIter.next().value) // 'Jack'
+console.log(nicknameIter.next().value) // 'Jake'
+console.log(nicknameIter.next().value) // 'J-Dog'
+
+// 生成器方法作为默认迭代器
+class Person19 {
+  constructor() {
+    this.nickNames = ['Jack', 'Jake', 'J-Dog']
+  }
+  *[Symbol.iterator]() {
+    // 生成器函数作为默认迭代器
+    yield* this.nickNames.entries()
+  }
+}
+
+var p17 = new Person19()
+for (let [i, n] of p17) {
+  console.log(i, n)
+  /* 
+    0 'Jack'
+    1 'Jake'
+    2 'J-Dog'
+  */
+}
+
+// 返回迭代器实例
+class Person20 {
+  constructor() {
+    this.nickNames = ['Jack', 'Jake', 'J-Dog']
+  }
+  [Symbol.iterator]() {
+    // 返回迭代器实例
+    return this.nickNames.entries()
+  }
+}
+var p18 = new Person20()
+for (let [i, n] of p18) {
+  console.log(i, n)
+  /* 
+    0 'Jack'
+    1 'Jake'
+    2 'J-Dog'
+  */
+}
 
 /* 8.4.4 继承 */
+
+/* 继承基础 */
+
+class Vehicle {}
+class Bus extends Vehicle {} // 继承类
+var b = new Bus()
+console.log(b instanceof Bus) // true
+console.log(b instanceof Vehicle) // true
+
+function Person21() {}
+class Engineer extends Person21 {} // 继承构造函数
+var p19 = new Engineer()
+console.log(p19 instanceof Engineer) // true
+console.log(p19 instanceof Person21) // true
+
+// extends关键字在类表达式中使用
+var Bus2 = class extends Vehicle {}
+
+// 子类访问父类和父类原型上定义的方法
+class Vehicle2 {
+  identifyPrototype(id) {
+    // 父类原型上定义的方法
+    console.log(id, this)
+  }
+  static identifyClass(id) {
+    // 父类本身定义的方法
+    console.log(id, this)
+  }
+}
+class Bus3 extends Vehicle2 {}
+
+var v = new Vehicle2()
+var b2 = new Bus3()
+
+v.identifyPrototype('v') // 'v' Vehicle2 {}，this为父类实例
+b2.identifyPrototype('b') // 'b' Bus3 {}，this为子类实例
+v.__proto__.identifyPrototype('v') // 'v' {}，this为父类原型
+b2.__proto__.identifyPrototype('b') // 'b' Vehicle2 {}，this为子类原型，即父类实例
+Vehicle2.identifyClass('v') // v [class Vehicle2]，this为父类本身
+Bus3.identifyClass('b') // b [class Bus3 extends Vehicle2]，this为子类本身
+
+/* 构造函数、HomeObject 和 super() */
+
+// 子类构造函数中调用super()
+class Vehicle3 {
+  constructor() {
+    this.hasEngine = true
+  }
+}
+class Bus4 extends Vehicle3 {
+  constructor() {
+    // console.log(this) // ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor，super()之前不能引用this
+    super() // 调用父类构造函数constructor
+    console.log(this) // Bus4 { hasEngine: true }，子类实例，已调用父类构造函数
+    console.log(this instanceof Vehicle3) // true
+    console.log(this instanceof Bus4) // true
+  }
+}
+new Bus4()
+
+// 子类静态方法中调用super()
+
+class Vehicle4 {
+  static identifyV() {
+    // 父类静态方法
+    console.log('vehicle4')
+  }
+}
+class Bus5 extends Vehicle4 {
+  static identifyB() {
+    // 子类静态方法
+    super.identifyV() // 调用父类静态方法
+  }
+}
+Bus5.identifyB() // 'vehicle4'
+
+/* 抽象基类 */
+
+/* 继承内置类型 */
+
+/* 类混入 */
