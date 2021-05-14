@@ -417,7 +417,6 @@ class Vehicle3 {
 }
 class Bus4 extends Vehicle3 {
   constructor() {
-    // console.log(this) // ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor，super()之前不能引用this
     super() // 调用父类构造函数constructor
     console.log(this) // Bus4 { hasEngine: true }，子类实例，已调用父类构造函数
     console.log(this instanceof Vehicle3) // true
@@ -442,8 +441,157 @@ class Bus5 extends Vehicle4 {
 }
 Bus5.identifyB() // 'vehicle4'
 
+// 使用super需注意几个问题
+class Vehicle5 {
+  constructor(id) {
+    // super() // SyntaxError: 'super' keyword unexpected here，super只能在子类构造函数和子类静态方法中使用
+    this.id = id
+  }
+}
+class Bus6 extends Vehicle5 {
+  constructor(id) {
+    // console.log(super) // SyntaxError: 'super' keyword unexpected here，不能单独引用super
+    // console.log(this) // ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor，调用super()之前不能引用this
+    super(id) // 调用父类构造函数，手动给父类构造函数传参，并将返回的实例赋给this（子类实例）
+    console.log(this) // Bus6 { id: 5 }，子类实例
+    console.log(this instanceof Vehicle5) // true
+    console.log(this instanceof Bus6) // true
+  }
+}
+new Bus6(5)
+
+class Bus7 extends Vehicle5 {} // 子类未定义构造函数
+console.log(new Bus7(6)) // Bus7 { id: 6 }，实例化时自动调用super()并传参
+
+class Bus8 extends Vehicle5 {
+  // constructor() {} // ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+  constructor(id) {
+    super(id) // 子类显式定义构造函数，要么调用super()
+  }
+}
+class Bus9 extends Vehicle5 {
+  // constructor() {} // ReferenceError: Must call super constructor in derived class before accessing 'this' or returning from derived constructor
+  constructor(id) {
+    return {} // 子类显式定义构造函数，要么返回其他对象
+  }
+}
+console.log(new Bus8(7)) // Bus8 { id: 7 }，子类实例
+console.log(new Bus9(8)) // {}，返回新对象
+
 /* 抽象基类 */
+
+class Vehicle6 {
+  constructor() {
+    console.log(new.target)
+    if (new.target === Vehicle6) {
+      // 阻止抽象基类被实例化
+      throw new Error('Vehicle6 cannot be directly instantiated')
+    }
+    if (!this.foo) {
+      // 要求子类必须定义foo()方法
+      throw new Error('Inheriting class must define foo()')
+    }
+  }
+}
+class Bus10 extends Vehicle6 {} // 子类未定义foo()方法
+class Bus11 extends Vehicle6 {
+  // 子类定义了foo()方法
+  foo() {}
+}
+
+// new Vehicle6() // [class Vehicle6]，Error: Vehicle6 cannot be directly instantiated
+// new Bus10() // [class Bus10 extends Vehicle6]，Error: Inheriting class must define foo()
+new Bus11() // [class Bus11 extends Vehicle6]
 
 /* 继承内置类型 */
 
+class SuperArray extends Array {
+  // 在子类原型上追加方法：任意洗牌
+  shuffle() {
+    for (let i = this.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[this[i], this[j]] = [this[j], this[i]]
+    }
+  }
+}
+var a = new SuperArray(1, 2, 3, 4, 5)
+console.log(a instanceof Array) // true，a是Array的实例
+console.log(a instanceof SuperArray) // true，a是SuperArray的实例
+console.log(a) // SuperArray(5) [ 1, 2, 3, 4, 5 ]
+a.shuffle()
+console.log(a) // SuperArray(5) [ 3, 1, 2, 5, 4 ]
+
+// 内置类型的方法返回新实例
+var a1 = new SuperArray(1, 2, 3, 4, 5)
+var a2 = a1.filter((x) => !!(x % 2)) // filter方法返回新的实例，实例类型与a1的一致
+console.log(a1) // SuperArray(5) [ 1, 2, 3, 4, 5 ]
+console.log(a2) // SuperArray(3) [ 1, 3, 5 ]
+console.log(a1 instanceof SuperArray) // true
+console.log(a2 instanceof SuperArray) // true
+
+// Symbol.species
+class SuperArray2 extends Array {
+  // Symbol.species定义静态获取器方法，覆盖新创建实例时返回的类
+  static get [Symbol.species]() {
+    return Array // 内置类型的方法新创建实例时，返回Array类型
+  }
+}
+var a3 = new SuperArray2(1, 2, 3, 4, 5)
+var a4 = a3.filter((x) => !!(x % 2)) // filter方法返回新的实例，实例类型已被覆盖（Array）
+console.log(a3) // SuperArray(5) [ 1, 2, 3, 4, 5 ]
+console.log(a4) // [ 1, 3, 5 ]
+console.log(a3 instanceof SuperArray2) // true
+console.log(a4 instanceof SuperArray2) // false
+
 /* 类混入 */
+
+// extends后面接表达式
+class Vehicle7 {}
+function getParentClass() {
+  console.log('evaluated expression')
+  return Vehicle7 // 表达式被解析为Vehicle7类
+}
+class Bus12 extends getParentClass {}
+new Bus12() // 'evaluated expression'
+
+// 混入模式，一个表达式连缀多个混入元素
+class Vehicle8 {}
+let FooMixin = (SuperClass) =>
+  // 表达式接收超类作为参数，返回子类
+  class extends SuperClass {
+    // 子类原型追加方法
+    foo() {
+      console.log('foo')
+    }
+  }
+let BarMixin = (SuperClass) =>
+  // 表达式接收超类作为参数，返回子类
+  class extends SuperClass {
+    // 子类原型追加方法
+    bar() {
+      console.log('bar')
+    }
+  }
+
+class Bus13 extends BarMixin(FooMixin(Vehicle8)) {} // 嵌套逐级继承：FooMixin继承Vehicle8，BarMixin继承FooMixin，Bus13继承BarMixin
+var b3 = new Bus13()
+console.log(b3) // Bus13 {}，子类实例
+b3.foo() // 'foo'，继承了超类原型上方法
+b3.bar() // 'bar'，继承了超类原型上方法
+
+// 辅助函数展开嵌套
+function mix(BaseClass, ...Mixins) {
+  /* 
+    reduce接收2个参数：对每一项都会运行的归并函数、归并起点的初始值（非必填）
+    归并函数接收4个参数：上一个归并值、当前项、当前索引、数组本身
+  */
+  return Mixins.reduce(
+    (pre, cur) => cur(pre), // 归并方法：执行当前项方法，参数为上个归并值
+    BaseClass // 归并初始值
+  )
+}
+class Bus14 extends mix(Vehicle7, FooMixin, BarMixin) {}
+var b4 = new Bus14()
+console.log(b4) // Bus14 {}
+b4.foo() // 'foo'
+b4.bar() // 'bar'
