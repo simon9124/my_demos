@@ -143,12 +143,75 @@ revocable.revoke() // 撤销代理，调用多次结果相同
 // console.log(proxy9.foo) // TypeError: Cannot perform 'get' on a proxy that has been revoked
 
 /* 9.1.6 实用反射API */
+
+/* 状态标记 */
 const o = {}
-try {
-  Object.defineProperty(o, 'foo', 'bar')
+Object.defineProperty(o, 'foo', {
+  writable: false, // 不可重写
+})
+
+// Object.defineProperty(o, 'foo', { value: 'bar' }) // TypeError: Cannot redefine property: foo，Object.defineProperty()定义不成功会抛出错误
+Reflect.defineProperty(o, 'foo', { value: 'bar' }) // Reflect.defineProperty()定义不成功不会抛出错误
+console.log(Reflect.defineProperty(o, 'foo', { value: 'bar' })) // false，Reflect.defineProperty()返回“状态标记”的布尔值
+
+// 重构后的代码
+if (Reflect.defineProperty(o, 'foo', { value: 'bar' })) {
   console.log('success')
-} catch (error) {
-  console.log('failure') // 'failure'，Object.defineProperty()定义出错会抛出错误
+} else {
+  console.log('failure') // 'failure'
 }
 
-if(Reflect.defineProperty(o, 'foo', 'bar'))
+/* 用一等函数替代操作符 */
+const o2 = {
+  foo: 1,
+  bar: 2,
+  get baz() {
+    return this.foo + this.bar
+  },
+}
+Reflect.get(o2, 'foo') // 1
+Reflect.set(o2, 'foo', 3)
+console.log(o2.foo) // 3
+Reflect.has(o2, 'foo') // true
+Reflect.deleteProperty(o2, 'bar')
+console.log(o2.bar) // undefined
+const arr = Reflect.construct(Array, [1, 2, 3])
+console.log(arr) // [ 1, 2, 3 ]
+
+/* 安全地应用函数 */
+const f1 = function () {
+  console.log(arguments[0] + this.mark)
+}
+const o3 = {
+  mark: 95,
+}
+f1.apply(o3, [15]) // 110，将f1的this绑定到o3
+Function.prototype.apply.call(f1, o3, [15]) // 110，函数的原型对象的apply方法，利用call进行绑定
+Reflect.apply(f1, o3, [15]) // 110，通过指定的参数列表发起对目标函数的调用，三个参数（目标函数、绑定的this对象、实参列表）
+
+/* 9.1.7 代理另一个代理 */
+const target7 = {
+  foo: 'bar',
+}
+const firstProxy = new Proxy(target7, {
+  // 第一层代理
+  get() {
+    console.log('first proxy')
+    return Reflect.get(...arguments)
+  },
+})
+const secondProxy = new Proxy(firstProxy, {
+  // 第二层代理
+  get() {
+    console.log('second proxy')
+    return Reflect.get(...arguments)
+  },
+})
+console.log(secondProxy.foo)
+/* 
+  'second proxy'
+  'first proxy'
+  'bar'
+*/
+
+/* 9.1.8 代理的问题与不足 */
