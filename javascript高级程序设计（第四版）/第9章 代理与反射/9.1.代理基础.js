@@ -215,3 +215,56 @@ console.log(secondProxy.foo)
 */
 
 /* 9.1.8 代理的问题与不足 */
+
+/* 代理中的this */
+const target8 = {
+  thisValEqualProxy() {
+    return this === proxy10
+    /* 
+      this指向：
+      在实例中，指向实例本身
+      在代理中，指向代理对象
+    */
+  },
+}
+const proxy10 = new Proxy(target8, {})
+console.log(target8.thisValEqualProxy()) // false
+console.log(proxy10.thisValEqualProxy()) // true
+
+// 目标对象依赖于对象标识
+const wm = new WeakMap()
+class User {
+  constructor(userId) {
+    wm.set(this, userId) // 使用目标对象作为WeakMap的键
+    /* 
+      this的指向：目标对象
+    */
+  }
+  get id() {
+    return wm.get(this)
+    /* 
+      this的指向：
+      在实例中，指向实例本身 User {}
+      在代理中，指向代理对象
+    */
+  }
+}
+
+const user = new User(123)
+console.log(wm) // WeakMap {User => 123}
+console.log(user.id) // 123
+
+const userInstanceProxy = new Proxy(user, {}) // 代理user实例，User类constructor中的this指向User类实例
+console.log(wm) // WeakMap {User => 123}，弱键未发生变化
+console.log(userInstanceProxy.id) // undefined
+
+const userClassProxy = new Proxy(User, {}) // 代理User类本身
+const proxyUser = new userClassProxy(456) // 创建代理实例，User类constructor中的this指向代理实例
+console.log(wm) // WeakMap {User => 123, User => 456}，弱键发生变化，追加了以代理作为键
+console.log(proxyUser.id) // 456
+
+/* 代理与内部槽位 */
+const target9 = new Date()
+const proxy11 = new Proxy(target9, {})
+console.log(target9.getDate()) // 24，当天日期
+// console.log(proxy11.getDate()) // TypeError: this is not a Date object.
