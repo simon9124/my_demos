@@ -71,4 +71,79 @@ proxy3.onlyNumberGoHere = '2' // 拦截操作，所赋的值为String类型
 console.log(proxy3.onlyNumberGoHere) // 1，赋值失败
 
 /* 9.3.4 函数与构造函数参数验证 */
+
+// 参数审查
+function median(...nums) {
+  return nums.sort()[Math.floor(nums.length / 2)]
+}
+const proxy4 = new Proxy(median, {
+  apply(target, thisArg, argumentsList) {
+    for (const arg of argumentsList) {
+      if (typeof arg !== 'number') {
+        // 只接收Number类型
+        throw 'Non-number argument provided'
+      }
+    }
+    return Reflect.apply(...arguments)
+  },
+})
+console.log(proxy4(4, 7, 1)) // 4
+// console.log(proxy4(4, 7, '1')) // Error: Non-number argument provided
+
+// 必须传参
+class User {
+  constructor(id) {
+    this._id = id
+  }
+}
+const proxy5 = new Proxy(User, {
+  construct(target, argumentsList, newTarget) {
+    if (argumentsList[0] === undefined) {
+      // 必须传参
+      throw 'User cannot be instantiated without id'
+    }
+    return Reflect.construct(...arguments)
+  },
+})
+new proxy5(1)
+// new proxy5() // Error: 'User cannot be instantiated without id'
+
 /* 9.3.5 数据绑定与可观察对象 */
+
+// 将创建的实例添加到全局集合
+const userList = []
+class User2 {
+  constructor(name) {
+    this._name = name
+  }
+}
+const proxy6 = new Proxy(User2, {
+  construct() {
+    const newUser = Reflect.construct(...arguments)
+    userList.push(newUser) // 将实例添加到全局集合
+    return newUser
+  },
+})
+new proxy6('John')
+new proxy6('Jacob')
+new proxy6('Jake')
+console.log(userList) // [ User2 { _name: 'John' }, User2 { _name: 'Jacob' }, User2 { _name: 'Jake' } ]
+
+// 每次插入新实例发送消息
+const eventList = []
+function emit(newValue) {
+  // console.log(newValue)
+}
+const proxy7 = new Proxy(eventList, {
+  set(target, property, value, receiver) {
+    console.log(target, property, value, receiver)
+    const result = Reflect.set(...arguments)
+    // result && emit(value)
+    if (result) {
+      emit(Reflect.get(target, property, receiver))
+    }
+    return result
+  },
+})
+proxy7.push('John')
+// proxy7.push('Jacob')
