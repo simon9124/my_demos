@@ -132,18 +132,27 @@ console.log(userList) // [ User2 { _name: 'John' }, User2 { _name: 'Jacob' }, Us
 // 每次插入新实例发送消息
 const eventList = []
 function emit(newValue) {
-  // console.log(newValue)
+  console.log(newValue)
+  /* 
+    John
+    Jacob
+  */
 }
 const proxy7 = new Proxy(eventList, {
   set(target, property, value, receiver) {
-    console.log(target, property, value, receiver)
+    console.log(target, property, value)
+    /* 
+      [] 0 John
+      [ 'John' ] length 1
+      [ 'John' ] 1 Jacob
+      [ 'John', 'Jacob' ] length 2
+    */
     const result = Reflect.set(...arguments)
-    // result && emit(value)
-    if (result) {
-      emit(Reflect.get(target, property, receiver))
+    if (result && property !== 'length') {
+      emit(value)
     }
     return result
   },
 })
 proxy7.push('John')
-// proxy7.push('Jacob')
+proxy7.push('Jacob')
