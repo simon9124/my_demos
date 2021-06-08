@@ -307,3 +307,47 @@ let sumExpression = function (num1, num2) {
 }
 
 /* 10.8 函数作为值 */
+function callSomeFunction(someFunction, someArgument) {
+  return someFunction(someArgument)
+}
+
+function add10(num) {
+  return num + 10
+}
+let result3 = callSomeFunction(add10, 10) // 访问函数的指针而不是执行函数，add10不带括号
+console.log(result3) // 20
+
+function getGreeting(name) {
+  return 'Hello,' + name // Hello,Nicholas
+}
+let result4 = callSomeFunction(getGreeting, 'Nicholas') // 访问函数的指针而不是执行函数，getGreeting不带括号
+console.log(result4) // 'Hello,Nicholas'
+
+/**
+ * 按照对象数组的某个object key，进行数组排序
+ * @param {String} key 要排序的key
+ * @param {String} sort 正序/倒序：asc/desc，默认为asc
+ */
+function arraySort(key, sort) {
+  return function (a, b) {
+    if (sort === 'asc' || sort === undefined || sort === '') {
+      // 正序：a[key] > b[key]
+      if (a[key] > b[key]) return 1
+      else if (a[key] < b[key]) return -1
+      else return 0
+    } else if (sort === 'desc') {
+      // 倒序：a[key] < b[key]
+      if (a[key] < b[key]) return 1
+      else if (a[key] > b[key]) return -1
+      else return 0
+    }
+  }
+}
+var userList = [
+  { name: 'Tony', id: 3 },
+  { name: 'Tom', id: 2 },
+  { name: 'Jack', id: 5 },
+]
+console.log(userList.sort(arraySort('id'))) // [{ name: 'Tom', id: 2 },{ name: 'Tony', id: 3 },{ name: 'Jack', id: 5 }]，按 id 正序排列
+console.log(userList.sort(arraySort('id', 'desc'))) // [{ name: 'Jack', id: 5 },{ name: 'Tony', id: 3 },{ name: 'Tom', id: 2 }]，按 id 倒序排列
+console.log(userList.sort(arraySort('name'))) // [{ name: 'Jack', id: 5 },{ name: 'Tom', id: 2 },{ name: 'Tony', id: 3 }]，按 name 正序排列
