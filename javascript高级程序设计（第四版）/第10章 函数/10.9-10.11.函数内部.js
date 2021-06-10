@@ -168,3 +168,69 @@ sayColor4() // 'red'，this指向全局对象
 bindSayColor() // 'blue'，this被绑定给对象o4
 
 /* 10.11 函数表达式 */
+
+// 函数声明提升
+sayHi() // 'Hi'，先调用后声明
+function sayHi() {
+  console.log('Hi')
+}
+
+// 函数表达式没有提升
+// sayHi2() // ReferenceError: Cannot access 'sayHi2' before initialization，不能先调用后赋值
+let sayHi2 = function sayHi() {
+  console.log('Hi')
+}
+
+// 条件块中的函数声明和函数表达式
+let condition = false
+if (condition) {
+  function sayHi3() {
+    console.log('true')
+  }
+} else {
+  function sayHi3() {
+    console.log('false')
+  }
+}
+sayHi3() // 不同浏览器的结果不同，避免在条件块中使用函数声明
+
+let sayHi4
+if (condition) {
+  sayHi4 = function () {
+    console.log('true')
+  }
+} else {
+  sayHi4 = function () {
+    console.log('false')
+  }
+}
+sayHi4() // false，可以在条件块中使用函数表达式
+
+/**
+ * 按照对象数组的某个object key，进行数组排序
+ * @param {String} key 要排序的key
+ * @param {String} sort 正序/倒序：asc/desc，默认为asc
+ */
+function arraySort(key, sort) {
+  return function (a, b) {
+    if (sort === 'asc' || sort === undefined || sort === '') {
+      // 正序：a[key] > b[key]
+      if (a[key] > b[key]) return 1
+      else if (a[key] < b[key]) return -1
+      else return 0
+    } else if (sort === 'desc') {
+      // 倒序：a[key] < b[key]
+      if (a[key] < b[key]) return 1
+      else if (a[key] > b[key]) return -1
+      else return 0
+    }
+  }
+}
+var userList = [
+  { name: 'Tony', id: 3 },
+  { name: 'Tom', id: 2 },
+  { name: 'Jack', id: 5 },
+]
+console.log(userList.sort(arraySort('id'))) // [{ name: 'Tom', id: 2 },{ name: 'Tony', id: 3 },{ name: 'Jack', id: 5 }]，按 id 正序排列
+console.log(userList.sort(arraySort('id', 'desc'))) // [{ name: 'Jack', id: 5 },{ name: 'Tony', id: 3 },{ name: 'Tom', id: 2 }]，按 id 倒序排列
+console.log(userList.sort(arraySort('name'))) // [{ name: 'Jack', id: 5 },{ name: 'Tom', id: 2 },{ name: 'Tony', id: 3 }]，按 name 正序排列
