@@ -157,3 +157,204 @@ for (let i = 0; i < 5; i++) {
 }
 
 /* 10.16 私有变量 */
+function add(num1, num2) {
+  // 3个私有变量：参数num1、参数num2、局部变量sum
+  let sum = num1 + num2
+  return sum
+}
+
+// 在构造函数中实现特权方法
+function MyObject() {
+  let privateVariable = 10
+  function privateFunction() {
+    console.log('privateFunction')
+    return false
+  }
+  // 特权方法（闭包）：访问私有变量privateVariable和私有方法privateFunction()
+  this.publicMethod = function () {
+    console.log('privateVariable', privateVariable++)
+    return privateFunction()
+  }
+}
+let obj = new MyObject()
+obj.publicMethod()
+/* 
+  privateVariable 10
+  privateFunction
+*/
+
+function Person(name) {
+  /* 私有变量name无法被直接访问到，只能通过getName()和setName()特权方法读写 */
+  this.getName = function () {
+    return name
+  }
+  this.setName = function (_name) {
+    name = _name
+  }
+}
+let person = new Person('Nicholas') // 每创建一个实例都创建一遍方法（私有方法&特权方法）
+console.log(person.getName()) // 'Nicholas'
+person.setName('Greg')
+console.log(person.getName()) // 'Greg'
+
+/* 10.16.1 静态私有变量 */
+;(function () {
+  /* 匿名函数表达式，创建私有作用域 */
+
+  // 私有变量和私有方法，被隐藏
+  let privateVariable = 10
+  function privateFunction() {
+    return false
+  }
+
+  // 构造函数：使用函数表达式 & 不使用关键字（创建在全局作用域）
+  MyObject = function () {}
+
+  // 公有方法/特权方法（闭包）：定义在构造函数的原型上
+  MyObject.prototype.publicMethod = function () {
+    console.log('privateVariable', privateVariable++)
+    return privateFunction()
+  }
+})()
+
+// 私有变量、私有方法、特权方法，均由实例共享
+;(function () {
+  // 私有变量name，被隐藏
+  let name = ''
+
+  // 构造函数，创建在全局作用域中
+  Person = function (_name) {
+    name = _name
+  }
+
+  // 特权方法，定义在构造函数原型上
+  Person.prototype.getName = function () {
+    return name
+  }
+  Person.prototype.setName = function (_name) {
+    name = _name
+  }
+})()
+
+let person1 = new Person('Nicholas')
+console.log(person1.getName()) // 'Nicholas'
+person1.setName('Matt')
+console.log(person1.getName()) // 'Matt'
+
+let person2 = new Person('Michael')
+console.log(person2.getName()) // 'Michael'，调用特权方法并修改静态私有变量
+console.log(person1.getName()) // 'Michael'，影响所有实例
+
+/* 10.16.2 模块模式 */
+let singleton = (function () {
+  /* 立即调用的函数表达式，创建私有作用域 */
+
+  // 私有变量和私有方法，被隐藏
+  let privateVariable = 10
+  function privateFunction() {
+    return false
+  }
+
+  // 返回只包含可以公开访问属性和方法的对象字面量
+  return {
+    publicProperty: true,
+    publicMethod() {
+      console.log(++privateVariable)
+      return privateFunction
+    },
+  }
+})()
+console.log(singleton) // { publicProperty: true, publicMethod: [Function: publicMethod] }
+singleton.publicMethod() // 11
+
+// 单例对象的公共接口
+function BaseComponent() {} // BaseComponent组件
+
+let application = (function () {
+  let components = new Array() // 创建私有数组components
+  components.push(new BaseComponent()) // 初始化，将BaseComponent组件的新实例添加到数组中
+
+  /* 公共接口 */
+  return {
+    // getComponentCount()特权方法：返回注册组件数量
+    getComponentCount() {
+      return components.length
+    },
+    // registerComponent()特权方法：注册组件
+    registerComponent(component) {
+      if (typeof component === 'object') {
+        components.push(component)
+      }
+    },
+    // getRegistedComponents()特权方法：查看已注册的组件
+    getRegistedComponents() {
+      return components
+    },
+  }
+})()
+
+console.log(application.getComponentCount()) // 1
+console.log(application.getRegistedComponents()) // [ BaseComponent {} ]，已注册组件BaseComponent
+
+function APPComponent() {} // APPComponent组件
+application.registerComponent(new APPComponent()) // 注册组件APPComponent
+console.log(application.getComponentCount()) // 2
+console.log(application.getRegistedComponents()) // [ BaseComponent {}, APPComponent {} ]，已注册组件BaseComponent和APPComponent
+
+/* 10.16.3 模块增强模式 */
+function CustomType() {} // 公有类型
+let singleton2 = (function () {
+  // 私有变量和私有方法，被隐藏
+  let privateVariable = 10
+  function privateFunction() {
+    return false
+  }
+
+  // 创建公有类型的实例
+  let object = new CustomType()
+
+  // 添加公有属性和方法
+  object.publicProperty = true
+  object.publicMethod = function () {
+    console.log(++privateVariable)
+    return privateFunction
+  }
+
+  // 返回实例
+  return object
+})()
+console.log(singleton2) // CustomType { publicProperty: true, publicMethod: [Function: publicMethod] }
+singleton2.publicMethod() // 11
+
+// 模块增强模式的公共接口
+let application2 = (function () {
+  let components = new Array() // 创建私有数组components
+  components.push(new BaseComponent()) // 初始化，将BaseComponent组件的新实例添加到数组中
+  let app = new BaseComponent() // 创建局部变量保存实例
+
+  /* 公共接口 */
+  // getComponentCount()特权方法：返回注册组件数量
+  app.getComponentCount = function () {
+    return components.length
+  }
+  // registerComponent()特权方法：注册组件
+  app.registerComponent = function (component) {
+    if (typeof component === 'object') {
+      components.push(component)
+    }
+  }
+  // getRegistedComponents()特权方法：查看已注册的组件
+  app.getRegistedComponents = function () {
+    return components
+  }
+
+  return app // 返回实例
+})()
+
+console.log(application2) // BaseComponent { getComponentCount: [Function (anonymous)], registerComponent: [Function (anonymous)], getRegistedComponents: [Function (anonymous)] }
+console.log(application2.getComponentCount()) // 1
+console.log(application2.getRegistedComponents()) // [ BaseComponent {} ]，已注册组件BaseComponent
+
+application2.registerComponent(new APPComponent()) // 注册组件APPComponent
+console.log(application2.getComponentCount()) // 2
+console.log(application2.getRegistedComponents()) // [ BaseComponent {}, APPComponent {} ]，已注册组件BaseComponent和APPComponent
