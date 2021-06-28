@@ -56,7 +56,7 @@ let object3 = {
 console.log(object3.getIdentity()) // 'My Object'
 console.log(object3.getIdentity) // [Function: getIdentity]，函数getIdentity()
 console.log((object3.getIdentity = object3.getIdentity)) // [Function: getIdentity]，函数getIdentity()赋值给object3.getIdentity
-console.log((object3.getIdentity = object3.getIdentity)()) // 'The Window'，赋值后在全局调用，this指向全局对象
+console.log((object3.getIdentity = object3.getIdentity)()) // 'The Window'，赋值后在全局立即调用匿名函数，this指向全局对象
 console.log((object3.funcA = object3.getIdentity)()) // 'The Window'，函数getIdentity()赋值给对象其他属性，结果相同
 object3.funcB = object3.getIdentity
 console.log(object3.funcB()) // 'My Object'，赋值后在object3调用，this指向object3
@@ -75,7 +75,7 @@ function assignHandler2() {
   element.onclick = () => {
     console.log(id) // 不直接引用element，改为引用改为引用保存着element.id的变量id
   }
-  element = null // 解除对element对象的引用，试放闭包内存
+  element = null // 解除对element对象的引用，释放闭包内存
 }
 
 /* 10.15 立即调用的函数表达式 */
@@ -302,7 +302,7 @@ console.log(application.getComponentCount()) // 2
 console.log(application.getRegistedComponents()) // [ BaseComponent {}, APPComponent {} ]，已注册组件BaseComponent和APPComponent
 
 /* 10.16.3 模块增强模式 */
-function CustomType() {} // 公有类型
+function CustomType() {} // 特定类型
 let singleton2 = (function () {
   // 私有变量和私有方法，被隐藏
   let privateVariable = 10
@@ -310,7 +310,7 @@ let singleton2 = (function () {
     return false
   }
 
-  // 创建公有类型的实例
+  // 创建特定类型的实例
   let object = new CustomType()
 
   // 添加公有属性和方法
