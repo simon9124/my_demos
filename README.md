@@ -48,6 +48,10 @@
 - 第 10 章：函数
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC10%E7%AB%A0%20%E5%87%BD%E6%95%B0/10.1-10.8.%E5%87%BD%E6%95%B0%E5%9F%BA%E7%A1%80.md">10.1-10.8.函数基础</a><br>
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC10%E7%AB%A0%20%E5%87%BD%E6%95%B0/10.9-10.11.%E5%87%BD%E6%95%B0%E5%86%85%E9%83%A8.md">10.9-10.11.函数内部</a><br>
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC10%E7%AB%A0%20%E5%87%BD%E6%95%B0/10.12-10.13.%E9%80%92%E5%BD%92.md">10.12-10.13.递归</a><br>
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC10%E7%AB%A0%20%E5%87%BD%E6%95%B0/10.14-10.16.%E9%97%AD%E5%8C%85.md">10.14-10.16.闭包</a><br>
+- 第 11 章：函数
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC11%E7%AB%A0%20%E6%9C%9F%E7%BA%A6%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0/11.1.%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B.md">11.1.异步编程</a><br>
 
 #### CSS 盒子模型：
 
