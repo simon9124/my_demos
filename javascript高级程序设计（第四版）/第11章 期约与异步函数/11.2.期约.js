@@ -69,4 +69,38 @@ setTimeout(console.log, 0, Promise.resolve(Promise.resolve(p9))) // Promise { <p
 
 // 能够包装错误对象，可能导致不符合预期的行为
 let p10 = Promise.resolve(new Error('foo'))
-setTimeout(console.log, 0, p10) // Promise {<fulfilled>: Error: foo
+// setTimeout(console.log, 0, p10) // Promise {<fulfilled>: Error: foo
+
+/* Promise.reject() */
+let p11 = new Promise((resolve, reject) => {
+  reject()
+})
+console.log(p11) // Promise {<rejected>: undefined}
+// Uncaught (in promise)
+
+let p12 = Promise.reject()
+console.log(p12) // Promise {<rejected>: undefined}
+// Uncaught (in promise)
+
+// 第一个参数为拒绝的期约的理由
+let p13 = Promise.reject(3)
+setTimeout(console.log, 0, p13) // Promise { <rejected> 3 }
+p13.then(null, (err) => setTimeout(console.log, 0, err)) // 3，参数传给后续拒绝处理程序
+
+// Promise.reject()不是幂等方法
+setTimeout(console.log, 0, Promise.reject(Promise.resolve())) // Promise {<rejected>: Promise}
+
+/* 同步/异步执行的二元性 */
+try {
+  throw new Error('foo') // 同步线程抛出错误
+} catch (error) {
+  console.log(error + '1') // Error: foo1，同步线程捕获错误
+}
+
+try {
+  Promise.reject('bar') // 同步线程使用期约
+} catch (error) {
+  console.log(error + '2') // 同步线程捕获不到拒绝的期约
+}
+// Promise {<rejected>: "bar"}，浏览器异步消息队列捕获到拒绝的期约
+// Uncaught (in promise) bar
