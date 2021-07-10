@@ -104,3 +104,80 @@ try {
 }
 // Promise {<rejected>: "bar"}，浏览器异步消息队列捕获到拒绝的期约
 // Uncaught (in promise) bar
+
+/* 11.2.3 期约的实例方法 */
+
+/* 实现 Thenable 接口 */
+class MyThenable {
+  // 实现Thenable接口的最简单的类
+  then() {}
+}
+
+/* Promise.prototype.then() */
+function onResolved(id) {
+  setTimeout(console.log, 0, id, 'resolved')
+}
+function onRejected(id) {
+  setTimeout(console.log, 0, id, 'rejected')
+}
+let p14 = new Promise((resolve, reject) => {
+  setTimeout(resolve, 3000)
+})
+let p15 = new Promise((resolve, reject) => {
+  setTimeout(reject, 3000)
+})
+
+p14.then(
+  () => {
+    onResolved('p14') // 'p14 resolved'（3秒后）
+  },
+  () => {
+    onRejected('p14')
+  }
+)
+p15.then(
+  () => {
+    onResolved('p15')
+  },
+  () => {
+    onRejected('p15') // 'p15 rejected'（3秒后）
+  }
+)
+
+// 非函数类型的参数被静默忽略
+p14.then('gobbeltygook') // 参数不是对象，静默忽略
+p14.then(() => onResolved('p14')) // 'p14 resolved'（3秒后），不传onRejected
+p15.then(null, () => onRejected('p15')) // 'p15 rejected'（3秒后），不传onResolved
+
+// 返回新的期约实例
+let p16 = Promise.resolve('foo')
+
+let result1 = p16.then() // 没有提供处理程序
+setTimeout(console.log, 0, result1) // Promise {<fulfilled>: 'foo'}，包装上一个期约解决后的值
+
+let result2 = p16.then(() => undefined) // 处理程序没有显示的返回语句
+let result3 = p16.then(() => {}) // 处理程序没有显示的返回语句
+let result4 = p16.then(() => Promise.resolve()) // 处理程序没有显示的返回语句
+setTimeout(console.log, 0, result2) // Promise {<fulfilled>: undefined}，包装默认返回值undefined
+setTimeout(console.log, 0, result3) // Promise {<fulfilled>: undefined}，包装默认返回值undefined
+setTimeout(console.log, 0, result4) // Promise {<fulfilled>: undefined}，包装默认返回值undefined
+
+let result5 = p16.then(() => 'bar') // 处理程序有显示的返回值
+let result6 = p16.then(() => Promise.resolve('bar')) // 处理程序有显示的返回值
+setTimeout(console.log, 0, result5) // Promise {<fulfilled>: 'bar'}，包装这个值
+setTimeout(console.log, 0, result6) // Promise {<fulfilled>: 'bar'}，包装这个值
+
+let result7 = p16.then(() => new Promise(() => {})) // 处理程序返回一个待定的期约
+let result8 = p16.then(() => Promise.reject('bar')) // 处理程序返回一个拒绝的期约
+// Uncaught (in promise) bar
+setTimeout(console.log, 0, result7) // Promise {<pending>}，包装返回的期约
+setTimeout(console.log, 0, result8) // Promise {<rejected>: 'bar'}，包装返回的期约
+
+let result9 = p16.then(() => {
+  throw 'baz' // 处理程序抛出异常
+})
+// Uncaught (in promise) baz
+setTimeout(console.log, 0, result9) // Promise {<rejected>: 'baz'}，包装拒绝的期约
+
+let result10 = p16.then(() => Error('qux')) // 处理程序返回错误值
+setTimeout(console.log, 0, result10) // Promise {<fulfilled>: Error: qux}，把错误对象包装在一个解决的期约中
