@@ -149,7 +149,7 @@ p14.then('gobbeltygook') // 参数不是对象，静默忽略
 p14.then(() => onResolved('p14')) // 'p14 resolved'（3秒后），不传onRejected
 p15.then(null, () => onRejected('p15')) // 'p15 rejected'（3秒后），不传onResolved
 
-// 返回新的期约实例
+// 返回新的期约实例 - 基于onResolved处理程序
 let p16 = Promise.resolve('foo')
 
 let result1 = p16.then() // 没有提供处理程序
@@ -181,3 +181,97 @@ setTimeout(console.log, 0, result9) // Promise {<rejected>: 'baz'}，包装拒�
 
 let result10 = p16.then(() => Error('qux')) // 处理程序返回错误值
 setTimeout(console.log, 0, result10) // Promise {<fulfilled>: Error: qux}，把错误对象包装在一个解决的期约中
+
+// 返回新的期约实例 - 基于onRejected处理程序
+let p17 = Promise.reject('foo')
+
+let result11 = p17.then() // 没有提供处理程序
+// Uncaught (in promise) foo
+setTimeout(console.log, 0, result11) // Promise {<rejected>: 'foo'}，包装上一个期约解决后的值
+
+let result12 = p17.then(null, () => undefined) // 处理程序没有显示的返回语句
+let result13 = p17.then(null, () => {}) // 处理程序没有显示的返回语句
+let result14 = p17.then(null, () => Promise.resolve()) // 处理程序没有显示的返回语句
+setTimeout(console.log, 0, result12) // Promise {<fulfilled>: undefined}，包装默认返回值undefined
+setTimeout(console.log, 0, result13) // Promise {<fulfilled>: undefined}，包装默认返回值undefined
+setTimeout(console.log, 0, result14) // Promise {<fulfilled>: undefined}，包装默认返回值undefined
+
+let result15 = p17.then(null, () => 'bar') // 处理程序有显示的返回值
+let result16 = p17.then(null, () => Promise.resolve('bar')) // 处理程序有显示的返回值
+setTimeout(console.log, 0, result15) // Promise {<fulfilled>: 'bar'}，包装这个值
+setTimeout(console.log, 0, result16) // Promise {<fulfilled>: 'bar'}，包装这个值
+
+let result17 = p17.then(null, () => new Promise(() => {})) // 处理程序返回一个待定的期约
+let result18 = p17.then(null, () => Promise.reject('bar')) // 处理程序返回一个拒绝的期约
+// Uncaught (in promise) bar
+setTimeout(console.log, 0, result17) // Promise {<pending>}，包装返回的期约
+setTimeout(console.log, 0, result18) // Promise {<rejected>: 'bar'}，包装返回的期约
+
+let result19 = p17.then(null, () => {
+  throw 'baz' // 处理程序抛出异常
+})
+// Uncaught (in promise) baz
+setTimeout(console.log, 0, result19) // Promise {<rejected>: 'baz'}，包装拒绝的期约
+
+let result20 = p17.then(null, () => Error('qux')) // 处理程序返回错误值
+setTimeout(console.log, 0, result20) // Promise {<fulfilled>: Error: qux}，把错误对象包装在一个解决的期约中
+
+/* Promise.prototype.catch() */
+let p18 = Promise.reject()
+let onRejected2 = function () {
+  setTimeout(console.log, 0, 'reject')
+}
+p18.then(null, onRejected2) // 'reject'
+p18.catch(onRejected2) // 'reject'，两种添加拒绝处理程序的方式是一样的
+
+let result21 = p18.then()
+let result22 = p18.catch()
+setTimeout(console.log, 0, result21)
+setTimeout(console.log, 0, result22)
+
+/* Promise.prototype.finally() */
+let p19 = Promise.resolve()
+let p20 = Promise.reject()
+let onFinally = function () {
+  setTimeout(console.log, 0, 'Finally')
+}
+p19.finally(onFinally) // 'Finally'
+p20.finally(onFinally) // 'Finally'
+
+// 返回新的期约实例 - 以下情况包装父期约的实例
+let p21 = Promise.resolve('foo')
+
+let result23 = p21.finally() // 未提供处理程序
+let result24 = p21.finally(() => undefined) // 提供了处理程序，但没有显示的返回语句
+let result25 = p21.finally(() => {}) // 提供了处理程序，但没有显示的返回语句
+let result26 = p21.finally(() => Promise.resolve()) // 提供了处理程序，但没有显示的返回语句
+let result27 = p21.finally(() => 'bar') // 提供了处理程序，且有显示的返回值
+let result28 = p21.finally(() => Promise.resolve('bar')) // 处理程序返回一个解决的期约
+let result29 = p21.finally(() => Error('qux')) // 处理程序返回错误值
+setTimeout(console.log, 0, result23) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+setTimeout(console.log, 0, result24) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+setTimeout(console.log, 0, result25) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+setTimeout(console.log, 0, result26) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+setTimeout(console.log, 0, result27) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+setTimeout(console.log, 0, result28) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+setTimeout(console.log, 0, result29) // Promise {<fulfilled>: 'foo'}，包装父期约的传递
+
+// 返回新的期约实例 - 以下情况包装相应的期约
+let result30 = p21.finally(() => new Promise(() => {})) // 处理程序返回一个待定的期约
+let result31 = p21.finally(() => Promise.reject()) // 处理程序返回一个拒绝的期约
+// Uncaught (in promise) undefined
+let result32 = p21.finally(() => {
+  throw 'baz' // 处理程序抛出错误
+})
+// Uncaught (in promise) baz
+setTimeout(console.log, 0, result30) // Promise {<pending>}，返回相应的期约
+setTimeout(console.log, 0, result31) // Promise {<rejected>: undefined}，返回相应的期约
+setTimeout(console.log, 0, result32) // Promise {<rejected>: 'baz'}，返回相应的期约
+
+// 待定的期约解决后，新期约仍后传初始期约
+let p22 = Promise.resolve('foo')
+let p23 = p22.finally(
+  () => new Promise((resolve, reject) => setTimeout(() => resolve('bar'), 100)) // 处理程序返回一个待定的期约（100毫秒后解决）
+)
+setTimeout(console.log, 0, p23) // Promise {<pending>}，返回相应的期约
+setTimeout(() => setTimeout(console.log, 0, p23), 200) // Promise {<fulfilled>: "foo"}，（200毫秒后）待定的期约已解决
