@@ -275,3 +275,187 @@ let p23 = p22.finally(
 )
 setTimeout(console.log, 0, p23) // Promise {<pending>}，返回相应的期约
 setTimeout(() => setTimeout(console.log, 0, p23), 200) // Promise {<fulfilled>: "foo"}，（200毫秒后）待定的期约已解决
+
+/* 非重入期约方法 */
+let p24 = Promise.resolve() // 解决的期约，已落定
+p24.then(() => console.log('onResolved handler')) // 与期约状态相关的onResolved处理程序
+console.log('then() returns') // 处理程序之后的同步代码
+/* 
+  'then() returns'，处理程序之后的同步代码先执行
+  'onResolved handler'
+*/
+
+// 期约在处理程序之后改变状态，处理程序仍表现非重入特性
+let synchronousResolve // 全局方法：期约状态状态
+let p25 = new Promise((resolve) => {
+  synchronousResolve = function () {
+    console.log('1: invoking resolve()')
+    resolve() // 期约状态改变
+    console.log('2: resolve() returns')
+  }
+})
+p25.then(() => console.log('4: then() handler executes')) // 与期约状态相关的onResolved处理程序
+synchronousResolve() // 处理程序之后的同步代码：期约状态改变
+console.log('3: synchronousResolve() returns') // 处理程序之后的同步代码
+/* 
+  '1: invoking resolve()'
+  '2: resolve() returns'
+  '3: synchronousResolve() returns'
+  '4: then() handler executes'
+*/
+
+// 非重入适用于onResolved、onRejected、catch()、finally()
+let p26 = Promise.resolve()
+p26.then(() => console.log('p26.then() onResolved'))
+console.log('p26.then() returns')
+
+let p27 = Promise.reject()
+p27.then(null, () => console.log('p27.then() onRejected'))
+console.log('p27.then() returns')
+
+let p28 = Promise.reject()
+p28.catch(() => console.log('p28.catch() onRejected'))
+console.log('p28.catch() returns')
+
+let p29 = Promise.resolve()
+p26.finally(() => console.log('p29.finally() onFinally'))
+console.log('p29.finally() returns')
+/* 
+  'p26.then() returns'
+  'p27.then() returns'
+  'p28.catch() returns'
+  'p29.finally() returns'
+  'p26.then() onResolved'
+  'p27.then() onRejected'
+  'p28.catch() onRejected'
+  'p29.finally() onFinally'
+*/
+
+/* 邻近处理程序的执行顺序 */
+let p30 = Promise.resolve()
+let p31 = Promise.reject()
+
+p30.then(() => setTimeout(console.log, 0, 1))
+p30.then(() => setTimeout(console.log, 0, 2))
+
+p31.then(null, () => setTimeout(console.log, 0, 3))
+p31.then(null, () => setTimeout(console.log, 0, 4))
+
+p31.catch(() => setTimeout(console.log, 0, 5))
+p31.catch(() => setTimeout(console.log, 0, 6))
+
+p30.finally(() => setTimeout(console.log, 0, 7))
+p30.finally(() => setTimeout(console.log, 0, 8))
+/* 
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+*/
+
+/* 传递解决之和拒绝理由 */
+let p32 = new Promise((resolve, reject) => resolve('foo')) // 执行函数中
+p32.then((value) => console.log(value)) // 'foo'
+let p33 = new Promise((resolve, reject) => reject('bar')) // 执行函数中
+p33.catch((reason) => console.log(reason)) // 'bar'
+
+let p34 = Promise.resolve('foo') // Promise.resolve()中
+p34.then((value) => console.log(value)) // 'foo'
+let p35 = Promise.reject('bar') // Promise.reject()中
+p35.catch((reason) => console.log(reason)) // 'bar'
+
+/* 拒绝期约与拒绝错误处理 */
+let p36 = new Promise((resolve, reject) => reject(Error('foo'))) // 在执行函数中抛出错误
+let p37 = new Promise((resolve, reject) => {
+  throw Error('foo') // 在执行函数中抛出错误
+})
+let p38 = Promise.resolve().then(() => {
+  throw Error('foo') // 在处理程序中抛出错误
+})
+let p39 = Promise.reject(Error('foo')) // 在拒绝的期约中抛出错误
+setTimeout(console.log, 0, p36) // Promise {<rejected>: Error: foo
+setTimeout(console.log, 0, p37) // Promise {<rejected>: Error: foo
+setTimeout(console.log, 0, p38) // Promise {<rejected>: Error: foo
+setTimeout(console.log, 0, p39) // Promise {<rejected>: Error: foo
+
+/* 上述拒绝期约会抛出4个未捕获错误：栈追踪信息
+  Uncaught (in promise) Error: foo
+  at <anonymous>:1:51
+  at new Promise (<anonymous>)
+  at <anonymous>:1:11
+  (anonymous)	@	VM1402:1
+  (anonymous)	@	VM1402:1
+
+  Uncaught (in promise) Error: foo
+  at <anonymous>:3:9
+  at new Promise (<anonymous>)
+  at <anonymous>:2:11
+  (anonymous)	@	VM1402:3
+  (anonymous)	@	VM1402:2
+
+  Uncaught (in promise) Error: foo
+  at <anonymous>:8:26
+  (anonymous)	@	VM1402:8
+
+  Uncaught (in promise) Error: foo
+  at <anonymous>:6:9
+  (anonymous)	@	VM1402:6
+  Promise.then (async)		
+  (anonymous)	@	VM1402:5
+*/
+
+// 异步错误 vs 同步错误
+// throw Error('foo') // 同步代码抛出错误（try/catch中能捕获）
+// console.log('bar') // 后续任何指令不再执行
+// Uncaught Error: foo，浏览器消息队列
+
+Promise.reject(Error('foo')) // 期约中抛出错误（try/catch中捕获不到）
+console.log('bar') // 'bar'，同步指令继续执行
+// Uncaught (in promise) Error: foo，浏览器消息队列
+
+Promise.reject(Error('foo')).catch((e) => {
+  console.log(e) // 'Error: foo'，在期约中捕获
+})
+
+// 执行函数中的错误，在解决或拒绝期约之前，仍可用try/catch捕获
+let p40 = new Promise((resolve, reject) => {
+  try {
+    throw Error('foo')
+  } catch (error) {}
+  resolve('bar')
+})
+setTimeout(console.log, 0, p40) // Promise {<fulfilled>: 'bar'}
+
+// onRejected捕获异步错误后,返回一个解决的期约
+console.log('begin synchronous execution')
+try {
+  throw Error('foo') // 抛出同步错误
+} catch (error) {
+  console.log('caught error', error) // 捕获同步错误
+}
+console.log('continue synchronous execution')
+/* 
+  'begin synchronous execution'
+  'caught error Error: foo'
+  'continue synchronous execution'
+*/
+
+new Promise((resolve, reject) => {
+  console.log('begin synchronous execution')
+  reject(Error('bar')) // 抛出异步错误
+})
+  .catch((e) => {
+    console.log('caught error', e) // 捕获异步错误
+  })
+  .then(() => {
+    console.log('continue synchronous execution')
+  })
+/* 
+  'begin synchronous execution'
+  'caught error Error: bar'
+  'continue synchronous execution'
+*/
