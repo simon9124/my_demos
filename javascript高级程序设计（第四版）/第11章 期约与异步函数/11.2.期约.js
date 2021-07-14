@@ -459,3 +459,170 @@ new Promise((resolve, reject) => {
   'caught error Error: bar'
   'continue synchronous execution'
 */
+
+/* 11.2.4 期约连锁与期约合成 */
+
+/* 期约连锁 */
+
+// 串行化同步任务
+let p41 = new Promise((resolve, reject) => {
+  console.log('first')
+  resolve()
+})
+p41
+  .then(() => console.log('second'))
+  .then(() => console.log('third'))
+  .then(() => console.log('fourth'))
+/* 
+  'first'
+  'second'
+  'third'
+  'fourth'
+*/
+
+// 串行化异步任务
+let p42 = new Promise((resolve, reject) => {
+  console.log('p42 first')
+  setTimeout(resolve, 1000)
+})
+p42
+  .then(
+    () =>
+      // 执行器返回期约实例
+      new Promise((resolve, reject) => {
+        console.log('p42 second')
+        setTimeout(resolve, 1000)
+      })
+  )
+  .then(
+    () =>
+      // 执行器返回期约实例
+      new Promise((resolve, reject) => {
+        console.log('p42 third')
+        setTimeout(resolve, 1000)
+      })
+  )
+  .then(
+    () =>
+      // 执行器返回期约实例
+      new Promise((resolve, reject) => {
+        console.log('p42 fourth')
+        setTimeout(resolve, 1000)
+      })
+  )
+/* 
+  'p42 first'（1秒后）
+  'p42 second'（2秒后）
+  'p42 third'（3秒后）
+  'p42 fourth'（4秒后）
+*/
+
+// 工厂函数封装
+function delayedResolve(str) {
+  return new Promise((resolve, reject) => {
+    console.log(str)
+    setTimeout(resolve, 1000)
+  })
+}
+delayedResolve('p42 first')
+  .then(() => delayedResolve('p42 second'))
+  .then(() => delayedResolve('p42 third'))
+  .then(() => delayedResolve('p42 fourth'))
+/* 
+  'p42 first'（1秒后）
+  'p42 second'（2秒后）
+  'p42 third'（3秒后）
+  'p42 fourth'（4秒后）
+*/
+
+// 不使用期约会产生“回调地狱”
+function delayedNotPromise(str, callback = null) {
+  setTimeout(() => {
+    console.log(str)
+    callback && callback()
+  }, 1000)
+}
+delayedNotPromise('p42 first', () => {
+  delayedNotPromise('p42 second', () => {
+    delayedNotPromise('p42 third', () => {
+      delayedNotPromise('p42 fourth', () => {})
+    })
+  })
+})
+/* 
+  'p42 first'（1秒后）
+  'p42 second'（2秒后）
+  'p42 third'（3秒后）
+  'p42 fourth'（4秒后）
+*/
+
+// then()、catch()、finally()任意期约连锁
+let p43 = new Promise((resolve, reject) => {
+  console.log('p43')
+  reject()
+})
+p43
+  .catch(() => console.log('p43 catch'))
+  .then(() => console.log('p43 then'))
+  .finally(() => console.log('p43 finally'))
+/* 
+  'p43'
+  'p43 catch'
+  'p43 then'
+  'p43 finally'
+*/
+
+/* 期约图 */
+let A = new Promise((resolve, reject) => {
+  console.log('A')
+  resolve()
+})
+let B = A.then(() => console.log('B'))
+let C = A.then(() => console.log('C'))
+B.then(() => console.log('D'))
+B.then(() => console.log('E'))
+C.then(() => console.log('F'))
+C.then(() => console.log('F'))
+/* 
+  'A'
+  'B'
+  'C'
+  'D'
+  'E'
+  'F'
+*/
+
+/* Promise.all()和 Promise.race() */
+
+// Promise.all()
+Promise.all([Promise.resolve(), Promise.resolve()]) // 接收1组可迭代对象
+Promise.all([3, 4]) // 可迭代对象中的元素通过Promise.resolve()转换为期约
+Promise.all([]) // 空迭代对象等价于Promise.resolve()
+// Promise.all() // TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))，参数必填
+
+let p44 = Promise.all([
+  Promise.resolve(),
+  new Promise((resolve, reject) => setTimeout(resolve, 1000)),
+])
+p44.then(() => setTimeout(console.log, 0, 'all() resolved!')) // 'all() resolved!'（1秒后，非0秒，需等包含的期约先解决）
+
+let p45 = Promise.all([new Promise(() => {}), Promise.resolve()]) // 包含的期约有待定的
+setTimeout(console.log, 0, p45) // Promise {<pending>}，合成待定的期约
+let p46 = Promise.all([new Promise(() => {}), Promise.reject()]) // 包含的期约有拒绝的（也有待定的）
+// Uncaught (in promise) undefined
+setTimeout(console.log, 0, p46) // Promise {<rejected>: undefined}，合成拒绝的期约
+
+let p47 = Promise.all([
+  Promise.resolve(1),
+  Promise.resolve(),
+  Promise.resolve(3),
+]) // 包含的所有期约都解决
+setTimeout(console.log, 0, p47) // [1, undefined, 3]
+
+let p48 = Promise.all([
+  Promise.reject(3), // 第一个拒绝的期约，拒绝理由为3
+  new Promise((resolve, reject) => setTimeout(reject, 1000, 4)), // 第二个拒绝的期约，拒绝理由为4
+])
+// Uncaught (in promise) 3
+setTimeout(console.log, 0, p48) // Promise {<rejected>: 3}，第一个拒绝理由作为合成期约的拒绝理由
+p48.catch((reason) => setTimeout(console.log, 2, reason)) // 3，第一个拒绝理由作为合成期约的拒绝理由，但浏览器不会显示未处理的错误（Uncaught (in promise) 3），期约状态为Promise {<fulfilled>: 4}
