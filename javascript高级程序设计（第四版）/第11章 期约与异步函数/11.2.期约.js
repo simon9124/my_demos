@@ -625,4 +625,38 @@ let p48 = Promise.all([
 ])
 // Uncaught (in promise) 3
 setTimeout(console.log, 0, p48) // Promise {<rejected>: 3}，第一个拒绝理由作为合成期约的拒绝理由
-p48.catch((reason) => setTimeout(console.log, 2, reason)) // 3，第一个拒绝理由作为合成期约的拒绝理由，但浏览器不会显示未处理的错误（Uncaught (in promise) 3），期约状态为Promise {<fulfilled>: 4}
+p48.catch((reason) => setTimeout(console.log, 2, reason)) // 3，第一个拒绝理由作为合成期约的拒绝理由，但浏览器不会显示未处理的错误（Uncaught (in promise) 3）
+
+// Promise.race()
+Promise.race([Promise.resolve(), Promise.resolve()]) // 接收1组可迭代对象
+Promise.race([3, 4]) // 可迭代对象中的元素通过Promise.resolve()转换为期约
+Promise.race([]) // 空迭代对象等价于Promise.resolve()
+// Promise.all() // TypeError: undefined is not iterable (cannot read property Symbol(Symbol.iterator))，参数必填
+
+let p49 = Promise.race([
+  Promise.resolve(3),
+  new Promise((resolve, reject) => setTimeout(reject, 1000)),
+])
+setTimeout(console.log, 0, p49) // Promise {<fulfilled>: 3}，解决先发生，超时后的拒绝被忽略
+
+let p50 = Promise.race([
+  Promise.reject(4),
+  new Promise((resolve, reject) => setTimeout(resolve, 1000)),
+])
+// Uncaught (in promise) 4
+setTimeout(console.log, 0, p50) // Promise {<rejected>: 4}，拒绝先发生，超时后的解决被忽略
+
+let p51 = Promise.race([
+  Promise.resolve(1),
+  Promise.resolve(),
+  Promise.resolve(3),
+])
+setTimeout(console.log, 0, p51) // Promise {<fulfilled>: 1}，迭代顺序决定落定顺序
+
+let p52 = Promise.race([
+  Promise.reject(3), // 第一个拒绝的期约，拒绝理由为3
+  new Promise((resolve, reject) => setTimeout(reject, 1000, 4)), // 第二个拒绝的期约，拒绝理由为4
+])
+// Uncaught (in promise) 3
+setTimeout(console.log, 0, p52) // Promise {<rejected>: 3}，第一个拒绝理由作为合成期约的拒绝理由
+p52.catch((reason) => setTimeout(console.log, 2, reason)) // 3，第一个拒绝理由作为合成期约的拒绝理由，但浏览器不会显示未处理的错误（Uncaught (in promise) 3）
