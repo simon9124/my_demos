@@ -483,7 +483,7 @@ let sum1 = values.reduce((pre, cur, index, arr) => {
     10 5 4
   */
   return pre + cur
-}) // 省略归并起点值，归并函数第1个参数为数组第2项，第2个参数为数组第2项
+}) // 省略归并起点值，归并函数第1个参数为数组第1项，第2个参数为数组第2项
 console.log(sum1) // 15
 
 let sum2 = values.reduce((pre, cur, index, arr) => {
