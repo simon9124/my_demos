@@ -1,0 +1,58 @@
+ <!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+</head>
+
+<body>
+  <button id="start">Start</button>
+  <button id="cancel">Cancel</button>
+</body>
+
+<script>
+  
+const startButton = document.querySelector('#start') // 开始按钮
+const cancelButton = document.querySelector('#cancel') // 结束按钮
+let cancelBtnHasClickEvent = false // 结束按钮是否已添加点击事件
+/* 
+  书中案例每次点击“开始”按钮，都会重新实例化CancelToken实例，给cancelToken追加一个点击事件，打印的'delay cancelled'会随之越来越多
+  这里追加一个全局变量cancelBtnHasClickEvent，确保只在首次点击“开始”按钮时，给cancelToken只追加一次点击事件
+*/
+  
+// CancelToken类，包装一个期约，把解决方法暴露给cancelFn参数
+class CancelToken {
+  constructor(cancelFn) {
+    this.promise = new Promise((resolve, reject) => {
+      cancelFn(() => {
+        setTimeout(console.log, 0, 'delay cancelled') // 取消计时
+        resolve() // 期约解决
+      })
+    })
+  }
+}
+
+// 点击事件：开始计时、实例化新的CancelToken实例
+function cancellabelDelayedResolve(delay) {
+  setTimeout(console.log, 0, 'set delay') // 开始计时
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => {
+      setTimeout(console.log, 0, 'delay resolve') // 经延时后触发
+      resolve()
+    }, delay)
+    // 实例化新的CancelToken实例
+    const cancelToken = new CancelToken((cancelCallback) =>{
+      (cancelBtnHasClickEvent === false) && cancelButton.addEventListener('click', cancelCallback) // 结束按钮添加点击事件
+      cancelBtnHasClickEvent = true // 结束按钮已添加点击事件
+    })
+    cancelToken.promise.then(() => clearTimeout(id)) // 触发令牌实例中的期约解决
+  })
+}
+
+startButton.addEventListener('click', () => cancellabelDelayedResolve(1000)) // 开始按钮添加点击事件
+
+</script>
+
+</html>

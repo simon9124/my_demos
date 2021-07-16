@@ -660,3 +660,52 @@ let p52 = Promise.race([
 // Uncaught (in promise) 3
 setTimeout(console.log, 0, p52) // Promise {<rejected>: 3}，第一个拒绝理由作为合成期约的拒绝理由
 p52.catch((reason) => setTimeout(console.log, 2, reason)) // 3，第一个拒绝理由作为合成期约的拒绝理由，但浏览器不会显示未处理的错误（Uncaught (in promise) 3）
+
+/* 串行期约合成 */
+function addTwo(x) {
+  return x + 2
+}
+function addThree(x) {
+  return x + 3
+}
+function addFive(x) {
+  return x + 5
+}
+
+// 函数合成
+function addTen(x) {
+  return addFive(addThree(addTwo(x)))
+}
+console.log(addTen(7)) // 17
+
+// 期约合成
+function addTen(x) {
+  return Promise.resolve(x).then(addTwo).then(addThree).then(addFive)
+}
+setTimeout(console.log, 0, addTen(8)) // Promise {<fulfilled>: 18}
+addTen(8).then((result) => console.log(result)) // 18
+
+// 使用reduce()简化
+function addTen(x) {
+  return [addTwo, addThree, addFive].reduce((pre, cur) => {
+    return pre.then(cur)
+  }, Promise.resolve(x)) // 归并起点值（归并函数第1个参数）为Promise.resolve(x)，第2个参数为数组第1项addTwo
+}
+setTimeout(console.log, 0, addTen(9)) // Promise {<fulfilled>: 19}
+addTen(9).then((result) => console.log(result)) // 19
+
+// 封装通用方法
+function compose(...fns) {
+  return (x) =>
+    fns.reduce((pre, cur) => {
+      return pre.then(cur)
+    }, Promise.resolve(x))
+}
+addTen = compose(addTwo, addThree, addFive)
+addTen(10).then((result) => console.log(result)) // 20
+
+/* 11.2.5 期约扩展 */
+
+/* 期约取消 */
+
+/* 期约进度通知 */
