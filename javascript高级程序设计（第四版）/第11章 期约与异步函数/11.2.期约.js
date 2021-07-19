@@ -709,3 +709,73 @@ addTen(10).then((result) => console.log(result)) // 20
 /* 期约取消 */
 
 /* 期约进度通知 */
+
+// 子类TrackablePromise，继承父类Promise
+class TrackablePromise extends Promise {
+  // 子类构造函数，接收1个参数（executor函数）
+  constructor(executor) {
+    const notifyHandlers = []
+    // super()调用父类构造函数constructor()，传入参数（执行器函数）
+    super((resolve, reject) => {
+      // 执行executor()函数，参数为传给TrackablePromise子类的参数，返回执行的结果
+      return executor(resolve, reject, (status) => {
+        console.log(status)
+        /* 
+          '80% remaining'（约1秒后）
+          '60% remaining'（约2秒后）
+          'remaining'（约3秒后）
+          'remaining'（约4秒后）
+        */
+        notifyHandlers.map((handler) => {
+          return handler(status)
+        })
+      })
+    })
+    this.notifyHandlers = notifyHandlers
+  }
+  // 添加notify方法，接收1个参数（notifyhandler函数）
+  notify(notifyHandler) {
+    this.notifyHandlers.push(notifyHandler)
+    return this
+  }
+}
+
+// 创建子类实例，传入参数（executor函数）
+let p53 = new TrackablePromise((resolve, reject, notify) => {
+  function countdown(x) {
+    if (x > 0) {
+      notify(`${20 * x}% remaining`)
+      setTimeout(() => countdown(x - 1), 1000)
+    } else {
+      resolve()
+    }
+  }
+  countdown(5)
+})
+console.log(p53) // Promise {<pending>, notifyHandlers: Array(0)}，TrackablePromise实例（子类期约）
+
+p53.notify((x) => setTimeout(console.log, 0, 'progress:', x)) // 调用期约实例的notify()方法，传入参数（notifyhandler函数）
+p53.then(() => setTimeout(console.log, 0, 'completed')) // 调用期约实例的then()方法，传入参数（onResolved处理程序）
+/* 
+  'progress: 80% remaining'（约1秒后）
+  'progress: 60% remaining'（约2秒后）
+  'progress: 40% remaining'（约3秒后）
+  'progress: 20% remaining'（约4秒后）
+  'completed'（约5秒后）
+*/
+
+p53
+  .notify((x) => setTimeout(console.log, 0, 'a:', x))
+  .notify((x) => setTimeout(console.log, 0, 'b:', x)) // notice()返回期约，连缀调用
+p53.then(() => setTimeout(console.log, 0, 'completed'))
+/* 
+  'a: 80% remaining'（约1秒后）
+  'b: 80% remaining'（约1秒后）
+  'a: 60% remaining'（约2秒后）
+  'b: 60% remaining'（约2秒后）
+  'a: 40% remaining'（约3秒后）
+  'b: 40% remaining'（约3秒后）
+  'a: 20% remaining'（约4秒后）
+  'b: 20% remaining'（约4秒后）
+  'completed'（约5秒后）
+*/
