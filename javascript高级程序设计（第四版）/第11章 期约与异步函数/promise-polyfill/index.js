@@ -1,0 +1,296 @@
+/* 
+  promise-polyfill源码：https://github.com/taylorhakes/promise-polyfill
+*/
+
+import promiseFinally from './finally'
+import allSettled from './allSettled'
+
+// Store setTimeout reference so promise-polyfill will be unaffected by
+// other code modifying setTimeout (like sinon.useFakeTimers())
+var setTimeoutFunc = setTimeout
+// @ts-ignore
+var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null
+
+function isArray(x) {
+  return Boolean(x && typeof x.length !== 'undefined')
+}
+
+function noop() {}
+
+// Polyfill for Function.prototype.bind
+function bind(fn, thisArg) {
+  return function () {
+    fn.apply(thisArg, arguments)
+  }
+}
+
+/**
+ * @constructor Promise构造函数
+ * @param {Function} fn 执行器函数(resolve,reject)=>{}，是一个箭头函数
+ */
+function Promise(fn) {
+  if (!(this instanceof Promise))
+    throw new TypeError('Promises must be constructed via new') // 如果实例对象不是Promise的实例，抛出错误
+  if (typeof fn !== 'function') throw new TypeError('not a function') // 如果传入的“执行器函数”不是function类型，抛出错误
+
+  /** @type {!number}
+   * 内部状态码
+   * 0: pending，当前Promise正在执行中，默认值
+   * 1: fulfilled, 执行了resolve函数，且参数_value不是期约，即_value instanceof Promise === false
+   * 2: rejected，执行了reject函数
+   * 3: fulfilled，执行了resolve函数，且参数_value是期约，即_value instanceof Promise === true
+   */
+  this._state = 0
+
+  /** @type {!boolean}
+   * 是否被处理过
+   */
+  this._handled = false
+
+  /** @type {Promise|undefined}
+   * resolve或reject的参数（解决值/拒绝理由）
+   */
+  this._value = undefined
+
+  /** @type {!Array<!Function>}
+   * 存放Handle实例对象的数组，缓存then方法传入的回调
+   * 保存obj,obj包含3个参数：当前promise的onFulfilled和onRejected回调方法、当前promise的完成后要执行的promise
+   * 当前Promise的resolve或reject触发调用后，forEach这个_deferreds数组中的每个Handle实例去处理对应的onFulfilled和onRejected方法
+   */
+  this._deferreds = []
+
+  doResolve(fn, this) // 调用并传入fn函数，this为期约实例
+}
+
+// handle()方法：核心
+function handle(self, deferred) {
+  while (self._state === 3) {
+    self = self._value
+  }
+  if (self._state === 0) {
+    self._deferreds.push(deferred)
+    return
+  }
+  self._handled = true
+  Promise._immediateFn(function () {
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected
+    if (cb === null) {
+      ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
+      return
+    }
+    var ret
+    try {
+      ret = cb(self._value)
+    } catch (e) {
+      reject(deferred.promise, e)
+      return
+    }
+    resolve(deferred.promise, ret)
+  })
+}
+
+// resolve()方法
+function resolve(self, newValue) {
+  try {
+    // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+    if (newValue === self)
+      throw new TypeError('A promise cannot be resolved with itself.') // resolve的值不能为期约实例本身（否则将导致无限循环）
+    if (
+      newValue &&
+      (typeof newValue === 'object' || typeof newValue === 'function') // 如果被resolve值为Promise对象的情况，特殊处理
+    ) {
+      var then = newValue.then
+      if (newValue instanceof Promise) {
+        self._state = 3 // resolve为promise对象，_state = 3
+        self._value = newValue
+        finale(self)
+        return
+      } else if (typeof then === 'function') {
+        // 兼容“类Promise对象”（thenable）的处理方式，对其then方法继续执行doResolve
+        doResolve(bind(then, newValue), self) // 将then方法bind，确保期约实例能够调用then方法
+        return
+      }
+    }
+    self._state = 1 // resolve为（非期约）正常值的时候，_state = 1
+    self._value = newValue
+    finale(self) // self为期约实例本身，还拥有_state、_handled（false）、_value、_deferreds（[]）四个属性
+  } catch (e) {
+    reject(self, e)
+  }
+}
+
+// reject()方法
+function reject(self, newValue) {
+  self._state = 2 // reject的时候，_state = 2
+  self._value = newValue
+  finale(self)
+}
+
+// finale()方法，调用Promise内部的handle()方法 ，消费self._deferreds队列
+function finale(self) {
+  if (self._state === 2 && self._deferreds.length === 0) {
+    // 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告
+    Promise._immediateFn(function () {
+      if (!self._handled) {
+        Promise._unhandledRejectionFn(self._value) // 给出警告
+      }
+    })
+  }
+
+  for (var i = 0, len = self._deferreds.length; i < len; i++) {
+    // 循环_deferreds数组，每一项都执行handle()方法
+    handle(self, self._deferreds[i])
+  }
+  self._deferreds = null // 全部执行后，将_deferreds数组重置为null
+}
+
+/** Handler构造函数
+ * @constructor
+ * @param onFulfilled resolve 回调函数
+ * @param onRejected reject 回调函数
+ * @param promise 下一个 promise 实例对象
+ * 将 onFulfilled、onRejected 和 promise 三个内容 “打包起来” 作为一个整体方便后面调用
+ */
+function Handler(onFulfilled, onRejected, promise) {
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null
+  this.promise = promise
+}
+
+/**
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, self) {
+  var done = false // 初始化done，确保resolve或reject只执行一次
+  try {
+    /* 立即执行（此时并非异步）传入的执行器函数fn(resolve,reject) */
+    fn(
+      // fn的resolve回调
+      function (value) {
+        if (done) return
+        done = true
+        resolve(self, value) // 调用resolve()方法，self为期约实例，value为解决值
+      },
+      // fn的reject回调
+      function (reason) {
+        if (done) return
+        done = true
+        reject(self, reason) // 调用reject()方法，self为期约实例，value为拒绝理由
+      }
+    )
+  } catch (ex) {
+    if (done) return
+    done = true
+    reject(self, ex) // 调用reject()方法
+  }
+}
+
+// .catch()方法，在then()上做一层封装，只接收onRejected
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected)
+}
+
+// .then()方法，支持链式回调，每个then()方法返回新的Promise实例
+Promise.prototype.then = function (onFulfilled, onRejected) {
+  // @ts-ignore
+  var prom = new this.constructor(noop) // 在期约实例上执行noop()方法
+  handle(this, new Handler(onFulfilled, onRejected, prom)) // new Handler存储调用then的promise及then的参数
+  return prom
+}
+
+// .finally()
+Promise.prototype['finally'] = promiseFinally
+
+Promise.all = function (arr) {
+  return new Promise(function (resolve, reject) {
+    if (!isArray(arr)) {
+      return reject(new TypeError('Promise.all accepts an array'))
+    }
+
+    var args = Array.prototype.slice.call(arr)
+    if (args.length === 0) return resolve([])
+    var remaining = args.length
+
+    function res(i, val) {
+      try {
+        if (val && (typeof val === 'object' || typeof val === 'function')) {
+          var then = val.then
+          if (typeof then === 'function') {
+            then.call(
+              val,
+              function (val) {
+                res(i, val)
+              },
+              reject
+            )
+            return
+          }
+        }
+        args[i] = val
+        if (--remaining === 0) {
+          resolve(args)
+        }
+      } catch (ex) {
+        reject(ex)
+      }
+    }
+
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i])
+    }
+  })
+}
+
+Promise.allSettled = allSettled
+
+Promise.resolve = function (value) {
+  if (value && typeof value === 'object' && value.constructor === Promise) {
+    return value
+  }
+
+  return new Promise(function (resolve) {
+    resolve(value)
+  })
+}
+
+Promise.reject = function (value) {
+  return new Promise(function (resolve, reject) {
+    reject(value)
+  })
+}
+
+Promise.race = function (arr) {
+  return new Promise(function (resolve, reject) {
+    if (!isArray(arr)) {
+      return reject(new TypeError('Promise.race accepts an array'))
+    }
+
+    for (var i = 0, len = arr.length; i < len; i++) {
+      Promise.resolve(arr[i]).then(resolve, reject)
+    }
+  })
+}
+
+// Use polyfill for setImmediate for performance gains
+Promise._immediateFn =
+  // @ts-ignore
+  (typeof setImmediateFunc === 'function' &&
+    function (fn) {
+      // @ts-ignore
+      setImmediateFunc(fn)
+    }) ||
+  function (fn) {
+    setTimeoutFunc(fn, 0)
+  }
+
+// _unhandledRejectionFn()方法，在浏览器给出警告
+Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+  if (typeof console !== 'undefined' && console) {
+    console.warn('Possible Unhandled Promise Rejection:', err) // eslint-disable-line no-console，浏览器给出警告
+  }
+}
+
+export default Promise
