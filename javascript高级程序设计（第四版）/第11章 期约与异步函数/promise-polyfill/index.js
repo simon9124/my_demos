@@ -54,7 +54,7 @@ function Promise(fn) {
 
   /** @type {!Array<!Function>}
    * 存放Handle实例对象的数组，缓存then方法传入的回调
-   * 保存obj,obj包含3个参数：当前promise的onFulfilled和onRejected回调方法、当前promise的完成后要执行的promise
+   * 保存obj，obj包含3个参数：当前promise的onFulfilled和onRejected回调方法、当前promise的完成后要执行的promise
    * 当前Promise的resolve或reject触发调用后，forEach这个_deferreds数组中的每个Handle实例去处理对应的onFulfilled和onRejected方法
    */
   this._deferreds = []
@@ -64,27 +64,39 @@ function Promise(fn) {
 
 // handle()方法：核心
 function handle(self, deferred) {
+  /* 如果参数为期约 */
   while (self._state === 3) {
-    self = self._value
+    self = self._value // 当前处理变更到了新的Promise对象上
   }
+
+  /* 如果是pendding状态，即还没有执行resolve()或reject()方法 */
   if (self._state === 0) {
-    self._deferreds.push(deferred)
+    self._deferreds.push(deferred) // 将deferred放入_deferrends数组，然后继续等待
     return
   }
-  self._handled = true
+  self._handled = true // 如果不是上述情况，标记当前进行的promise._handled为true
+
+  /** 如果执行了resolve()或reject()方法，则通过事件循环异步来做回调的处理 **/
   Promise._immediateFn(function () {
     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected
+
+    /* 如果自己没有onFulfilled或onRejected回调函数，则调用下一个Promise对象的回调，并携带当前的_value值 */
     if (cb === null) {
       ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
       return
     }
+
+    /* 自己有onFulfilled或onRejected回调函数，则执行自己的回调 */
     var ret
     try {
       ret = cb(self._value)
     } catch (e) {
+      /* 处理下一个Promise的catch回调方法，ret作为上一个Promise catch回调return的值，返回给下一个Promise catch作为输入值 */
       reject(deferred.promise, e)
       return
     }
+
+    /* 处理下一个Promise的then回调方法，ret作为上一个Promise then回调return的值，返回给下一个Promise then作为输入值 */
     resolve(deferred.promise, ret)
   })
 }
@@ -101,7 +113,8 @@ function resolve(self, newValue) {
     ) {
       var then = newValue.then
       if (newValue instanceof Promise) {
-        self._state = 3 // resolve为promise对象，_state = 3
+        // resolve为promise对象，_state = 3
+        self._state = 3
         self._value = newValue
         finale(self)
         return
@@ -146,10 +159,10 @@ function finale(self) {
 
 /** Handler构造函数
  * @constructor
- * @param onFulfilled resolve 回调函数
- * @param onRejected reject 回调函数
- * @param promise 下一个 promise 实例对象
- * 将 onFulfilled、onRejected 和 promise 三个内容 “打包起来” 作为一个整体方便后面调用
+ * @param onFulfilled resolve回调函数
+ * @param onRejected reject回调函数
+ * @param promise 下一个promise实例对象
+ * 将 onFulfilled、onRejected和promise三个内容 “打包起来” 作为一个整体方便后面调用
  */
 function Handler(onFulfilled, onRejected, promise) {
   this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
@@ -193,7 +206,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected)
 }
 
-// .then()方法，支持链式回调，每个then()方法返回新的Promise实例
+// .then()方法，支持无限链式回调，每个then()方法返回新的Promise实例
 Promise.prototype.then = function (onFulfilled, onRejected) {
   // @ts-ignore
   var prom = new this.constructor(noop) // 在期约实例上执行noop()方法
@@ -207,15 +220,16 @@ Promise.prototype['finally'] = promiseFinally
 Promise.all = function (arr) {
   return new Promise(function (resolve, reject) {
     if (!isArray(arr)) {
-      return reject(new TypeError('Promise.all accepts an array'))
+      return reject(new TypeError('Promise.all accepts an array')) // 参数必须是数组
     }
 
-    var args = Array.prototype.slice.call(arr)
-    if (args.length === 0) return resolve([])
+    var args = Array.prototype.slice.call(arr) // Array的原型对象的slice方法，利用call绑定给数组arr
+    if (args.length === 0) return resolve([]) // 若数组为空
     var remaining = args.length
 
     function res(i, val) {
       try {
+        /** 如果val是Promise对象，则执行Promise，直到resolve了一个非Promise对象 **/
         if (val && (typeof val === 'object' || typeof val === 'function')) {
           var then = val.then
           if (typeof then === 'function') {
@@ -229,11 +243,16 @@ Promise.all = function (arr) {
             return
           }
         }
+        /** 用当前resolve/reject的值重写args[i]{Promise} 对象 **/
         args[i] = val
+
+        /** 若所有的Promise都执行完毕，则resolve all的Promise对象，返回args数组结果 **/
         if (--remaining === 0) {
-          resolve(args)
+          resolve(args) // 递归自己
         }
       } catch (ex) {
+        /** 只要其中一个Promise出现异常，则全部的Promise执行退出，进入catch异常处理 **/
+        /** doResolve()内部的done控制了resolve/reject方法只执行一次的处理，因此他的Promise都不执行 **/
         reject(ex)
       }
     }
@@ -265,9 +284,10 @@ Promise.reject = function (value) {
 Promise.race = function (arr) {
   return new Promise(function (resolve, reject) {
     if (!isArray(arr)) {
-      return reject(new TypeError('Promise.race accepts an array'))
+      return reject(new TypeError('Promise.race accepts an array')) // 参数必须是数组
     }
 
+    /** doResolve()内部的done控制了resolve/reject方法只执行一次的处理，因此最快的Promise执行了resolve/reject，后面的Promise都不执行 **/
     for (var i = 0, len = arr.length; i < len; i++) {
       Promise.resolve(arr[i]).then(resolve, reject)
     }
