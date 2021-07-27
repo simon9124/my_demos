@@ -114,22 +114,22 @@ function resolve(self, newValue) {
       throw new TypeError('A promise cannot be resolved with itself.') // 解决值不能为期约实例本身（否则将导致无限循环）
     if (
       newValue &&
-      (typeof newValue === 'object' || typeof newValue === 'function') // 解决值为Promise对象，特殊处理
+      (typeof newValue === 'object' || typeof newValue === 'function') // 如果解决值为对象或函数对象
     ) {
       var then = newValue.then
       if (newValue instanceof Promise) {
-        // resolve为promise对象，_state = 3
+        // 解决值为promise类型，_state = 3
         self._state = 3
         self._value = newValue
         finale(self)
         return
       } else if (typeof then === 'function') {
-        // 兼容“类Promise对象”（thenable）的处理方式，对其then方法继续执行doResolve
+        // 解决值为thenable对象（拥有then方法的对象或函数），对其then方法继续执行doResolve
         doResolve(bind(then, newValue), self) // 将then方法bind，确保期约实例能够调用then方法
         return
       }
     }
-    self._state = 1 // 解决值（非期约）正常值，_state = 1
+    self._state = 1 // 解决值为其他正常值，_state = 1
     self._value = newValue // 把解决值赋给期约实例的_value属性
     finale(self) // self为期约实例
   } catch (e) {

@@ -1,3 +1,12 @@
+/** Polyfill for Function.prototype.bind
+ * 手写bind方法
+ */
+function bind(fn, thisArg) {
+  return function () {
+    fn.apply(thisArg, arguments)
+  }
+}
+
 /**
  * Promise构造函数
  * 参数fn：执行器函数(resolve,reject)=>{resolve(),reject()}
@@ -85,24 +94,27 @@ function resolve(self, newValue) {
   try {
     if (newValue === self)
       throw new TypeError('A promise cannot be resolved with itself.') // 解决值不能为期约实例本身（否则将导致无限循环）
-    // if (
-    //   newValue &&
-    //   (typeof newValue === 'object' || typeof newValue === 'function') // 解决值为Promise对象，特殊处理
-    // ) {
-    //   var then = newValue.then
-    //   if (newValue instanceof Promise) {
-    //     // resolve为promise对象，_state = 3
-    //     self._state = 3
-    //     self._value = newValue
-    //     finale(self)
-    //     return
-    //   } else if (typeof then === 'function') {
-    //     // 兼容“类Promise对象”（thenable）的处理方式，对其then方法继续执行doResolve
-    //     doResolve(bind(then, newValue), self) // 将then方法bind，确保期约实例能够调用then方法
-    //     return
-    //   }
-    // }
-    self._state = 1 // 解决值（非期约）正常值，_state = 1
+    if (
+      newValue &&
+      (typeof newValue === 'object' || typeof newValue === 'function') // 如果解决值为对象或函数对象
+    ) {
+      var then = newValue.then
+      if (newValue instanceof Promise) {
+        // 解决值为promise类型，_state = 3
+        self._state = 3
+        self._value = newValue
+        finale(self)
+        return
+      } else if (typeof then === 'function') {
+        // 解决值为thenable对象（拥有then方法的对象或函数），对其then方法继续执行doResolve
+        // doResolve(bind(then, newValue), self) // 将then方法bind，确保期约实例能够调用then方法
+        doResolve(function () {
+          return then.apply(newValue, arguments) // 将then方法体内的this指向newValue
+        }, self)
+        return
+      }
+    }
+    self._state = 1 // 解决值为其他正常值，_state = 1
     self._value = newValue // 把解决值赋给期约实例的_value属性
     /**
      * finale()方法
@@ -130,16 +142,24 @@ function finale(self) {
     console.log('resolve:' + self._value)
   } else if (self._state === 2) {
     console.log('reject:' + self._value)
+  } else if (self._state === 3) {
+    console.log('resolve value is Promise')
   }
 }
 
 new Promise((resolve, reject) => {
   // resolve(3)
   // reject(3)
-  resolve(
-    new Promise((resolve, reject) => {
-      resolve(3)
-    })
-  )
-  throw Error('error!')
+  // resolve({ val: 3 })
+  // resolve(
+  //   new Promise((resolve, reject) => {
+  //     resolve(3)
+  //   })
+  // )
+  resolve({
+    then: function () {
+      console.log('thenable function')
+    },
+  })
+  // throw Error('error!')
 })
