@@ -196,7 +196,7 @@ Promise.prototype['catch'] = function (onRejected) {
 // .then()方法，支持链式回调，每个then()方法返回新的Promise实例
 Promise.prototype.then = function (onFulfilled, onRejected) {
   // @ts-ignore
-  var prom = new this.constructor(noop) // 在期约实例上执行noop()方法
+  var prom = new this.constructor(noop) // 在期约实例上执行noop()方法 ？
   handle(this, new Handler(onFulfilled, onRejected, prom)) // new Handler存储调用then的promise及then的参数
   return prom
 }
