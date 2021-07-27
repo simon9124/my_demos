@@ -26,7 +26,8 @@ function bind(fn, thisArg) {
 
 /**
  * @constructor Promise构造函数
- * @param {Function} fn 执行器函数(resolve,reject)=>{}，是一个箭头函数
+ * @param {Function} fn 执行器函数(resolve,reject)=>{resolve(),reject()}
+ *                      执行器函数又接收2个参数：resolve()和reject()回调函数
  */
 function Promise(fn) {
   if (!(this instanceof Promise))
@@ -101,15 +102,19 @@ function handle(self, deferred) {
   })
 }
 
-// resolve()方法
+/**
+ * resolve()方法
+ * 参数self：（期约）实例
+ * 参数newValue：解决值
+ */
 function resolve(self, newValue) {
   try {
     // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
     if (newValue === self)
-      throw new TypeError('A promise cannot be resolved with itself.') // resolve的值不能为期约实例本身（否则将导致无限循环）
+      throw new TypeError('A promise cannot be resolved with itself.') // 解决值不能为期约实例本身（否则将导致无限循环）
     if (
       newValue &&
-      (typeof newValue === 'object' || typeof newValue === 'function') // 如果被resolve值为Promise对象的情况，特殊处理
+      (typeof newValue === 'object' || typeof newValue === 'function') // 解决值为Promise对象，特殊处理
     ) {
       var then = newValue.then
       if (newValue instanceof Promise) {
@@ -124,18 +129,22 @@ function resolve(self, newValue) {
         return
       }
     }
-    self._state = 1 // resolve为（非期约）正常值的时候，_state = 1
-    self._value = newValue
-    finale(self) // self为期约实例本身，还拥有_state、_handled（false）、_value、_deferreds（[]）四个属性
+    self._state = 1 // 解决值（非期约）正常值，_state = 1
+    self._value = newValue // 把解决值赋给期约实例的_value属性
+    finale(self) // self为期约实例
   } catch (e) {
     reject(self, e)
   }
 }
 
-// reject()方法
+/**
+ * reject()方法
+ * 参数self：（期约）实例
+ * 参数newValue：拒绝理由
+ */
 function reject(self, newValue) {
   self._state = 2 // reject的时候，_state = 2
-  self._value = newValue
+  self._value = newValue // 把拒绝理由赋给期约实例的_value属性
   finale(self)
 }
 
@@ -175,11 +184,12 @@ function Handler(onFulfilled, onRejected, promise) {
  * onFulfilled and onRejected are only called once.
  *
  * Makes no guarantees about asynchrony.
+ *
  */
 function doResolve(fn, self) {
   var done = false // 初始化done，确保resolve或reject只执行一次
   try {
-    /* 立即执行（此时并非异步）传入的执行器函数fn(resolve,reject) */
+    /* 立即执行（此时并非异步）传入的执行器函数fn */
     fn(
       // fn的resolve回调
       function (value) {
