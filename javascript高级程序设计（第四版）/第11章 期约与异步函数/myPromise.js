@@ -1,11 +1,14 @@
 /** Polyfill for Function.prototype.bind
- * 手写bind方法
+ * 用apply写bind方法
  */
 function bind(fn, thisArg) {
   return function () {
     fn.apply(thisArg, arguments)
   }
 }
+
+var setTimeoutFunc = setTimeout
+var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null
 
 /**
  * Promise构造函数
@@ -107,10 +110,14 @@ function resolve(self, newValue) {
         return
       } else if (typeof then === 'function') {
         // 解决值为thenable对象（拥有then方法的对象或函数），对其then方法继续执行doResolve
-        // doResolve(bind(then, newValue), self) // 将then方法bind，确保期约实例能够调用then方法
-        doResolve(function () {
-          return then.apply(newValue, arguments) // 将then方法体内的this指向newValue
-        }, self)
+
+        // doResolve(function () {
+        //   // 整个方法作为新的执行器方法，传给doResolve()并立即调用，then()作为当前resolve()，执行这个resolve()即执行then()
+        //   return then.apply(newValue, arguments) // 将解决值的then方法体内的this指向解决值本身
+        // }, self)
+
+        doResolve(bind(then, newValue), self) // 源码中用apply重写上述的bind方法
+        // doResolve(then, self) // 不指定then方法体内的this，调用后this指向全局对象window
         return
       }
     }
@@ -137,29 +144,183 @@ function reject(self, newValue) {
   finale(self)
 }
 
+/**
+ * finale()方法
+ * 参数self：（期约）实例
+ */
+// function finale(self) {
+//   if (self._state === 1) {
+//     console.log('resolve:' + self._value)
+//   } else if (self._state === 2) {
+//     console.log('reject:' + self._value)
+//   } else if (self._state === 3) {
+//     console.log('resolve value is Promise')
+//   }
+// }
+
+/* 测试new Promise(()=>{}) */
+// new Promise((resolve, reject) => {
+// resolve(3) // 解决值为基本类型
+// reject(3) // 拒绝值为基本类型
+// resolve({ val: 3 }) // 解决值为普通对象
+// resolve(new Promise(() => {})) // 解决值为期约实例
+// resolve({
+//   // 解决值为thenable对象
+//   value: 3,
+//   then: function () {
+//     console.log(this)
+//     console.log(this.value)
+//   },
+// })
+// throw Error('error!') // 抛出错误
+// })
+
+/**
+ * Promise构造函数的reject()方法
+ * 参数value：解决值
+ */
+Promise.resolve = function (value) {
+  /* 如果解决值的constructor属性指向Promise构造函数（即解决值是Promise实例） */
+  if (value && typeof value === 'object' && value.constructor === Promise) {
+    return value // 返回这个Promise实例
+  }
+
+  /* 解决值不是Promise实例，返回新的Promise实例并调用其resolve()方法，参数为该解决值 */
+  return new Promise(function (resolve) {
+    resolve(value)
+  })
+}
+
+/**
+ * Promise构造函数的reject()方法
+ * 参数value：拒绝理由
+ */
+Promise.reject = function (value) {
+  /* 返回新的Promise实例并调用其reject()方法，参数为该拒绝理由 */
+  return new Promise(function (resolve, reject) {
+    reject(value)
+  })
+}
+
+/* 测试Promise.resolve()和Promise.reject() */
+// Promise.resolve(3) // 解决值为基本类型
+// Promise.reject(3) // 拒绝值为基本类型
+// Promise.resolve({ val: 3 }) // 解决值为普通对象
+// Promise.resolve(
+//   // 解决值为期约实例
+//   new Promise((resolve) => {
+//     resolve(3)
+//   })
+// )
+// Promise.resolve({
+//   // 解决值为thenable对象
+//   value: 3,
+//   then: function () {
+//     console.log(this)
+//     console.log(this.value)
+//   },
+// })
+
+/**
+ * finale()方法
+ * 参数self：（期约）实例
+ */
 function finale(self) {
-  if (self._state === 1) {
-    console.log('resolve:' + self._value)
-  } else if (self._state === 2) {
-    console.log('reject:' + self._value)
-  } else if (self._state === 3) {
-    console.log('resolve value is Promise')
+  // console.log(self)
+
+  /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
+  if (self._state === 2 && self._deferreds.length === 0) {
+    /**
+     * 执行Promise对象的_immediateFn()方法
+     * 参数fn：要执行的警告方法
+     */
+    Promise._immediateFn(function () {
+      /* 如果未被处理过，则给出警告 */
+      if (!self._handled) {
+        /**
+         * 执行Promise对象的._unhandledRejectionFn()方法
+         * 参数self._value：拒绝理由
+         */
+        Promise._unhandledRejectionFn(self._value)
+      }
+    })
+  }
+
+  // for (var i = 0, len = self._deferreds.length; i < len; i++) {
+  //   // 循环_deferreds数组，每一项都执行handle()方法
+  //   handle(self, self._deferreds[i])
+  // }
+  // self._deferreds = null // 全部执行后，将_deferreds数组重置为null
+}
+
+/**
+ * handle()方法：核心
+ * 参数self：（期约）实例
+ * 参数deferred：
+ */
+function handle(self, deferred) {
+  /* 如果参数为期约 */
+  while (self._state === 3) {
+    self = self._value // 当前处理变更到了新的Promise对象上
+  }
+
+  /* 如果是pendding状态，即还没有执行resolve()或reject()方法 */
+  if (self._state === 0) {
+    self._deferreds.push(deferred) // 将deferred放入_deferrends数组，然后继续等待
+    return
+  }
+  self._handled = true // 如果不是上述情况，标记当前进行的promise._handled为true
+
+  /** 如果执行了resolve()或reject()方法，则通过事件循环异步来做回调的处理 **/
+  Promise._immediateFn(function () {
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected
+
+    /* 如果自己没有onFulfilled或onRejected回调函数，则调用下一个Promise对象的回调，并携带当前的_value值 */
+    if (cb === null) {
+      ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
+      return
+    }
+
+    /* 自己有onFulfilled或onRejected回调函数，则执行自己的回调 */
+    var ret
+    try {
+      ret = cb(self._value)
+    } catch (e) {
+      /* 处理下一个Promise的catch回调方法，ret作为上一个Promise catch回调return的值，返回给下一个Promise catch作为输入值 */
+      reject(deferred.promise, e)
+      return
+    }
+
+    /* 处理下一个Promise的then回调方法，ret作为上一个Promise then回调return的值，返回给下一个Promise then作为输入值 */
+    resolve(deferred.promise, ret)
+  })
+}
+
+/**
+ * Promise构造函数的_immediateFn()方法
+ * 参数fn：要执行的警告方法
+ */
+Promise._immediateFn =
+  typeof setImmediateFunc === 'function' // 判断setImmediateFunc是否为函数对象
+    ? function (fn) {
+        setImmediateFunc(fn) // 异步调用fn方法（立即）
+      }
+    : function (fn) {
+        setTimeoutFunc(fn, 0) // 异步调用fn方法（0毫秒后）
+      }
+
+/**
+ * Promise构造函数的_unhandledRejectionFn()方法：要执行的警告方法
+ * 参数err：拒绝理由
+ */
+Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+  if (typeof console !== 'undefined' && console) {
+    console.warn('Possible Unhandled Promise Rejection:', err) // 浏览器给出警告
   }
 }
 
-new Promise((resolve, reject) => {
-  // resolve(3)
-  // reject(3)
-  // resolve({ val: 3 })
-  // resolve(
-  //   new Promise((resolve, reject) => {
-  //     resolve(3)
-  //   })
-  // )
-  resolve({
-    then: function () {
-      console.log('thenable function')
-    },
-  })
-  // throw Error('error!')
-})
+/* 测试浏览器警告 */
+// new Promise((resolve, reject) => {
+//   reject(4)
+// })
+// Promise.reject(4) // 拒绝值为基本类型

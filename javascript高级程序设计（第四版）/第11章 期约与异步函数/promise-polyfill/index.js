@@ -17,7 +17,7 @@ function isArray(x) {
 
 function noop() {}
 
-// Polyfill for Function.prototype.bind
+// Polyfill for Function.prototype.bind（用apply写bind方法）
 function bind(fn, thisArg) {
   return function () {
     fn.apply(thisArg, arguments)
@@ -125,7 +125,7 @@ function resolve(self, newValue) {
         return
       } else if (typeof then === 'function') {
         // 解决值为thenable对象（拥有then方法的对象或函数），对其then方法继续执行doResolve
-        doResolve(bind(then, newValue), self) // 将then方法bind，确保期约实例能够调用then方法
+        doResolve(bind(then, newValue), self) // 将解决值then方法体内的this指向解决值本身，确保期约实例能够调用then方法
         return
       }
     }
