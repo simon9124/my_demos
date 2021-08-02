@@ -65,14 +65,14 @@ function Promise(fn) {
 
 // handle()方法：核心
 function handle(self, deferred) {
-  /* 如果参数为期约 */
+  /* 如果返回的期约实例的解决值为promise类型，_state=3 */
   while (self._state === 3) {
     self = self._value // 当前处理变更到了新的Promise对象上
   }
 
-  /* 如果是pendding状态，即还没有执行resolve()或reject()方法 */
+  /* 如果返回的期约实例是pendding状态，_state=0，即还没有执行resolve()或reject()方法 */
   if (self._state === 0) {
-    self._deferreds.push(deferred) // 将deferred放入_deferrends数组，然后继续等待
+    self._deferreds.push(deferred) // 将Handler实例放入实例的_deferrends数组，然后继续等待
     return
   }
   self._handled = true // 如果不是上述情况，标记当前进行的promise._handled为true
@@ -171,7 +171,7 @@ function finale(self) {
  * @param onFulfilled resolve回调函数
  * @param onRejected reject回调函数
  * @param promise 下一个promise实例对象
- * 将 onFulfilled、onRejected和promise三个内容 “打包起来” 作为一个整体方便后面调用
+ * 打包onFulfilled、onRejected和promise，作为一个整体方便后面调用
  */
 function Handler(onFulfilled, onRejected, promise) {
   this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
@@ -219,9 +219,9 @@ Promise.prototype['catch'] = function (onRejected) {
 // .then()方法，支持无限链式回调，每个then()方法返回新的Promise实例
 Promise.prototype.then = function (onFulfilled, onRejected) {
   // @ts-ignore
-  var prom = new this.constructor(noop) // 在期约实例上执行noop()方法 ？
+  var prom = new this.constructor(noop) // 传入空方法noop，创建一个新期约实例（相当于new Promise(noop)）
   handle(this, new Handler(onFulfilled, onRejected, prom)) // new Handler存储调用then的promise及then的参数
-  return prom
+  return prom // 返回新创建的期约实例，以便链式调用
 }
 
 // .finally()
