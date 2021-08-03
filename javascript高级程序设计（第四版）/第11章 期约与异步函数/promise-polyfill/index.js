@@ -77,7 +77,7 @@ function handle(self, deferred) {
   }
   self._handled = true // 如果不是上述情况，标记当前进行的promise._handled为true
 
-  /** 如果执行了resolve()或reject()方法，则通过事件循环异步来做回调的处理 **/
+  /** 通过事件循环异步来做回调的处理 **/
   Promise._immediateFn(function () {
     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected
 

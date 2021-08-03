@@ -41,6 +41,8 @@ function Promise(fn) {
  * 参数self：（期约）实例
  */
 function doResolve(fn, self) {
+  // console.log(self)
+
   var done = false // 初始化done，确保resolve或reject只执行一次
 
   /* 立即执行（此时并非异步）传入的执行器函数fn */
@@ -95,17 +97,28 @@ function resolve(self, newValue) {
         self._state = 3
         self._value = newValue
         finale(self)
+        /* 此时的self
+          Promise {
+            _state: 3,
+            _handled: false,
+            _value: Promise {...},
+            _deferreds: []
+          }
+        */
         return
       } else if (typeof then === 'function') {
         // 解决值为thenable对象（拥有then方法的对象或函数），对其then方法继续执行doResolve
+        // console.log(newValue)
+        // console.log(newValue.then)
+        // console.log(self)
 
         // doResolve(function () {
-        //   // 整个方法作为新的执行器方法，传给doResolve()并立即调用，then()作为当前resolve()，执行这个resolve()即执行then()
-        //   return then.apply(newValue, arguments) // 将解决值的then方法体内的this指向解决值本身
+        //   // 整个function作为新的执行器方法，传给doResolve()并立即调用，then()作为当前的resolve()，执行这个resolve()即执行then()
+        //   return then.apply(newValue, arguments) // 将解决值的then方法体内的this指向解决值本身，并执行then()
         // }, self)
-
         doResolve(bind(then, newValue), self) // 源码中用apply重写上述的bind方法
         // doResolve(then, self) // 不指定then方法体内的this，调用后this指向全局对象window
+
         return
       }
     }
@@ -222,34 +235,34 @@ Promise.reject = function (value) {
  * 测试用的finale()方法
  * 参数self：（期约）实例
  */
-function finale(self) {
-  // console.log(self)
+// function finale(self) {
+//   // console.log(self)
 
-  /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
-  if (self._state === 2 && self._deferreds.length === 0) {
-    /**
-     * 执行Promise构造函数的_immediateFn()方法
-     * 参数fn：要执行的警告方法
-     */
-    Promise._immediateFn(function () {
-      /* 如果未被处理过，则给出警告 */
-      if (!self._handled) {
-        /**
-         * 执行Promise构造函数的._unhandledRejectionFn()方法
-         * 参数self._value：拒绝理由
-         */
-        Promise._unhandledRejectionFn(self._value)
-      }
-    })
-  }
-}
+//   /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
+//   if (self._state === 2 && self._deferreds.length === 0) {
+//     /**
+//      * 执行Promise构造函数的_immediateFn()方法
+//      * 参数fn：要执行的警告方法
+//      */
+//     Promise._immediateFn(function () {
+//       /* 如果未被处理过，则给出警告 */
+//       if (!self._handled) {
+//         /**
+//          * 执行Promise构造函数的._unhandledRejectionFn()方法
+//          * 参数self._value：拒绝理由
+//          */
+//         Promise._unhandledRejectionFn(self._value)
+//       }
+//     })
+//   }
+// }
 
 var setTimeoutFunc = setTimeout
 var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null
 
 /**
  * Promise构造函数的_immediateFn()方法
- * 参数fn：要执行的警告方法
+ * 参数fn：要执行的方法（异步调用）
  */
 Promise._immediateFn =
   typeof setImmediateFunc === 'function' // 判断setImmediateFunc是否为函数对象
@@ -276,11 +289,10 @@ Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
 // })
 // Promise.reject(4) // 拒绝值为基本类型
 
-/** Handler构造函数
+/** Handler构造函数：打包onFulfilled、onRejected和promise，作为一个整体方便后面调用
  * 参数onFulfilled：resolve回调函数
  * 参数onRejected：reject回调函数
  * 参数promise：下一个promise实例对象
- * 打包onFulfilled、onRejected和promise，作为一个整体方便后面调用
  */
 function Handler(onFulfilled, onRejected, promise) {
   this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
@@ -294,16 +306,18 @@ function Handler(onFulfilled, onRejected, promise) {
  * 支持无限链式回调，每个then()方法返回新的Promise实例
  */
 Promise.prototype.then = function (onFulfilled, onRejected) {
-  // console.log(this) // this指向then()前返回的Promise实例
+  // console.log(this, 'then') // this指向then()前返回的Promise实例
   // console.log(this.constructor) // constructor指向Promise构造函数
   // console.log(this.constructor === Promise) // true
-  var prom = new this.constructor(noop) // 传入空方法noop，创建一个新期约实例（相当于new Promise(noop)）
+
+  /* 创建一个新期约实例（相当于new Promise(noop)），传入空方法noop作为执行器函数 */
+  var prom = new this.constructor(noop)
   // console.log(prom) // Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，新期约
   // console.log(new Promise(noop)) // Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，同上
 
   /**
    * handle()方法
-   * 参数this：then()前返回的Promise实例
+   * 参数this：then()前返回的上一个Promise实例
    * 参数new Handler(onFulfilled, onRejected, prom)：创建的Handler实例
    */
   handle(this, new Handler(onFulfilled, onRejected, prom))
@@ -318,152 +332,265 @@ function noop() {}
  * 参数self：then()前返回的Promise实例
  * 参数deferred：创建的Handler实例
  */
+// function handle(self, deferred) {
+//   // console.log(self)
+//   // console.log(deferred)
+//   /* deferred为创建的Handler实例
+//   Handler {
+//     onFulfilled: [Function (anonymous)], // onFulfilled处理程序，没有则为null
+//     onRejected: [Function (anonymous)], // onRejected处理程序，没有则为null
+//     promise: Promise { // promise属性指向一个新的Promise实例
+//       _state: 0,
+//       _handled: false,
+//       _value: undefined,
+//       _deferreds: []
+//     }
+//   }
+//   */
+
+//   /* 如果返回的期约实例的解决值为promise类型，_state=3 */
+//   while (self._state === 3) {
+//     self = self._value // 将解决值赋给返回的期约实例
+//     // console.log(self)
+//   }
+
+//   /* 如果返回的期约实例是pendding状态，_state=0，即还没有执行resolve()或reject()方法 */
+//   if (self._state === 0) {
+//     self._deferreds.push(deferred) // 将Handler实例放入实例的_deferrends数组，然后继续等待
+//     console.log(self)
+//     return
+//   }
+
+//   /* 如果不是上述情况，标记当前进行的promise._handled为true */
+//   self._handled = true
+//   // console.log(self)
+
+//   /** 通过事件循环异步来做回调的处理 **/
+//   Promise._immediateFn(function () {
+//     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 获取onFulfilled或onRejected处理程序
+
+//     /* 如果有onFulfilled或onRejected回调函数，则执行自己的回调 */
+//     // var ret
+//     try {
+//       /**
+//        * cb()方法：执行onFulfilled或onRejected处理程序
+//        * 参数self._value：then()前返回的Promise实例的解决值/拒绝理由
+//        */
+//       // ret = cb(self._value) // 执行回调，返回值赋给ret
+//       cb(self._value) // 执行回调
+//     } catch (e) {
+//       /* 处理下一个Promise的catch回调方法，ret作为上一个Promise catch回调return的值，返回给下一个Promise catch作为输入值 */
+//       reject(deferred.promise, e)
+//       return
+//     }
+//   })
+// }
+
+/* 测试：Promise.prototype.then */
+// new Promise((resolve, reject) => {
+//   // 未解决，返回pending状态的期约
+//   // resolve(3) // 解决值为基本类型
+//   // resolve({ val: 3 }) // 解决值为普通对象
+//   // resolve(new Promise(() => {})) // 解决值为期约实例 - pending状态
+//   // resolve(
+//   //   // 解决值为期约实例 - fulfilled状态
+//   //   new Promise((resolve) => {
+//   //     resolve(3)
+//   //   })
+//   // )
+//   // resolve({
+//   //   // 解决值为thenable对象
+//   //   value: 3,
+//   //   then: function () {
+//   //     console.log(this)
+//   //     console.log(this.value)
+//   //   },
+//   // })
+// }).then(
+//   /* onFulfilled处理程序 */
+//   (res) => {
+//     // console.log(res) // then()前返回的Promise的解决值
+//   }
+//   // null,
+//   /* onRejected处理程序 */
+//   // (err) => {
+//   //   console.log(err) // then()前返回的Promise的拒绝理由
+//   // }
+// )
+
+/** Promise原型的catch()方法：在then()上做一层封装，只接收onRejected
+ * 参数onRejected：onRejected处理程序，在期约拒绝时执行的回调
+ * 支持无限链式回调，每个catch()方法返回新的Promise实例
+ */
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected)
+}
+
+/* 测试：Promise.prototype.catch */
+// new Promise((resolve, reject) => {
+//   reject(4) // 拒绝值为基本类型
+//   // throw Error('error!') // 抛出错误
+// }).catch(
+//   /* onRejected处理程序 */
+//   (err) => {
+//     // console.log(err) // catch()前返回的Promise的拒绝理由
+//   }
+// )
+
+/* 暂时还未实现：链式调用 */
+// new Promise((resolve, reject) => {
+//   resolve(3)
+// })
+//   .then((res) => {
+//     return res
+//   })
+//   .then((res) => {
+//     console.log(res)
+//   })
+
+/**
+ * handle()方法：核心
+ * 参数self：上一个then()前返回的Promise实例
+ * 参数deferred：创建的Handler实例
+ */
 function handle(self, deferred) {
-  // console.log(self)
+  // console.log(self, 'handle')
+  // console.log(deferred)
+  /* deferred为创建的Handler实例
+    Handler {
+      onFulfilled: [Function (anonymous)], // onFulfilled处理程序，没有则为null
+      onRejected: [Function (anonymous)], // onRejected处理程序，没有则为null
+      promise: Promise { // promise属性指向一个新的Promise实例
+        _state: 0,
+        _handled: false,
+        _value: undefined,
+        _deferreds: []
+      }
+    }
+  */
 
   /* 如果返回的期约实例的解决值为promise类型，_state=3 */
-  if (self._state === 3) {
+  while (self._state === 3) {
     self = self._value // 将解决值赋给返回的期约实例
     // console.log(self)
   }
 
-  /* 如果返回的期约实例是pendding状态，_state=0，即还没有执行resolve()或reject()方法 */
+  /* 如果_state=0，即期约实例是pendding状态（还未执行onResolve或onReject处理程序） */
+  /* 链式调用时，第二个或之后的then()前返回的Promise实例永远是新的Promise实例，其_state值为0 */
   if (self._state === 0) {
-    self._deferreds.push(deferred) // 将Handler实例放入实例的_deferrends数组，然后继续等待
+    self._deferreds.push(deferred) // 将Handler实例放入上一个then()前返回的Promise实例的_deferrends数组
     // console.log(self)
-    return
+    /* 
+      Promise {
+        _state: 0,
+        _handled: false,
+        _value: undefined,
+        _deferreds: [
+          Handler {
+            onFulfilled: [Function (anonymous)],
+            onRejected: [Function (anonymous)],
+            promise: [Promise]
+          }
+        ]
+      }
+    */
+    return // 同步执行到此暂停，等待异步执行（执行前一个Promise的then）
   }
 
   /* 如果不是上述情况，标记当前进行的promise._handled为true */
   self._handled = true
-  console.log(self)
+  // console.log(self)
 
-  /** 如果执行了resolve()或reject()方法，则通过事件循环异步来做回调的处理 **/
-  // Promise._immediateFn(function () {
-  //   var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected
+  /** 通过事件循环异步来做回调的处理
+   * 注意：这里的事件是异步执行的，第二个then会比这里的方法先执行
+   */
+  Promise._immediateFn(function () {
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 获取onFulfilled或onRejected处理程序
 
-  //   /* 如果自己没有onFulfilled或onRejected回调函数，则调用下一个Promise对象的回调，并携带当前的_value值 */
-  //   if (cb === null) {
-  //     ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
-  //     return
-  //   }
+    /* 如果没有onFulfilled或onRejected回调函数，则调用下一个Promise对象的回调，并携带当前的_value值 */
+    // if (cb === null) {
+    //   ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
+    //   return
+    // }
 
-  //   /* 自己有onFulfilled或onRejected回调函数，则执行自己的回调 */
-  //   var ret
-  //   try {
-  //     ret = cb(self._value)
-  //   } catch (e) {
-  //     /* 处理下一个Promise的catch回调方法，ret作为上一个Promise catch回调return的值，返回给下一个Promise catch作为输入值 */
-  //     reject(deferred.promise, e)
-  //     return
-  //   }
+    /* 如果有onFulfilled或onRejected回调函数，则执行自己的回调 */
+    var ret
+    try {
+      /**
+       * cb()方法：执行onFulfilled或onRejected处理程序
+       * 参数self._value：then()前返回的Promise实例的解决值/拒绝理由
+       */
+      ret = cb(self._value) // 执行回调，返回值赋给ret
+    } catch (e) {
+      /**
+       * reject()方法：处理下一个catch的回调方法
+       * 参数deferred.promise：创建的Handler实例的promise属性，指向新的Promise实例
+       * 参数e：错误信息
+       */
+      reject(deferred.promise, e)
+      return
+    }
 
-  //   /* 处理下一个Promise的then回调方法，ret作为上一个Promise then回调return的值，返回给下一个Promise then作为输入值 */
-  //   resolve(deferred.promise, ret)
-  // })
+    /**
+     * resolve()方法：处理下一个then的回调方法
+     * 参数deferred.promise：创建的Handler实例的promise属性，指向新的Promise实例
+     * 参数ret：执行当前then回调的返回值
+     */
+    // console.log(deferred.promise, ret)
+    resolve(deferred.promise, ret)
+  })
 }
 
-/* 测试：Promise.prototype.then */
+/**
+ * finale()方法
+ * 参数self：（期约）实例
+ */
+function finale(self) {
+  // console.log(self, 'finale')
+
+  /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
+  if (self._state === 2 && self._deferreds.length === 0) {
+    /**
+     * 执行Promise构造函数的_immediateFn()方法
+     * 参数fn：要执行的警告方法
+     */
+    Promise._immediateFn(function () {
+      /* 如果未被处理过，则给出警告 */
+      if (!self._handled) {
+        /**
+         * 执行Promise构造函数的._unhandledRejectionFn()方法
+         * 参数self._value：拒绝理由
+         */
+        Promise._unhandledRejectionFn(self._value)
+      }
+    })
+  }
+
+  /* 循环self._deferreds，每一项都执行handle()方法 */
+  for (var i = 0, len = self._deferreds.length; i < len; i++) {
+    /**
+     * handle()方法
+     * 参数self：（期约）实例
+     * 参数self._deferreds[i]：当前的Handle实例对象
+     */
+    handle(self, self._deferreds[i])
+  }
+
+  self._deferreds = null // 全部执行后，将_deferreds数组重置为null
+}
+
+/* 完整的链式调用测试 */
 new Promise((resolve, reject) => {
-  resolve(3) // 解决值为基本类型
-  // reject(3) // 拒绝值为基本类型
-  // resolve({ val: 3 }) // 解决值为普通对象
-  // resolve(new Promise(() => {})) // 解决值为期约实例 - pending状态
-  // resolve(
-  //   // 解决值为期约实例 - fulfilled状态
-  //   new Promise((resolve) => {
-  //     resolve(3)
-  //   })
-  // )
-  // resolve({
-  //   // 解决值为thenable对象
-  //   value: 3,
-  //   then: function () {
-  //     console.log(this)
-  //     console.log(this.value)
-  //   },
-  // })
-  // throw Error('error!') // 抛出错误
-  // 未解决，返回pending状态的期约
-}).then()
-
-/**
- * 测试用的finale()方法
- * 参数self：（期约）实例
- */
-// function finale(self) {
-//   // console.log(self)
-
-//   /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
-//   if (self._state === 2 && self._deferreds.length === 0) {
-//     /**
-//      * 执行Promise构造函数的_immediateFn()方法
-//      * 参数fn：要执行的警告方法
-//      */
-//     Promise._immediateFn(function () {
-//       /* 如果未被处理过，则给出警告 */
-//       if (!self._handled) {
-//         /**
-//          * 执行Promise构造函数的._unhandledRejectionFn()方法
-//          * 参数self._value：拒绝理由
-//          */
-//         Promise._unhandledRejectionFn(self._value)
-//       }
-//     })
-//   }
-
-//   /* 循环_deferreds数组，每一项都执行handle()方法 */
-//   for (var i = 0, len = self._deferreds.length; i < len; i++) {
-//     /**
-//      * handle()方法：核心
-//      * 参数self：（期约）实例
-//      * 参数self._deferreds[i]：当前的Handle实例对象
-//      */
-//     handle(self, self._deferreds[i])
-//   }
-
-//   self._deferreds = null // 全部执行后，将_deferreds数组重置为null
-// }
-
-/**
- * handle()方法：核心
- * 参数self：（期约）实例
- * 参数deferred：
- */
-// function handle(self, deferred) {
-//   /* 如果参数为期约 */
-//   while (self._state === 3) {
-//     self = self._value // 将期约的解决值赋给期约本身
-//   }
-
-//   /* 如果是pendding状态，即还没有执行resolve()或reject()方法 */
-//   // if (self._state === 0) {
-//   //   self._deferreds.push(deferred) // 将deferred放入_deferrends数组，然后继续等待
-//   //   return
-//   // }
-//   self._handled = true // 如果不是上述情况，标记当前进行的promise._handled为true
-
-//   /** 如果执行了resolve()或reject()方法，则通过事件循环异步来做回调的处理 **/
-//   // Promise._immediateFn(function () {
-//   //   var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected
-
-//   //   /* 如果自己没有onFulfilled或onRejected回调函数，则调用下一个Promise对象的回调，并携带当前的_value值 */
-//   //   if (cb === null) {
-//   //     ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
-//   //     return
-//   //   }
-
-//   //   /* 自己有onFulfilled或onRejected回调函数，则执行自己的回调 */
-//   //   var ret
-//   //   try {
-//   //     ret = cb(self._value)
-//   //   } catch (e) {
-//   //     /* 处理下一个Promise的catch回调方法，ret作为上一个Promise catch回调return的值，返回给下一个Promise catch作为输入值 */
-//   //     reject(deferred.promise, e)
-//   //     return
-//   //   }
-
-//   //   /* 处理下一个Promise的then回调方法，ret作为上一个Promise then回调return的值，返回给下一个Promise then作为输入值 */
-//   //   resolve(deferred.promise, ret)
-//   // })
-// }
+  resolve(3)
+})
+  .then((res) => {
+    console.log(res)
+    return 4
+  })
+  .then((res) => {
+    console.log(res)
+    return 5
+  })
+// .then((res) => {
+//   console.log(res)
+// })
