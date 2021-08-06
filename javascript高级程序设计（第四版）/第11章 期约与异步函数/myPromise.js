@@ -262,7 +262,7 @@ var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null
 
 /**
  * Promise构造函数的_immediateFn()方法
- * 参数fn：要执行的方法（异步调用）
+ * 参数fn：要执行的方法（**注意：是异步调用**）
  */
 Promise._immediateFn =
   typeof setImmediateFunc === 'function' // 判断setImmediateFunc是否为函数对象
@@ -591,6 +591,12 @@ new Promise((resolve, reject) => {
     console.log(res)
     return 5
   })
-// .then((res) => {
-//   console.log(res)
-// })
+  .then((res) => {
+    console.log(res)
+  })
+/* 上述代码的完整调用流程：
+  1.创建Promise实例，同步立即执行执行器函数
+    new Promise -> doResolve() -> resolve() -> finale
+
+
+*/
