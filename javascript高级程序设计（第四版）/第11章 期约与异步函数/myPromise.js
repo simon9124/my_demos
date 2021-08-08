@@ -494,7 +494,7 @@ function handle(self, deferred) {
         ]
       }
     */
-    return // 同步执行到此暂停，等待异步执行（执行前一个Promise的then）
+    return // 同步执行到此暂停，等待异步执行（执行前一个Promise的then里面的onResolve）
   }
 
   /* 如果不是上述情况，标记当前进行的promise._handled为true */
@@ -595,8 +595,36 @@ new Promise((resolve, reject) => {
     console.log(res)
   })
 /* 上述代码的完整调用流程：
-  1.创建Promise实例，同步立即执行执行器函数
-    new Promise -> doResolve() -> resolve() -> finale
+  1.new Promise((resolve, reject) => {
+      resolve(3)
+    })
+      执行new Promise，创建Promise实例，返回这个Promise实例
+      执行doResolve()，同步立即执行执行器函数(resolve, reject) => {resolve(3)}
+      执行resolve(3)，将Promise实例的_state赋为1、_value赋为3
+      执行finale()，Promise实例的_deferreds为[]，赋为null后执行结束
+    返回Promise实例：Promise { _state: 1, _handled: false, _value: 3, _deferreds: null }
+  2..then((res) => {
+      console.log(res)
+      return 4
+    })
+      执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
+      执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 4}，返回Handler实例
+      执行handle()，传入then()前返回的上一个Promise实例和Handler实例
+        上一个Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，异步执行onFulfilled处理程序
+    返回新的Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，并将当前的onFulfilled处理程序放入异步线程
+  3..then((res) => {
+      console.log(res)
+      return 5
+    })
+      执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
+      执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 5}，返回Handler实例
+      执行handle()，传入then()前返回的上一个Promise实例和Handler实例
+        上一个Promise实例的_state为0，将本次的Hander实例放入其_deferreds空数组，同步线程暂停
+      回到异步线程，以上一个Promise实例的_value作为参数，执行其onFulfilled处理程序，打印3，返回4
+      执行resolve()，传入新的Promise实例和onFulfilled返回值，处理下一个then的回调方法
 
 
+      执行finale()，Promise实例的_deferreds为[]，赋为null后执行结束
+
+    返回新的Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，并将当前的onFulfilled处理程序放入异步线程
 */
