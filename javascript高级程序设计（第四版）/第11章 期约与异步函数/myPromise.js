@@ -124,6 +124,7 @@ function resolve(self, newValue) {
     }
     self._state = 1 // 解决值为其他正常值，_state = 1
     self._value = newValue // 把解决值赋给期约实例的_value属性
+    // console.log(self)
     /**
      * finale()方法
      * 参数self：（期约）实例
@@ -297,7 +298,9 @@ Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
 function Handler(onFulfilled, onRejected, promise) {
   this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
   this.onRejected = typeof onRejected === 'function' ? onRejected : null
-  this.promise = promise
+  this.promise = promise // Handler的promise，指向prom，即在.then()中创建的Promise实例
+  // console.log(this.promise, 'new Handler')
+  // console.log(this)
 }
 
 /** Promise原型的then()方法
@@ -310,8 +313,11 @@ Promise.prototype.then = function (onFulfilled, onRejected) {
   // console.log(this.constructor) // constructor指向Promise构造函数
   // console.log(this.constructor === Promise) // true
 
-  /* 创建一个新期约实例（相当于new Promise(noop)），传入空方法noop作为执行器函数 */
-  var prom = new this.constructor(noop)
+  /* 创建一个新期约实例（相当于new Promise(noop)），传入空方法noop作为执行器函数
+     注意：每次调用.then()都创建新的Promise实例，但调用下一个.then()会将其_deferreds数组改变（放入下一个Handler实例）！
+  */
+  // var prom = new this.constructor(noop)
+  var prom = new Promise(noop)
   // console.log(prom) // Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，新期约
   // console.log(new Promise(noop)) // Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，同上
 
@@ -451,7 +457,7 @@ Promise.prototype['catch'] = function (onRejected) {
 /**
  * handle()方法：核心
  * 参数self：上一个then()前返回的Promise实例
- * 参数deferred：创建的Handler实例
+ * 参数deferred：本次创建的Handler实例
  */
 function handle(self, deferred) {
   // console.log(self, 'handle')
@@ -479,7 +485,7 @@ function handle(self, deferred) {
   /* 链式调用时，第二个或之后的then()前返回的Promise实例永远是新的Promise实例，其_state值为0 */
   if (self._state === 0) {
     self._deferreds.push(deferred) // 将Handler实例放入上一个then()前返回的Promise实例的_deferrends数组
-    // console.log(self)
+    // console.log(self, 'push')
     /* 
       Promise {
         _state: 0,
@@ -505,6 +511,8 @@ function handle(self, deferred) {
    * 注意：这里的事件是异步执行的，第二个then会比这里的方法先执行
    */
   Promise._immediateFn(function () {
+    // console.log(deferred, '_immediateFn')
+
     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 获取onFulfilled或onRejected处理程序
 
     /* 如果没有onFulfilled或onRejected回调函数，则调用下一个Promise对象的回调，并携带当前的_value值 */
@@ -533,7 +541,7 @@ function handle(self, deferred) {
 
     /**
      * resolve()方法：处理下一个then的回调方法
-     * 参数deferred.promise：创建的Handler实例的promise属性，指向新的Promise实例
+     * 参数deferred.promise：Handler实例的promise，指向上一个then()前的Promise实例？？
      * 参数ret：执行当前then回调的返回值
      */
     // console.log(deferred.promise, ret)
@@ -546,7 +554,7 @@ function handle(self, deferred) {
  * 参数self：（期约）实例
  */
 function finale(self) {
-  // console.log(self, 'finale')
+  console.log(self, 'finale')
 
   /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
   if (self._state === 2 && self._deferreds.length === 0) {
@@ -573,6 +581,7 @@ function finale(self) {
      * 参数self：（期约）实例
      * 参数self._deferreds[i]：当前的Handle实例对象
      */
+    // console.log(self, self._deferreds[i])
     handle(self, self._deferreds[i])
   }
 
@@ -591,9 +600,9 @@ new Promise((resolve, reject) => {
     console.log(res)
     return 5
   })
-  .then((res) => {
-    console.log(res)
-  })
+// .then((res) => {
+//   console.log(res)
+// })
 /* 上述代码的完整调用流程：
   1.new Promise((resolve, reject) => {
       resolve(3)
@@ -609,22 +618,27 @@ new Promise((resolve, reject) => {
     })
       执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
       执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 4}，返回Handler实例
-      执行handle()，传入then()前返回的上一个Promise实例和Handler实例
-        上一个Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，异步执行onFulfilled处理程序
-    返回新的Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，并将当前的onFulfilled处理程序放入异步线程
+      执行handle()，传入上一个then()前返回的Promise实例和Handler实例
+        上一个Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，将当前的onFulfilled处理程序放入异步线程1
+    返回Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }
   3..then((res) => {
       console.log(res)
       return 5
     })
       执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
       执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 5}，返回Handler实例
-      执行handle()，传入then()前返回的上一个Promise实例和Handler实例
+      执行handle()，传入上一个then()前返回的Promise实例和Handler实例
         上一个Promise实例的_state为0，将本次的Hander实例放入其_deferreds空数组，同步线程暂停
-      回到异步线程，以上一个Promise实例的_value作为参数，执行其onFulfilled处理程序，打印3，返回4
-      执行resolve()，传入新的Promise实例和onFulfilled返回值，处理下一个then的回调方法
-
-
-      执行finale()，Promise实例的_deferreds为[]，赋为null后执行结束
-
-    返回新的Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }，并将当前的onFulfilled处理程序放入异步线程
+        上一个Promise实例变为：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {} ]  }，Handler为本次的Handler实例
+        重点来了：由于Handler的promise指向.then()中创建的Promise实例，因此上一个Handler实例也受到影响，其promise指向的Promise实例（即上一个Promise实例）的_deferreds同样指向[ Handler {} ]
+      回到异步线程1，执行上一个Handler实例包装的onFulfilled处理程序，打印3，返回4
+      执行resolve()，传入上一个Handler实例的promise（指向已发生变化的Promise实例）和onFulfilled返回值（4），将_state赋为1、_value赋为4
+        此时已发生变化的Promise实例更新为Promise { _state: 1, _handled: false, _value: 4, _deferreds: [ Handler {} ]  }
+      执行finale()，传入更新的Promise，循环_deferreds数组
+      执行handle()，传入更新的Promise实例和本次的Handler实例
+        更新的Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，将当前的onFulfilled处理程序放入异步线程2（嵌套在异步线程1中）
+      由于没有同步线程了，直接来到异步线程2，执行本次Handler实例包装的onFulfilled处理程序，打印4，返回5
+      执行resolve()，传入本次Handler实例的promise（未发生变化，初始的Promise实例）和onFulfilled返回值（5），将_state赋为1、_value赋为5
+      执行finale()，传入初始的Promise，其_deferreds为[]，赋为null后执行结束
+    返回Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }
 */
