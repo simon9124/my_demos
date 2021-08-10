@@ -230,7 +230,7 @@ Promise.prototype['finally'] = promiseFinally
 Promise.all = function (arr) {
   return new Promise(function (resolve, reject) {
     if (!isArray(arr)) {
-      return reject(new TypeError('Promise.all accepts an array')) // 参数必须是数组
+      return reject(new TypeError('Promise.all accepts an array')) // 参数必须可迭代
     }
 
     var args = Array.prototype.slice.call(arr) // Array的原型对象的slice方法，利用call绑定给数组arr

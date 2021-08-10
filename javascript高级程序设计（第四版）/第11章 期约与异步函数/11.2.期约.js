@@ -617,7 +617,7 @@ let p47 = Promise.all([
   Promise.resolve(),
   Promise.resolve(3),
 ]) // 包含的所有期约都解决
-setTimeout(console.log, 0, p47) // [1, undefined, 3]
+setTimeout(console.log, 0, p47) // Promise {<fulfilled>: [1, undefined, 3]}
 
 let p48 = Promise.all([
   Promise.reject(3), // 第一个拒绝的期约，拒绝理由为3
