@@ -679,20 +679,19 @@ Promise.all = function (arr) {
      */
     function res(i, val) {
       try {
-        // console.log(args[i], val)
+        // console.log(args[i], val) // args[i]和val最初是一样的
 
         /* 如果该项为对象或函数对象，则对其then属性做特殊处理 */
         if (val && (typeof val === 'object' || typeof val === 'function')) {
           var then = val.then
-          // 如果then属性是一个函数（val是Promise类型或thenable对象）
+          // 如果then指向一个函数（val是Promise类型或thenable对象），则做处理
           if (typeof then === 'function') {
             /* 将该项的then方法体内的this指向该项本身，并执行then()
                Promise.prototype.then原本接受2个参数onFulfilled和onRejected，将function(val){}和reject回调分别作为这两个方法传给.then()
                执行.then() 
-                -> 创建Handler实例 
-                -> 调用handle方法 
-                -> handle方法中根据_state进行下一步操作 
-                -> 调用Promise._immediateFn 
+                -> 创建Handler实例（this指向then前的Promise实例，即该项本身）
+                -> 调用handle方法，根据_state进行下一步操作
+                -> 如_state为1，则调用Promise._immediateFn 
                 -> 调用onFulfilled（即function(val)），参数为期约的_value值，即调用function(self._value)
             */
             then.call(
@@ -706,7 +705,7 @@ Promise.all = function (arr) {
           }
         }
 
-        /* 重写该项，若该项为期约则被重写为其解决值/拒绝理由，若为其他则不变 */
+        /* 重写该项：若该项为期约则被重写为其解决值/拒绝理由，若为其他则不变 */
         args[i] = val
         // console.log(args[i], val)
 
@@ -735,15 +734,15 @@ function isArray(x) {
 setTimeout(
   console.log,
   0,
-  // Promise.all(1)
-  // Promise.all([])
-  // new Promise((resolve, reject) => resolve([]))
-  // Promise.all([1, 2, 3])
-  // Promise.all([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)])
+  // Promise.all(1),
+  // Promise.all([]),
+  // new Promise((resolve, reject) => resolve([])),
+  // Promise.all([1, 2, 3]),
+  Promise.all([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)])
   // Promise.all([
   //   Promise.resolve(true),
   //   Promise.resolve(true),
   //   Promise.resolve(true),
-  // ])
-  Promise.all([Promise.resolve(1), Promise.reject(2), Promise.resolve(3)])
+  // ]),
+  // Promise.all([Promise.resolve(1), Promise.reject(2), Promise.resolve(3)])
 )
