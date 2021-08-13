@@ -796,3 +796,25 @@ Promise.race = function (arr) {
    Promise.all()：resolve数组所有项（如果该项是期约，则用其解决值/拒绝理由替换）
    Promise.race()：逐个Promise.resolve数组项（如果返回的期约已解决/拒绝，则不再Promise.resolve后面的项）
 */
+
+/** Promise原型的finally()方法
+ * 参数callback：
+ */
+Promise.prototype['finally'] = function (callback) {
+  var constructor = this.constructor
+  return this.then(
+    function (value) {
+      // @ts-ignore，最终执行callback
+      return constructor.resolve(callback()).then(function () {
+        return value
+      })
+    },
+    function (reason) {
+      // @ts-ignore，最终执行callback
+      return constructor.resolve(callback()).then(function () {
+        // @ts-ignore
+        return constructor.reject(reason)
+      })
+    }
+  )
+}
