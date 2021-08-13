@@ -11,6 +11,7 @@ var setTimeoutFunc = setTimeout
 // @ts-ignore
 var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null
 
+// isArray方法：判断对象是否为数组
 function isArray(x) {
   return Boolean(x && typeof x.length !== 'undefined')
 }
@@ -227,46 +228,69 @@ Promise.prototype.then = function (onFulfilled, onRejected) {
 // .finally()
 Promise.prototype['finally'] = promiseFinally
 
+/** Promise构造函数的all()方法
+ * 参数arr：数组
+ */
 Promise.all = function (arr) {
+  // 返回一个新期约
   return new Promise(function (resolve, reject) {
     if (!isArray(arr)) {
-      return reject(new TypeError('Promise.all accepts an array')) // 参数必须可迭代
+      return reject(new TypeError('Promise.all accepts an array')) // 参数必须是数组
     }
+    var args = Array.prototype.slice.call(arr) // Array原型的slice方法，利用call绑定给arr（避免有自定义的slice方法）
+    if (args.length === 0) return resolve([]) // 若数组长度为0，则立即执行执行器函数并返回，参数为空数组
+    // ↑相当于：new Promise((resolve, reject) => resolve([]))
 
-    var args = Array.prototype.slice.call(arr) // Array的原型对象的slice方法，利用call绑定给数组arr
-    if (args.length === 0) return resolve([]) // 若数组为空
     var remaining = args.length
 
+    /**
+     * res()方法
+     * 参数i：数组下标
+     * 参数val：数组项
+     */
     function res(i, val) {
       try {
-        /** 如果val是Promise对象，则执行Promise，直到resolve了一个非Promise对象 **/
+        // console.log(args[i], val) // args[i]和val最初是一样的
+
+        /* 如果该项为对象或函数对象，则对其then属性做特殊处理 */
         if (val && (typeof val === 'object' || typeof val === 'function')) {
           var then = val.then
+          // 如果then指向一个函数（val是Promise类型或thenable对象），则做处理
           if (typeof then === 'function') {
+            /* 将该项的then方法体内的this指向该项本身，并执行then()
+               Promise.prototype.then原本接受2个参数onFulfilled和onRejected，将function(val){}和reject回调分别作为这两个方法传给.then()
+               执行.then() 
+                -> 创建Handler实例（this指向then前的Promise实例，即该项本身）
+                -> 调用handle方法，根据_state进行下一步操作
+                -> 如_state为1，则调用Promise._immediateFn 
+                -> 调用onFulfilled（即function(val)），参数为期约的_value值，即调用function(self._value)
+            */
             then.call(
               val,
               function (val) {
-                res(i, val)
+                res(i, val) // 将期约的_value值作为val，再次调用res方法
               },
               reject
             )
             return
           }
         }
-        /** 用当前resolve/reject的值重写args[i]{Promise} 对象 **/
-        args[i] = val
 
-        /** 若所有的Promise都执行完毕，则resolve all的Promise对象，返回args数组结果 **/
+        /* 重写该项：若该项为期约则被重写为其解决值/拒绝理由，若为其他则不变 */
+        args[i] = val
+        // console.log(args[i], val)
+
+        /* 若所有的项都执行完毕，则执行执行器函数的resolve回调，参数为处理后的数组 */
         if (--remaining === 0) {
-          resolve(args) // 递归自己
+          resolve(args) // doResolve()内部的done控制着resolve/reject方法只执行一次
         }
       } catch (ex) {
-        /** 只要其中一个Promise出现异常，则全部的Promise执行退出，进入catch异常处理 **/
-        /** doResolve()内部的done控制了resolve/reject方法只执行一次的处理，因此他的Promise都不执行 **/
-        reject(ex)
+        /* 只要其中一项出现异常，则全部执行退出，进入catch异常处理 */
+        reject(ex) // doResolve()内部的done控制着resolve/reject方法只执行一次
       }
     }
 
+    /* 循环数组，针对每一项执行res()方法 */
     for (var i = 0; i < args.length; i++) {
       res(i, args[i])
     }

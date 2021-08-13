@@ -586,7 +586,7 @@ function finale(self) {
   self._deferreds = null // 全部执行后，将_deferreds数组重置为null
 }
 
-/* 完整的链式调用测试 */
+/* 测试：完整的链式调用 */
 // new Promise((resolve, reject) => {
 //   resolve(3)
 // })
@@ -658,24 +658,24 @@ function finale(self) {
 //   })
 
 /** Promise构造函数的all()方法
- * 参数arr：可迭代对象
+ * 参数arr：数组
  */
 Promise.all = function (arr) {
   // 返回一个新期约
   return new Promise(function (resolve, reject) {
     if (!isArray(arr)) {
-      return reject(new TypeError('Promise.all accepts an array')) // 参数必须可迭代
+      return reject(new TypeError('Promise.all accepts an array')) // 参数必须是数组
     }
     var args = Array.prototype.slice.call(arr) // Array原型的slice方法，利用call绑定给arr（避免有自定义的slice方法）
-    if (args.length === 0) return resolve([]) // 若可迭代对象长度为0，则立即执行执行器函数并返回，参数为空数组
+    if (args.length === 0) return resolve([]) // 若数组长度为0，则立即执行执行器函数并返回，参数为空数组
     // ↑相当于：new Promise((resolve, reject) => resolve([]))
 
     var remaining = args.length
 
     /**
      * res()方法
-     * 参数i：可迭代对象下标
-     * 参数val：可迭代对象的项
+     * 参数i：数组下标
+     * 参数val：数组项
      */
     function res(i, val) {
       try {
@@ -709,7 +709,7 @@ Promise.all = function (arr) {
         args[i] = val
         // console.log(args[i], val)
 
-        /* 若所有的项都执行完毕，则执行执行器函数的resolve回调，参数为处理后的可迭代对象 */
+        /* 若所有的项都执行完毕，则执行执行器函数的resolve回调，参数为处理后的数组 */
         if (--remaining === 0) {
           resolve(args) // doResolve()内部的done控制着resolve/reject方法只执行一次
         }
@@ -719,30 +719,80 @@ Promise.all = function (arr) {
       }
     }
 
-    /* 循环可迭代对象，针对每一项执行res()方法 */
+    /* 循环数组，针对每一项执行res()方法 */
     for (var i = 0; i < args.length; i++) {
       res(i, args[i])
     }
   })
 }
 
-// isArray方法：判断对象是否可迭代
+// isArray方法：判断对象是否为数组
 function isArray(x) {
   return Boolean(x && typeof x.length !== 'undefined')
 }
 
-setTimeout(
-  console.log,
-  0,
-  // Promise.all(1),
-  // Promise.all([]),
-  // new Promise((resolve, reject) => resolve([])),
-  // Promise.all([1, 2, 3]),
-  Promise.all([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)])
-  // Promise.all([
-  //   Promise.resolve(true),
-  //   Promise.resolve(true),
-  //   Promise.resolve(true),
-  // ]),
-  // Promise.all([Promise.resolve(1), Promise.reject(2), Promise.resolve(3)])
-)
+/* 测试：Promise.all */
+// setTimeout(
+//   console.log,
+//   0,
+//   // Promise.all() // 参数不是可迭代对象
+//   // Promise.all([]), // 参数是空数组
+//   // new Promise((resolve, reject) => resolve([])) // 等效于Promise.all([])
+//   // Promise.all([1, 2, 3]), // 参数是数组，数组的每项不是Promise对象
+//   Promise.all([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]) // 参数是数组，数组的每项是解决的Promise对象
+//   // Promise.all([
+//   //   Promise.resolve(true),
+//   //   Promise.resolve(true),
+//   //   Promise.resolve(true),
+//   // ]),
+//   // Promise.all([Promise.resolve(1), Promise.reject(2), Promise.resolve(3)]) // 参数是数组，数组中有拒绝的Promise对象
+//   // Promise.all([Promise.resolve(1), new Promise(() => {}), Promise.resolve(3)]) // 参数是数组，数组中有待定的Promise对象
+// )
+
+/** Promise构造函数的race()方法
+ * 参数arr：数组
+ */
+Promise.race = function (arr) {
+  // 返回一个新期约
+  return new Promise(function (resolve, reject) {
+    if (!isArray(arr)) {
+      return reject(new TypeError('Promise.race accepts an array')) // 参数必须是数组
+    }
+    /* 循环数组，针对每一项执行resolve()和.then()方法（若参数为空数组，则不执行，返回待解决的期约） */
+    for (var i = 0, len = arr.length; i < len; i++) {
+      /**
+       * Promise.resolve()方法
+       * 参数arr[i]：数组项
+       */
+      Promise.resolve(arr[i]) // 返回新期约
+        /* Promise.prototype.then()方法
+           Promise.prototype.then原本接受2个参数onFulfilled和onRejected，将fn的resolve和reject回调分别作为这两个方法传给.then()
+           执行.then()
+           -> 创建Handler实例（this指向then前的Promise实例，即Promise.resolve()返回的新期约）
+           -> 调用handle方法，根据_state进行下一步操作
+           -> 如_state为1，则调用Promise._immediateFn
+           -> 调用onFulfilled，参数为期约的_value值，即调用function(self._value)
+        */
+        .then(resolve, reject) // doResolve()内部的done控制着resolve/reject方法只执行一次，因此只有最先落定（解决或拒绝）的Promise执行了resolve/reject，后面的Promise都不执行
+    }
+    // 以Promise.race([3, 2, 1])为例，可以简化为Promise.resolve(3).then(resolve, reject)
+  })
+}
+
+/* 测试：Promise.race */
+// setTimeout(
+//   console.log,
+//   0,
+//   // Promise.race() // 参数不是可迭代对象
+//   // Promise.race([]) // 参数是空数组
+//   // Promise.race([3, 2, 1]) // 参数是数组，数组的每项不是Promise对象
+//   // Promise.resolve(3) // 等效于Promise.race([3, 2, 1])
+//   // Promise.race([Promise.resolve(3), Promise.resolve(2), Promise.resolve(1)]) // 参数是数组，最先落定解决的Promise对象
+//   // Promise.race([Promise.reject(1), Promise.resolve(2), Promise.resolve(3)]) // 参数是数组，最先落定拒绝的Promise对象
+//   Promise.race([new Promise(() => {}), Promise.resolve(2), Promise.resolve(1)]) // 参数是数组，最先落定解决的Promise对象
+// )
+
+/* 核心思路比对
+   Promise.all()：resolve数组所有项（如果该项是期约，则用其解决值/拒绝理由替换）
+   Promise.race()：逐个Promise.resolve数组项（如果返回的期约已解决/拒绝，则不再Promise.resolve后面的项）
+*/
