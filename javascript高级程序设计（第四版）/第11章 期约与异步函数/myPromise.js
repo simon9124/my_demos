@@ -802,28 +802,39 @@ Promise.prototype['finally'] = function (callback) {
   // console.log(this, 'finally') // this指向finally()前返回的Promise实例
   // console.log(this.constructor) // constructor指向Promise构造函数
   // console.log(this.constructor === Promise) // true
-  var constructor = this.constructor // 为什么要做这个赋值？
+  var constructor = this.constructor // 存疑：为什么要做这个赋值？直接用Promise不好么？
 
-  /* 调用Promise.prototype.then()方法
+  /* 调用Promise.prototype.then()方法，以下文setTimeout中的测试为例：
      -> 创建Handler实例（this指向finally()前的Promise实例），创建新Promise实例
-     -> 调用handle方法，根据_state进行下一步操作
-        -> 如_state为1（finally前返回解决的期约）
-            -> 调用Promise._immediateFn，调用onFulfilled，调用后返回Promise实例（调用过程见onFulfilled内部）
-            -> 调用resolve()，传入Handler实例的promise和当前回调的返回值（是一个期约），将_state赋值为3
-            -> 调用finale()，其_deferreds为[]，赋为null后执行结束
-            -> 返回.then()内部创建的Promise实例
+     -> 调用handle()，_state为1，调用Promise._immediateFn，调用onFulfilled，调用后返回Promise实例（调用过程见onFulfilled内部）
+     -> 调用resolve()，传入Handler实例的promise和onFulfilled返回值（是一个Promise实例），将_state赋值为3，_value赋值为onFulfilled返回的Promise实例
+     -> 调用finale()，其_deferreds为[]，赋为null后执行结束
+     -> 返回.then()内部创建的Promise实例：
+        Promise { 
+          _state: 3,
+          _handled: false,
+          _value: Promise {
+            _deferreds: null,
+            _handled: false,
+            _state: 1,
+            _value: 2,
+          }
+          _deferreds: null
+        }
   */
   return this.then(
     /* onFulfilled处理程序 */
     function (value) {
-      /* 调用过程，以finally前是Promise.resolve(3)为例：
-        -> 调用callback
-        -> 调用Promise.resolve()，创建解决的Promise实例，解决值为callback返回值
-        -> 调用.then()（内部this指向Promise.resolve()返回的期约，_state为1，_value为callback返回值），创建Handler实例，创建新Promise实例
-        -> 调用handle()，调用Promise._immediateFn，调用onFulfilled（即：function() {return value}），返回的value是finally前Promise实例的_value
-        -> 调用resolve()，传入Handler实例的promise和当前回调的返回值（finally前Promise实例的_value），将_state赋值为1
+      /* 调用过程，以下文setTimeout中的测试为例：
+        -> 调用callback，打印finally3，返回3
+        -> 调用Promise.resolve()，创建解决的Promise实例，解决值为callback返回值3
+           此时then前的Promise实例为：Promise { _state: 1, _handled: false, _value: 3, _deferreds: null }
+        -> 调用.then()（内部this指向Promise.resolve()返回的期约，_state为1，_value为3），创建Handler实例（只有onFulfilled），创建新Promise实例
+        -> 调用handle()，内部state为1，将handled置为true，调用Promise._immediateFn，调用onFulfilled（即：function() {return value}），返回的value是finally前Promise实例的_value，即2
+        -> 调用resolve()，传入Handler实例的promise和onFulfilled返回值2，将_state赋值为1，_value赋值为2
         -> 调用finale()，其_deferreds为[]，赋为null后执行结束
         -> 返回.then()内部创建的Promise实例（作为参数，传递给上层resolve()方法）
+           返回的Promise实例为：Promise { _state: 1, _handled: false, _value: 2, _deferreds: null }
       */
       // return constructor.resolve(callback())
       return constructor.resolve(callback()).then(function () {
@@ -835,11 +846,27 @@ Promise.prototype['finally'] = function (callback) {
     function (reason) {
       return constructor.resolve(callback()).then(function () {
         // console.log(reason) // finally()前返回的Promise实例的拒绝理由
-        return constructor.reject(reason) // 与onFulfilled稍有不同，内部返回拒绝的期约
+        return constructor.reject(reason) // 与onFulfilled不同的是，内部返回拒绝的期约，拒绝理由为finally()前Promise实例的拒绝理由
         /* 
-          Promise._immediateFn最后一步均为调用resolve()方法，_state值会在resolve()中被赋为1
-          为了区分与onFulfilled的区别，返回拒绝的期约（而不是拒绝理由）
-          返回期约的_value值会多嵌套一层Promise（onFulfilled嵌套2层，onRejected嵌套3层），最内层为这个拒绝的期约
+          Promise._immediateFn最后一步均为调用resolve()方法，第二个参数若不是期约，则_state值会在resolve()中被赋为1
+          因此为了区分与onFulfilled的区别，返回拒绝的期约（而不是拒绝理由），第二个参数是期约，_state值在resolve()中被赋为3
+          因此最终返回的期约，会多嵌套一层Promise（onFulfilled嵌套2层，onRejected嵌套3层），最内层为这个拒绝的期约
+          Promise { 
+            _state: 3,
+            _handled: false,
+            _value: Promise {
+              _deferreds: null,
+              _handled: false,
+              _state: 3,
+              _value: Promise { // 最内层为拒绝的期约
+                _deferreds: null,
+                _handled: false,
+                _state: 2, // 此处的_state
+                _value: 2
+              }
+            }
+            _deferreds: null
+          }
         */
       })
     }
@@ -849,19 +876,19 @@ Promise.prototype['finally'] = function (callback) {
 }
 
 /* 测试：Promise.prototype.finally */
-// Promise.resolve(3).finally(() => {
+// Promise.resolve(2).finally(() => {
 //   console.log('finally')
 // })
 
 setTimeout(
   console.log,
   0,
-  Promise.resolve(3).finally(() => {
-    console.log('finally3')
-    return 3
-  })
-  // Promise.reject(4).finally(() => {
-  //   console.log('finally4')
-  //   return 4
+  // Promise.resolve(2).finally(() => {
+  //   console.log('finally3')
+  //   return 3
   // })
+  Promise.reject(2).finally(() => {
+    console.log('finally4')
+    return 4
+  })
 )
