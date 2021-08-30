@@ -690,8 +690,9 @@ Promise.all = function (arr) {
                Promise.prototype.then原本接受2个参数onFulfilled和onRejected，将function(val){}和reject回调分别作为这两个方法传给.then()
                 -> 创建Handler实例（this指向then前的Promise实例，即该项本身）
                 -> 调用handle方法，根据_state进行下一步操作
-                    -> 如_state为1，则调用Promise._immediateFn 
-                    -> 调用onFulfilled（即function(val)），参数为期约的_value值，即调用function(self._value)
+                  -> 如_state为1，则调用Promise._immediateFn 
+                  -> 调用onFulfilled（即function(val)），参数为期约的_value值，即调用function(self._value)
+                  （若_state为0，则将Handler实例放入then()前Promise实例（该项本身）的_deferrends数组，同步执行暂停，整端代码执行终止，返回该项，即待定的期约）
             */
             then.call(
               val,
@@ -704,11 +705,12 @@ Promise.all = function (arr) {
           }
         }
 
-        /* 重写该项：若该项为期约则被重写为其解决值/拒绝理由，若为其他则不变 */
+        /* 重写该项：若该项为解决的期约则被重写为其解决值/拒绝理由，若为非期约则不变 */
         args[i] = val
         // console.log(args[i], val)
+        // console.log(args)
 
-        /* 若所有的项都执行完毕，则执行执行器函数的resolve回调，参数为处理后的数组 */
+        /* 若所有的Promise都执行完毕（没有待定的），则执行执行器函数的resolve回调，参数为处理后的数组 */
         if (--remaining === 0) {
           resolve(args) // doResolve()内部的done控制着resolve/reject方法只执行一次
         }
@@ -734,18 +736,18 @@ function isArray(x) {
 // setTimeout(
 //   console.log,
 //   0,
-//   // Promise.all() // 参数不是可迭代对象
+//   // Promise.all() // 参数不是数组
 //   // Promise.all([]), // 参数是空数组
 //   // new Promise((resolve, reject) => resolve([])) // 等效于Promise.all([])
-//   // Promise.all([1, 2, 3]), // 参数是数组，数组的每项不是Promise对象
-//   Promise.all([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]) // 参数是数组，数组的每项是解决的Promise对象
+//   // Promise.all([1, 2, 3]) // 参数是数组，数组的每项不是Promise对象
+//   // Promise.all([Promise.resolve(1), Promise.resolve(2), Promise.resolve(3)]) // 参数是数组，数组的每项是解决的Promise对象
 //   // Promise.all([
 //   //   Promise.resolve(true),
 //   //   Promise.resolve(true),
 //   //   Promise.resolve(true),
 //   // ]),
 //   // Promise.all([Promise.resolve(1), Promise.reject(2), Promise.resolve(3)]) // 参数是数组，数组中有拒绝的Promise对象
-//   // Promise.all([Promise.resolve(1), new Promise(() => {}), Promise.resolve(3)]) // 参数是数组，数组中有待定的Promise对象
+//   Promise.all([Promise.resolve(1), new Promise(() => {}), Promise.resolve(3)]) // 参数是数组，数组中有待定的Promise对象
 // )
 
 /** Promise构造函数的race()方法
@@ -781,7 +783,7 @@ Promise.race = function (arr) {
 // setTimeout(
 //   console.log,
 //   0,
-//   // Promise.race() // 参数不是可迭代对象
+//   // Promise.race() // 参数不是数组
 //   // Promise.race([]) // 参数是空数组
 //   // Promise.race([3, 2, 1]) // 参数是数组，数组的每项不是Promise对象
 //   // Promise.resolve(3) // 等效于Promise.race([3, 2, 1])
@@ -880,15 +882,126 @@ Promise.prototype['finally'] = function (callback) {
 //   console.log('finally')
 // })
 
+// setTimeout(
+//   console.log,
+//   0,
+//   // Promise.resolve(2).finally(() => {
+//   //   console.log('finally3')
+//   //   return 3
+//   // })
+//   Promise.reject(2).finally(() => {
+//     console.log('finally4')
+//     return 4
+//   })
+// )
+
+/** Promise构造函数的allSettled()方法
+ * 参数arr：数组
+ */
+Promise.allSettled = function (arr) {
+  // console.log(this) // this指向Promise构造函数
+  var P = this // 存疑：同Promise.prototype.['finally']，为什么要做这个赋值？
+
+  // 返回一个新期约
+  return new P(function (resolve, reject) {
+    // 参数必须是数组
+    if (!(arr && typeof arr.length !== 'undefined')) {
+      return reject(
+        new TypeError(
+          typeof arr +
+            ' ' +
+            arr +
+            ' is not iterable(cannot read property Symbol(Symbol.iterator))'
+        )
+      )
+    }
+
+    var args = Array.prototype.slice.call(arr) // Array原型的slice方法，利用call绑定给arr（避免有自定义的slice方法）
+    if (args.length === 0) return resolve([]) // 若数组长度为0，则立即执行执行器函数并返回，参数为空数组
+    // ↑相当于：new Promise((resolve, reject) => resolve([]))
+
+    var remaining = args.length
+
+    /**
+     * res()方法
+     * 参数i：数组下标
+     * 参数val：数组项
+     */
+    function res(i, val) {
+      // console.log(args[i], val) // args[i]和val最初是一样的
+
+      /* 如果该项为对象或函数对象，则对其then属性做特殊处理 */
+      if (val && (typeof val === 'object' || typeof val === 'function')) {
+        var then = val.then
+        // 如果then指向一个函数（val是Promise类型或thenable对象），则做处理
+        if (typeof then === 'function') {
+          /* 将该项的then方法体内的this指向该项本身，并执行then()
+             Promise.prototype.then原本接受2个参数onFulfilled和onRejected，将function(val){}和function(e){}回调分别作为这两个方法传给.then()
+             -> 创建Handler实例（this指向then前的Promise实例，即该项本身）
+             -> 调用handle方法，根据_state进行下一步操作
+               -> 如_state为1，则调用Promise._immediateFn
+               -> 调用onFulfilled（即function(val)），参数为期约的_value值，即调用function(self._value)
+               （若_state为0，则将Handler实例放入then()前Promise实例（该项本身）的_deferrends数组，同步执行暂停，整端代码执行终止，返回该项，即待定的期约）
+          */
+          then.call(
+            val,
+            function (val) {
+              res(i, val) // 将期约的_value值作为val，再次调用res方法
+            },
+            function (e) {
+              args[i] = { status: 'rejected', reason: e } // 将该项重写为{status:'rejected',reason:错误原因}
+              /* 若所有的项都执行完毕，则执行执行器函数的resolve回调，参数为处理后的数组 */
+              if (--remaining === 0) {
+                resolve(args)
+              }
+            }
+          )
+          return
+        }
+      }
+
+      /* 重写该项：
+         若该项为解决的期约，则被重写为{status:'fulfilled',value:解决值}
+         若该项为拒绝的期约，则被重写为{status:'rejected',reason:拒绝理由}
+         若该项为非期约，则被重写为对象{status:'fulfilled',value:该项}
+      */
+      args[i] = { status: 'fulfilled', value: val }
+      // console.log(args[i], val)
+      // console.log(args)
+
+      /* 若所有的Promise都执行完毕（没有待定的），则执行执行器函数的resolve回调，参数为处理后的数组 */
+      if (--remaining === 0) {
+        resolve(args) // doResolve()内部的done控制着resolve/reject方法只执行一次
+      }
+    }
+
+    /* 循环数组，针对每一项执行res()方法 */
+    for (var i = 0; i < args.length; i++) {
+      res(i, args[i])
+    }
+  })
+}
+
+/* 测试：Promise.allSettled */
 setTimeout(
   console.log,
   0,
-  // Promise.resolve(2).finally(() => {
-  //   console.log('finally3')
-  //   return 3
-  // })
-  Promise.reject(2).finally(() => {
-    console.log('finally4')
-    return 4
-  })
+  // Promise.allSettled() // 参数不是数组
+  // Promise.allSettled([]) // 参数是空数组
+  // Promise.allSettled([3, 2, 1]) // 参数是数组，数组的每项不是Promise对象
+  // Promise.allSettled([
+  //   Promise.resolve(3),
+  //   Promise.resolve(2),
+  //   Promise.resolve(1),
+  // ]) // 参数是数组，每项都是解决的Promise对象
+  Promise.allSettled([
+    Promise.resolve(1),
+    Promise.reject(2),
+    Promise.resolve(3),
+  ]) // 参数是数组，每项都是Promise对象，有拒绝的期约
+  // Promise.allSettled([
+  //   Promise.resolve(2),
+  //   new Promise(() => {}),
+  //   Promise.resolve(1),
+  // ]) // 参数是数组，每项都是Promise对象，有待定的期约
 )
