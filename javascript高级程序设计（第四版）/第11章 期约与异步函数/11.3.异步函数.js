@@ -28,13 +28,13 @@ async function foo() {
 console.log(foo()) // Promise {<fulfilled>: "foo"}，被当作已解决的期约
 foo().then((result) => console.log(result)) // 'foo'
 
-async function bar() {
+async function bar2() {
   return ['bar'] // 返回没有实现thenable接口的对象
 }
-console.log(bar()) // Promise {<fulfilled>: ['bar']}，被当作已解决的期约
-bar().then((result) => console.log(result)) // ['bar']
+console.log(bar2()) // Promise {<fulfilled>: ['bar']}，被当作已解决的期约
+bar2().then((result) => console.log(result)) // ['bar']
 
-async function baz() {
+async function baz2() {
   const thenable = {
     then(callback) {
       callback('baz')
@@ -42,8 +42,8 @@ async function baz() {
   }
   return thenable // 返回实现了thenable接口的非期约对象
 }
-console.log(baz()) // Promise {<pending>}
-baz().then((result) => console.log(result)) // 'baz'，由then()解包
+console.log(baz2()) // Promise {<pending>}
+baz2().then((result) => console.log(result)) // 'baz'，由then()解包
 
 async function qux() {
   return Promise.resolve('qux') // 返回解决的期约
@@ -78,3 +78,92 @@ async function foo() {
 }
 foo().catch((result) => console.log(result)) // catch()方法捕获不到
 // Uncaught (in promise) 3，浏览器消息队列捕获
+
+/* await */
+let p = new Promise((resolve, reject) => {
+  setTimeout(resolve, 1000, 3)
+})
+p.then((x) => console.log(x))
+
+// 用async/await重写
+async function foo() {
+  let p = new Promise((resolve, reject) => {
+    setTimeout(resolve, 1000, 3)
+  })
+  console.log(await p)
+}
+foo() // 'foo'
+
+// await将期约解包
+async function foo() {
+  console.log(await Promise.resolve('foo')) // 将期约解包，再将值传给表达式
+}
+foo()
+
+async function bar2() {
+  return await Promise.resolve('bar')
+}
+bar2().then((res) => console.log(res)) // 'bar'
+
+async function baz2() {
+  await new Promise((resolve, reject) => {
+    setTimeout(resolve, 1000)
+  })
+  console.log('baz')
+}
+baz2() // 'baz'（1000毫秒后）
+
+// await等待值比较
+async function foo() {
+  console.log(await 'foo') // 等待原始值，被当作已解决的期约Promise.resolve('foo')，再由await解包
+}
+foo() // 'foo'
+
+async function bar2() {
+  console.log(await ['bar']) // 等待值是没有实现thenable接口的对象，被当作已解决的期约再由await解包
+}
+bar2() // ["bar"]
+
+async function baz2() {
+  const thenable = {
+    then(callback) {
+      callback('baz')
+    },
+  }
+  console.log(await thenable) // 等待值是实现了thenable接口的非期约对象，由await解包
+}
+baz2() // 'baz'
+
+async function qux() {
+  console.log(await Promise.resolve('qux')) // 等待值是解决的期约
+}
+qux() // 'qux'
+
+// 等待会抛出错误的同步操作，返回拒绝的期约
+async function foo() {
+  console.log(1)
+  await (() => {
+    throw 3 // 抛出错误的同步操作
+  })()
+}
+foo().catch((result) => console.log(result)) // 给返回的期约添加拒绝处理程序
+console.log(2)
+/* 
+  1
+  2
+  3
+*/
+
+// 对拒绝的期约使用await，释放错误值（将拒绝期约返回）
+async function foo() {
+  console.log(1)
+  await Promise.reject(3) // 对拒绝的期约使用await，将其返回（后续代码不再执行）
+  console.log(4) // 不执行
+}
+foo().catch((result) => console.log(result)) // 给返回的期约添加拒绝处理程序
+console.log(2)
+/* 
+  1
+  2
+  3
+*/
