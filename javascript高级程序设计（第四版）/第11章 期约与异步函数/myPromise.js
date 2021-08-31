@@ -502,7 +502,8 @@ function handle(self, deferred) {
   Promise._immediateFn(function () {
     // console.log(deferred, '_immediateFn') // 注意：当有不少于2个.then()时，前一个.then()生成的Handler实例，其promise指向的Promise实例的_deferreds指向问题（后一个.then()里包含onFulfilled或onRejected回调函数，_deferreds不再指向空数组而是包含后一个Handler实例的数组）
 
-    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 获取onFulfilled或onRejected处理程序
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 根据上一个then()前的Promise实力的_state，获取onFulfilled或onRejected处理程序
+    // console.log(cb)
 
     /* 如果没有onFulfilled或onRejected回调函数，则携带当前的_value值，等待下一个Promise对象的回调 */
     if (cb === null) {
@@ -587,6 +588,22 @@ function finale(self) {
 }
 
 /* 测试：完整的链式调用 */
+// Promise.resolve(1)
+//   .catch((err) => {
+//     return 3
+//   })
+//   .then((res) => {
+//     console.log(res)
+//   })
+
+// Promise.reject(1)
+//   .then((res) => {
+//     return 2
+//   })
+//   .catch((err) => {
+//     console.log(err)
+//   })
+
 // new Promise((resolve, reject) => {
 //   resolve(3)
 // })
@@ -983,25 +1000,25 @@ Promise.allSettled = function (arr) {
 }
 
 /* 测试：Promise.allSettled */
-setTimeout(
-  console.log,
-  0,
-  // Promise.allSettled() // 参数不是数组
-  // Promise.allSettled([]) // 参数是空数组
-  // Promise.allSettled([3, 2, 1]) // 参数是数组，数组的每项不是Promise对象
-  // Promise.allSettled([
-  //   Promise.resolve(3),
-  //   Promise.resolve(2),
-  //   Promise.resolve(1),
-  // ]) // 参数是数组，每项都是解决的Promise对象
-  Promise.allSettled([
-    Promise.resolve(1),
-    Promise.reject(2),
-    Promise.resolve(3),
-  ]) // 参数是数组，每项都是Promise对象，有拒绝的期约
-  // Promise.allSettled([
-  //   Promise.resolve(2),
-  //   new Promise(() => {}),
-  //   Promise.resolve(1),
-  // ]) // 参数是数组，每项都是Promise对象，有待定的期约
-)
+// setTimeout(
+//   console.log,
+//   0,
+//   // Promise.allSettled() // 参数不是数组
+//   // Promise.allSettled([]) // 参数是空数组
+//   // Promise.allSettled([3, 2, 1]) // 参数是数组，数组的每项不是Promise对象
+//   // Promise.allSettled([
+//   //   Promise.resolve(3),
+//   //   Promise.resolve(2),
+//   //   Promise.resolve(1),
+//   // ]) // 参数是数组，每项都是解决的Promise对象
+//   Promise.allSettled([
+//     Promise.resolve(1),
+//     Promise.reject(2),
+//     Promise.resolve(3),
+//   ]) // 参数是数组，每项都是Promise对象，有拒绝的期约
+//   // Promise.allSettled([
+//   //   Promise.resolve(2),
+//   //   new Promise(() => {}),
+//   //   Promise.resolve(1),
+//   // ]) // 参数是数组，每项都是Promise对象，有待定的期约
+// )
