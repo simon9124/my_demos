@@ -167,3 +167,105 @@ console.log(2)
   2
   3
 */
+
+/* await的限制 */
+
+async function foo() {
+  console.log(await Promise.resolve(3)) // 必须在异步函数中使用
+}
+foo() // 3
+;(async function () {
+  console.log(await Promise.resolve(3)) // 3，立即调用的异步函数表达式
+})()
+
+const syncFn = async () => {
+  console.log(await Promise.resolve(3)) // 在箭头函数中使用，箭头函数前一样要加async
+}
+syncFn() // 3
+
+function foo() {
+  // console.log(await Promise.resolve(3)) // 不允许在同步函数中使用
+}
+
+async function foo() {
+  // function bar() {
+  //   console.log(await Promise.resolve(3)) // 错误：异步函数不会扩展到嵌套函数
+  // }
+  async function bar() {
+    console.log(await Promise.resolve(3)) // 需要在bar前加async
+  }
+}
+
+/* 11.3.2 停止和恢复执行 */
+
+// async只是标识符
+async function foo() {
+  console.log(2)
+}
+console.log(1)
+foo()
+console.log(3)
+/* 
+  1
+  2
+  3
+*/
+
+// 遇到await -> 记录暂停 -> await右边的值可用 -> 恢复执行异步函数
+async function foo() {
+  console.log(2)
+  await null // 暂停，且后续操作变为异步
+  // 为立即可用的值null向消息队列中添加一个任务
+  console.log(4)
+}
+console.log(1)
+foo()
+console.log(3)
+/* 
+  1
+  2
+  3
+  4
+*/
+
+// await后面是一个期约
+async function foo() {
+  console.log(2)
+  console.log(await Promise.resolve(8))
+  console.log(9)
+}
+
+async function bar2() {
+  console.log(4)
+  console.log(await 6)
+  console.log(7)
+}
+
+console.log(1)
+foo()
+console.log(3)
+bar2()
+console.log(5)
+/*
+  书本顺序：1 2 3 4 5 6 7 8 9
+  浏览器顺序：1 2 3 4 5 8 9 6 7（tc39做过1次修改）
+*/
+
+/* 11.3.3 异步函数策略 */
+
+/* 实现sleep() */
+function sleep(delay) {
+  return new Promise((resolve) => setTimeout(resolve, delay)) // 设定延迟，延迟后返回一个解决的期约
+}
+async function foo() {
+  const t0 = Date.now()
+  await sleep(1500) // 暂停约1500毫秒
+  console.log(Date.now() - t0)
+}
+foo() // 1507
+
+/* 利用平行执行 */
+
+/* 串行执行期约 */
+
+/* 栈追踪与内存管理 */
