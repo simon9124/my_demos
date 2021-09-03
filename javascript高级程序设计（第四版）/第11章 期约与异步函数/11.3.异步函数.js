@@ -266,6 +266,195 @@ foo() // 1507
 
 /* 利用平行执行 */
 
+async function randomDelay(id) {
+  const delay = Math.random() * 1000 // 随机延迟0-1000毫秒
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      console.log(`${id} finished`)
+      resolve()
+    }, delay)
+  )
+}
+
+async function foo() {
+  const t0 = Date.now()
+  await randomDelay(0)
+  await randomDelay(1)
+  await randomDelay(2)
+  await randomDelay(3)
+  await randomDelay(4)
+  console.log(`${Date.now() - t0} ms elapsed`)
+}
+foo()
+/* 
+  0 finished
+  1 finished
+  2 finished
+  3 finished
+  4 finished
+  3279 ms elapsed
+*/
+
+// 用for循环重写
+async function foo() {
+  const t0 = Date.now()
+  for (let i = 0; i < 5; i++) {
+    await randomDelay(i)
+  }
+  console.log(`${Date.now() - t0} ms elapsed`)
+}
+foo()
+/* 
+  0 finished
+  1 finished
+  2 finished
+  3 finished
+  4 finished
+  3314 ms elapsed
+*/
+
+// 不考虑顺序，一次性初始化所有期约，再分别等待结果
+async function foo() {
+  const t0 = Date.now()
+
+  // 一次性初始化所有期约
+  const p0 = randomDelay(0)
+  const p1 = randomDelay(1)
+  const p2 = randomDelay(2)
+  const p3 = randomDelay(3)
+  const p4 = randomDelay(4)
+
+  // 分别等待结果，延迟各不相同
+  await p0
+  await p1
+  await p2
+  await p3
+  await p4
+
+  console.log(`${Date.now() - t0} ms elapsed`)
+}
+foo()
+/* 
+  4 finished
+  3 finished
+  1 finished
+  0 finished
+  2 finished
+  870 ms elapsed，大幅度降低总耗时
+*/
+
+// 用数组和for循环再次包装
+async function foo() {
+  const t0 = Date.now()
+  const promises = Array(5)
+    .fill(null)
+    .map((item, i) => randomDelay(i))
+
+  for (const p of promises) {
+    await p
+  }
+  console.log(`${Date.now() - t0} ms elapsed`)
+}
+foo()
+/* 
+  1 finished
+  3 finished
+  0 finished
+  4 finished
+  2 finished
+  806 ms elapsed
+*/
+
+// await按顺序收到每个期约的值
+async function randomDelay(id) {
+  const delay = Math.random() * 1000 // 随机延迟0-1000毫秒
+  return new Promise((resolve) =>
+    setTimeout(() => {
+      console.log(`${id} finished`)
+      resolve(id)
+    }, delay)
+  )
+}
+async function foo() {
+  const t0 = Date.now()
+  const promises = Array(5)
+    .fill(null)
+    .map((item, i) => randomDelay(i))
+
+  for (const p of promises) {
+    console.log(`awaited ${await p}`)
+  }
+  console.log(`${Date.now() - t0} ms elapsed`)
+}
+foo()
+/* 
+  1 finished
+  4 finished
+  0 finished
+  awaited 0
+  awaited 1
+  2 finished
+  awaited 2
+  3 finished
+  awaited 3
+  awaited 4
+  833 ms elapsed
+*/
+
 /* 串行执行期约 */
 
+function addTwo(x) {
+  return x + 2
+}
+function addThree(x) {
+  return x + 3
+}
+function addFive(x) {
+  return x + 5
+}
+async function addTen(x) {
+  for (const fn of [addTwo, addThree, addFive]) {
+    x = await fn(x)
+  }
+  return x
+}
+addTen(9).then((res) => console.log(res)) // 19
+
+// 将函数改成异步函数，返回期约
+async function addTwo(x) {
+  return x + 2
+}
+async function addThree(x) {
+  return x + 3
+}
+async function addFive(x) {
+  return x + 5
+}
+addTen(9).then((res) => console.log(res)) // 19
+
 /* 栈追踪与内存管理 */
+function fooPromiseExecutor(resolve, reject) {
+  setTimeout(reject, 1000, 'bar')
+}
+function foo() {
+  new Promise(fooPromiseExecutor)
+}
+foo()
+/* 
+  Uncaught (in promise) bar
+  setTimeout (async) // 错误信息包含嵌套函数的标识符
+  fooPromiseExecutor // fooPromiseExecutor函数已返回，不应该在栈追踪信息中看到
+  foo
+*/
+
+// 换成异步函数
+async function foo() {
+  await new Promise(fooPromiseExecutor)
+}
+foo()
+/* 
+  Uncaught (in promise) bar
+  foo
+  async function (async)
+  foo
+*/
