@@ -156,6 +156,7 @@ function reject(self, newValue) {
  * 参数self：（期约）实例
  */
 // function finale(self) {
+//   console.log(self)
 //   if (self._state === 1) {
 //     console.log('resolve:' + self._value)
 //   } else if (self._state === 2) {
@@ -165,21 +166,29 @@ function reject(self, newValue) {
 //   }
 // }
 
-/* 测试：new Promise(()=>{}) */
+/** 测试：new Promise(()=>{})
+ * 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并
+ */
 // new Promise((resolve, reject) => {
-// resolve(3) // 解决值为基本类型
-// reject(3) // 拒绝值为基本类型
-// resolve({ val: 3 }) // 解决值为普通对象
-// resolve(new Promise(() => {})) // 解决值为期约实例
-// resolve({
-//   // 解决值为thenable对象
-//   value: 3,
-//   then: function () {
-//     console.log(this)
-//     console.log(this.value)
-//   },
-// })
-// throw Error('error!') // 抛出错误
+//   resolve(3) // 'resolve:3'，解决值为基本类型，
+//   /* self为Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] } */
+//   reject(3) // 'reject:3'，拒绝值为基本类型
+//   /* self为Promise { _state: 2, _handled: false, _value: 3, _deferreds: [] } */
+//   resolve({ val: 3 }) // 'resolve:[object Object]'，解决值为普通对象
+//   /* self为Promise { _state: 1, _handled: false, _value: { val: 3 }, _deferreds: [] } */
+//   resolve(new Promise(() => {})) // 'resolve value is Promise'，解决值为期约实例
+//   /* self为Promise { _state: 3, _handled: false, _value: Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }, _deferreds: [] } */
+//   resolve({
+//     // 解决值为thenable对象，self为{ value: 3, then: [Function: then] }
+//     value: 3,
+//     then: function () {
+//       /* 在resolve()方法里，指定then方法体内的this。如不指定，则调用后this指向全局对象window，this.value指向undefined */
+//       console.log(this) // { value: 3, then: [Function: then] }，this指向解决值本身
+//       console.log(this.value) // 3
+//     },
+//   })
+//   console.log('next coding...') // 'next coding...'，只要不抛出错误，均不影响后续代码执行
+//   throw Error('error!') // 抛出错误
 // })
 
 /** Promise构造函数的reject()方法
