@@ -55,7 +55,7 @@ function Promise(fn) {
 
 ```js
 /** doResolve()方法
- * 参数fn：执行器函数(resolve,reject)=>{}
+ * 参数fn：执行器函数(resolve,reject)=>{resolve(),reject()}
  * 参数self：（期约）实例
  */
 function doResolve(fn, self) {
@@ -200,9 +200,9 @@ function reject(self, newValue) {
 
 - 过程与`resolve()`大致相同，将期约的`_state`和`_value`分别赋值，而后执行`finale()`方法
 
-## finale() - 阶段测试
+## finale() - 测试代码
 
-- 手写一个测试的`finale()`方法，做阶段测试
+- 手写一个测试的`finale()`方法，方便做阶段测试
 
 ```js
 /** 测试用的finale()方法
@@ -219,6 +219,8 @@ function finale(self) {
   }
 }
 ```
+
+## new Promise - 阶段测试
 
 - 创建`Promise`实例，根据执行器函数的**回调类型**（解决/拒绝）及**解决值或拒绝理由的类型**，打印不同的结果
 
