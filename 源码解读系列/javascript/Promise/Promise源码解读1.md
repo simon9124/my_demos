@@ -12,7 +12,7 @@
 ```js
 /** Promise构造函数
  * 参数fn：执行器函数(resolve,reject)=>{resolve(),reject()}
- *        执行器函数又接收2个参数：resolve()和reject()回调函数
+ *        执行器函数又接收2个参数：resolve和reject回调函数
  */
 function Promise(fn) {
   if (!(this instanceof Promise))

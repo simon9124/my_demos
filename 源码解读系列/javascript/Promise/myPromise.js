@@ -1,6 +1,6 @@
 /** Promise构造函数
  * 参数fn：执行器函数(resolve,reject)=>{resolve(),reject()}
- *        执行器函数又接收2个参数：resolve()和reject()回调函数
+ *        执行器函数又接收2个参数：resolve和reject回调函数
  */
 function Promise(fn) {
   if (!(this instanceof Promise))
@@ -191,7 +191,7 @@ function reject(self, newValue) {
 //   throw Error('error!') // 抛出错误
 // })
 
-/** Promise构造函数的reject()方法
+/** Promise构造函数的resolve()方法
  * 参数value：解决值
  */
 Promise.resolve = function (value) {
