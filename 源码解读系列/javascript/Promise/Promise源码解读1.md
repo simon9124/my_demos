@@ -1,4 +1,4 @@
-<a href="" target="_blank">Promise 源码解读 1</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB1.md" target="_blank">Promise 源码解读 1</a>
 <a href="" target="_blank">Promise 源码解读 2</a>
 <a href="" target="_blank">Promise 源码解读 3</a>
 <a href="" target="_blank">Promise 源码解读 4</a>
@@ -255,4 +255,4 @@ new Promise((resolve, reject) => {
 - 执行器函数一旦解决或拒绝后，后续`resolve`或`reject`不会再执行（抛出的错误也不会被捕捉），但不影响其他代码
 - 解决值若是`thenable`对象，则将其`then`方法内的`this`绑定给该对象，并执行其`then`方法
 
-<a href="" target="_blank">本节完整代码</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB1.js" target="_blank">本节完整代码</a>
