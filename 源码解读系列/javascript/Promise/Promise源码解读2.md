@@ -1,7 +1,9 @@
-<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB1.md" target="_blank">Promise 源码解读 1</a>
-<a href="" target="_blank">Promise 源码解读 2</a>
-<a href="" target="_blank">Promise 源码解读 3</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB1.md" target="_blank">Promise 源码解读 1</a><br>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB2.md" target="_blank">Promise 源码解读 2</a><br>
+<a href="" target="_blank">Promise 源码解读 3</a><br>
 <a href="" target="_blank">Promise 源码解读 4</a>
+
+<a href="" target="_blank">完整代码+注释</a>，可对照阅读
 
 ## Promise.resolve - 源码
 
@@ -162,4 +164,4 @@ Promise.reject(Promise.reject(5)) // Possible Unhandled Promise Rejection: Promi
 - `Promise.resolve`的参数若是期约，则返回该期约
 - 失败的回调暂时会在浏览器给出警告
 
-<a href="" target="_blank">本节完整代码</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB2.js" target="_blank">本节完整代码</a>

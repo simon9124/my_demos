@@ -300,19 +300,6 @@ Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
 // Promise.resolve(Promise.reject(4)) // Possible Unhandled Promise Rejection: 4
 // Promise.reject(Promise.reject(5)) // Possible Unhandled Promise Rejection: Promise { _state: 2, _handled: false, _value: 5, _deferreds: [] }
 
-/** Handler构造函数：打包onFulfilled、onRejected和promise，作为一个整体方便后面调用
- * 参数onFulfilled：resolve回调函数
- * 参数onRejected：reject回调函数
- * 参数promise：下一个promise实例对象
- */
-function Handler(onFulfilled, onRejected, promise) {
-  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null
-  this.onRejected = typeof onRejected === 'function' ? onRejected : null
-  this.promise = promise // Handler的promise，指向prom，即在.then()中创建的Promise实例
-  // console.log(this.promise, 'new Handler')
-  // console.log(this)
-}
-
 /** Promise原型的then()方法
  * 参数onFulfilled：onResolved处理程序，在期约兑现时执行的回调
  * 参数onRejected：onRejected处理程序，在期约拒绝时执行的回调
@@ -342,6 +329,19 @@ Promise.prototype.then = function (onFulfilled, onRejected) {
 }
 
 function noop() {}
+
+/** Handler构造函数：打包onFulfilled、onRejected和promise，作为一个整体方便后面调用
+ * 参数onFulfilled：resolve回调函数
+ * 参数onRejected：reject回调函数
+ * 参数promise：下一个promise实例对象
+ */
+function Handler(onFulfilled, onRejected, promise) {
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null // 是否有成功回调，若没有则赋为null
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null // 是否有失败回调，若没有则赋为null
+  this.promise = promise // Handler的promise，指向prom，即在.then()中创建的Promise实例
+  // console.log(this.promise, 'new Handler')
+  // console.log(this)
+}
 
 /** 测试用的handle()方法
  * 参数self：then()前返回的Promise实例
