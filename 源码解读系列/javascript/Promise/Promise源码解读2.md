@@ -108,7 +108,7 @@ Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
 
 ## finale() - 测试代码
 
-- 更新手写的测试`finale()`方法，加入浏览器警告，方便做阶段测试
+- 更新手写的测试`finale()`方法，加入浏览器警告，使其更趋近于源码，方便做阶段测试
 
 ```js
 /** 测试用的finale()方法
@@ -164,4 +164,4 @@ Promise.reject(Promise.reject(5)) // Possible Unhandled Promise Rejection: Promi
 - `Promise.resolve`的参数若是期约，则返回该期约
 - 失败的回调暂时会在浏览器给出警告
 
-<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB2.js" target="_blank">本节完整代码</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB2.js" target="_blank">截至本节的代码</a>
