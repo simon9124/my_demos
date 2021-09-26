@@ -346,45 +346,81 @@ function handle(self, deferred) {
 }
 
 /* 测试：Promise.prototype.then */
-new Promise((resolve, reject) => {}).then() // then前是未解决的期约
+// new Promise((resolve, reject) => {}).then(() => {
+//   console.log(3) // then前是未解决的期约，期约解决前不会执行处理程序
+// })
 /* 执行到handle()时，self._state为0，将Handler实例放入实例的_deferrends数组，不再执行后续操作，self为：
   Promise {
     _state: 0,
     _handled: false,
     _value: undefined,
     _deferreds: [
-      Handler { onFulfilled: null, onRejected: null, promise: Promise {_state: 0, _handled: false, _value: undefined, _deferreds: []} }
+      Handler { 
+        onFulfilled: [Function (anonymous)], 
+        onRejected: null, 
+        promise: Promise {_state: 0, _handled: false, _value: undefined, _deferreds: []}
+      }
     ]
   }
 */
 
-new Promise((resolve, reject) => {
-  /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
+// new Promise((resolve, reject) => {
+//   /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
 
-  resolve(3) // 打印res为3，解决值为基本类型
-  /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
-  resolve({ val: 3 }) // 打印res为{ val: 3 }，解决值为普通对象
-  /* self为Promise { _state: 1, _handled: true, _value: { val: 3 }, _deferreds: [] } */
-  resolve(new Promise(() => {})) // 不打印res，解决值为pending的期约实例
-  /* self与new Promise((resolve, reject) => {}).then()基本相同，onFulfilled不再是null*/
-  resolve(Promise.resolve(3)) // 打印res为3，解决值为fullfilled的期约实例，将fullfilled的解决值赋给self
-  /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
-  resolve({
-    // 解决值为thenable对象
-    value: 3,
-    then: function () {
-      console.log(this) // { value: 3, then: [Function: then] }
-      console.log(this.value) // 3
-    },
-  })
-  /* self与resolve(new Promise(() => {}))相同 */
-}).then((res) => {
-  console.log(res) // then()前返回的Promise的解决值
+//   resolve(3) // 打印res为3，解决值为基本类型
+//   /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
+//   resolve({ val: 3 }) // 打印res为{ val: 3 }，解决值为普通对象
+//   /* self为Promise { _state: 1, _handled: true, _value: { val: 3 }, _deferreds: [] } */
+//   resolve(new Promise(() => {})) // 不打印res，解决值为pending的期约实例
+//   /* self与new Promise((resolve, reject) => {}).then()基本相同，onFulfilled不再是null */
+//   resolve(Promise.resolve(3)) // 打印res为3，解决值为fullfilled的期约实例，将fullfilled的解决值赋给self
+//   /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
+//   resolve({
+//     // 解决值为thenable对象
+//     value: 3,
+//     then: function () {
+//       console.log(this) // { value: 3, then: [Function: then] }
+//       console.log(this.value) // 3
+//     },
+//   })
+//   /* self与resolve(new Promise(() => {}))相同 */
+// }).then((res) => {
+//   console.log(res) // then()前返回的Promise的解决值
+// })
+
+// new Promise((resolve, reject) => {
+//   reject(3) // 打印res为3
+//   /* self为Promise { _state: 2, _handled: true, _value: 3, _deferreds: [] } */
+// }).then(null, (err) => {
+//   console.log(err) // then()前返回的Promise的拒绝理由
+// })
+
+/** Promise原型的catch属性，指向函数
+ * 参数onRejected：onRejected处理程序，在期约拒绝时执行的回调
+ * 支持无限链式回调，每个catch()方法返回新的Promise实例
+ */
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected)
+}
+
+/* 测试：Promise.prototype.catch */
+new Promise((resolve, reject) => {}).catch(() => {
+  console.log(3) // catch前是未解决的期约，期约解决前不会执行处理程序（同then）
 })
 
 new Promise((resolve, reject) => {
-  reject(3) // 打印res为3
-  /* self为Promise { _state: 2, _handled: true, _value: 3, _deferreds: [] } */
-}).then(null, (err) => {
-  console.log(err) // then()前返回的Promise的拒绝理由
+  /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
+
+  reject(4) // 4，拒绝理由为基本类型
+  /* self为Promise { _state: 2, _handled: true, _value: 4, _deferreds: [] } */
+  reject({ val: 4 }) // { val: 4 }，拒绝理由为普通对象
+  /* self为Promise { _state: 2, _handled: true, _value: { val: 4 }, _deferreds: [] } */
+  throw Error('error!') // 'Error: error!'，抛出错误
+  /* self为Promise { _state: 2, _handled: true, _value: Error: error!, _deferreds: [] } */
+  reject(new Promise(() => {})) // 'Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }'，期约本身作为拒绝理由（需与resolve区分）
+  /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }, _deferreds: [] } */
+  reject(Promise.resolve(3)) // 'Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }'，同上，期约本身作为拒绝理由，与期约状态无关
+  /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }, _deferreds: [] } */
+}).catch((err) => {
+  console.log(err) // catch()前返回的Promise的拒绝理由
 })

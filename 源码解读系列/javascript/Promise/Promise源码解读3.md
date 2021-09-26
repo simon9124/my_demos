@@ -1,11 +1,11 @@
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB1.md" target="_blank">Promise 源码解读 1</a><br>
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB2.md" target="_blank">Promise 源码解读 2</a><br>
-<a href="" target="_blank">Promise 源码解读 3</a><br>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB3.md" target="_blank">Promise 源码解读 3</a><br>
 <a href="" target="_blank">Promise 源码解读 4</a><br>
 
 <a href="" target="_blank">完整代码+注释</a>，可对照阅读
 
-## Promise.then - 源码
+## Promise.prototype.then - 源码
 
 ```js
 /** Promise原型的then属性，指向函数
@@ -42,7 +42,7 @@ function noop() {}
 - 每次调用`Promise.then`时：
   - 将空方法`noop`作为执行器函数，调用`new this.constructor()`创建一个新的空`Promise`实例
   - 还会新创建一个`Handler`实例，然后调用`handle()`方法
-  - 最终都**返回新创建的期约实例**
+  - 最终都**返回新创建的期约实例**，这是为了**支持无限链式回调**
   - “调用下一个`.then()`会将上一个`Promise`实例的`_deferreds`数组改变”，可后续再研究
 
 ## Handler 构造函数 - 源码
@@ -62,7 +62,7 @@ function Handler(onFulfilled, onRejected, promise) {
 }
 ```
 
-- 接收 3 个参数：成功回调、失败回调和`then`后面的`Promise`对象
+- 接收 3 个参数：成功回调、失败回调新的空`promise`实例
 
 ## handle() - 测试代码
 
@@ -128,20 +128,26 @@ function handle(self, deferred) {
 
 - `then`前返回的期约实例，根据`_state`值的不同，做不同的处理
   - 返回非待定的期约，最终会执行`then`中的处理程序
-  - 返回待定的期约，则不会执行`then`中的处理程序
+  - 返回待定的期约，则不会执行`then`中的处理程序，但**会将`then`中生成的`Handler`实例放入`then`前`Promise`实例的`_deferreds`数组**
 - 执行`then`中的处理程序是**异步**的，会在所有同步操作都执行完才去执行
 
 ## Promise.prototype.then - 阶段测试
 
 ```js
-new Promise((resolve, reject) => {}).then() // then前是未解决的期约
+new Promise((resolve, reject) => {}).then(() => {
+  console.log(3) // then前是未解决的期约，期约解决前不会执行处理程序
+})
 /* 执行到handle()时，self._state为0，将Handler实例放入实例的_deferrends数组，不再执行后续操作，self为：
   Promise {
     _state: 0,
     _handled: false,
     _value: undefined,
     _deferreds: [
-      Handler { onFulfilled: null, onRejected: null, promise: Promise {_state: 0, _handled: false, _value: undefined, _deferreds: []} }
+      Handler { 
+        onFulfilled: [Function (anonymous)], 
+        onRejected: null, 
+        promise: Promise {_state: 0, _handled: false, _value: undefined, _deferreds: []}
+      }
     ]
   }
 */
@@ -178,8 +184,53 @@ new Promise((resolve, reject) => {
 })
 ```
 
+- 大体有了链式回调的雏形：
+  - 能够根据`Promise`实例的状态，获取其解决值/拒绝理由，并执行相应的处理程序（`onResolve`或`onReject`）
+- `pedding`状态的期约调用`then`后，会将`then`中生成的`Handler`实例放入其`_deferreds`数组
+
+## Promise.prototype.catch - 源码
+
+```js
+/** Promise原型的catch属性，指向函数
+ * 参数onRejected：onRejected处理程序，在期约拒绝时执行的回调
+ * 支持无限链式回调，每个catch()方法返回新的Promise实例
+ */
+Promise.prototype['catch'] = function (onRejected) {
+  return this.then(null, onRejected)
+}
+```
+
+- 在`Promise.prototype.then`上做一层封装，只接收`onRejected`处理程序
+
+## Promise.prototype.catch - 阶段测试
+
+```js
+new Promise((resolve, reject) => {}).catch(() => {
+  console.log(3) // catch前是未解决的期约，期约解决前不会执行处理程序（同then）
+})
+
+new Promise((resolve, reject) => {
+  /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
+
+  reject(4) // 4，拒绝理由为基本类型
+  /* self为Promise { _state: 2, _handled: true, _value: 4, _deferreds: [] } */
+  reject({ val: 4 }) // { val: 4 }，拒绝理由为普通对象
+  /* self为Promise { _state: 2, _handled: true, _value: { val: 4 }, _deferreds: [] } */
+  throw Error('error!') // 'Error: error!'，抛出错误
+  /* self为Promise { _state: 2, _handled: true, _value: Error: error!, _deferreds: [] } */
+  reject(new Promise(() => {})) // 'Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }'，期约本身作为拒绝理由（需与resolve区分）
+  /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }, _deferreds: [] } */
+  reject(Promise.resolve(3)) // 'Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }'，同上，期约本身作为拒绝理由，与期约状态无关
+  /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }, _deferreds: [] } */
+}).catch((err) => {
+  console.log(err) // catch()前返回的Promise的拒绝理由
+})
+```
+
+- 与`Promise.prototype.then`的结果大致相同，需区分`catch`前期约的拒绝理由是`Promise`实例的情况
+
 ## 实现结果总结
 
--
+- 单个`Promise.prototype.then`和`Promise.prototype.catch`的链式回调（多个还未实现）
 
-<a href="" target="_blank">截至本节的代码</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB3.js" target="_blank">截至本节的代码 →</a>
