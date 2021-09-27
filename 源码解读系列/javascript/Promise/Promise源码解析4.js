@@ -345,56 +345,6 @@ function handle(self, deferred) {
   })
 }
 
-/* 测试：Promise.prototype.then */
-new Promise((resolve, reject) => {}).then(() => {
-  console.log(3) // then前是未解决的期约，期约解决前不会执行处理程序
-})
-/* 执行到handle()时，self._state为0，将Handler实例放入实例的_deferrends数组，不再执行后续操作，self为：
-  Promise {
-    _state: 0,
-    _handled: false,
-    _value: undefined,
-    _deferreds: [
-      Handler { 
-        onFulfilled: [Function (anonymous)], 
-        onRejected: null, 
-        promise: Promise {_state: 0, _handled: false, _value: undefined, _deferreds: []}
-      }
-    ]
-  }
-*/
-
-new Promise((resolve, reject) => {
-  /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
-
-  resolve(3) // 打印res为3，解决值为基本类型
-  /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
-  resolve({ val: 3 }) // 打印res为{ val: 3 }，解决值为普通对象
-  /* self为Promise { _state: 1, _handled: true, _value: { val: 3 }, _deferreds: [] } */
-  resolve(new Promise(() => {})) // 不打印res，解决值为pending的期约实例
-  /* self与new Promise((resolve, reject) => {}).then()基本相同，onFulfilled不再是null */
-  resolve(Promise.resolve(3)) // 打印res为3，解决值为fullfilled的期约实例，将fullfilled的解决值赋给self
-  /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
-  resolve({
-    // 解决值为thenable对象
-    value: 3,
-    then: function () {
-      console.log(this) // { value: 3, then: [Function: then] }
-      console.log(this.value) // 3
-    },
-  })
-  /* self与resolve(new Promise(() => {}))相同 */
-}).then((res) => {
-  console.log(res) // then()前返回的Promise的解决值
-})
-
-new Promise((resolve, reject) => {
-  reject(3) // 打印res为3
-  /* self为Promise { _state: 2, _handled: true, _value: 3, _deferreds: [] } */
-}).then(null, (err) => {
-  console.log(err) // then()前返回的Promise的拒绝理由
-})
-
 /** Promise原型的catch属性，指向函数
  * 参数onRejected：onRejected处理程序，在期约拒绝时执行的回调
  * 支持无限链式回调，每个catch()方法返回新的Promise实例
@@ -403,24 +353,174 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected)
 }
 
-/* 测试：Promise.prototype.catch */
-new Promise((resolve, reject) => {}).catch(() => {
-  console.log(3) // catch前是未解决的期约，期约解决前不会执行处理程序（同then）
-})
+/* 暂时还未实现：不少于2个的.then()链式调用 */
+// new Promise((resolve, reject) => {
+//   resolve(3)
+// })
+//   .then((res) => {
+//     /* 调用第1个then时，prom为当前then前返回的期约实例，是解决的期约实例，解决值为3
+//        在handle()里打印self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] }
+//        将继续异步执行处理程序 */
+//     return res
+//   })
+//   .then((res) => {
+//     /* 调用第2个then时，prom为当前then前返回的期约实例，是第1个then返回的prom，是一个新创建的、未解决的期约实例
+//     将当前then中生成的Handler实例放入当前then前返回的期约实例的_deferreds数组，然后暂停并返回
+//     此时handle()里打印self为Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {...} ] } */
+//     console.log(res) // 不打印res，第2个then及后面的处理程序，暂时还未实现
+//   })
+
+/** handle()方法：核心
+ * 参数self：上一个then()前返回的Promise实例
+ * 参数deferred：本次创建的Handler实例
+ */
+function handle(self, deferred) {
+  console.log(self, 'handle')
+  // console.log(deferred)
+  /* deferred为创建的Handler实例
+    Handler {
+      onFulfilled: [Function (anonymous)], // onFulfilled处理程序，没有则为null
+      onRejected: [Function (anonymous)], // onRejected处理程序，没有则为null
+      promise: Promise { // promise属性指向一个新的Promise实例
+        _state: 0,
+        _handled: false,
+        _value: undefined,
+        _deferreds: []
+      }
+    }
+  */
+
+  /* 如果返回的期约实例的解决值为promise类型，_state=3 */
+  while (self._state === 3) {
+    self = self._value // 将解决值赋给返回的期约实例
+    // console.log(self)
+  }
+
+  /* 如果_state=0，即期约实例是pendding状态（还未执行onResolve或onReject处理程序） */
+  /* 链式调用时，第二个或之后的then()前返回的Promise实例永远是新的Promise实例，其_state值为0 */
+  if (self._state === 0) {
+    self._deferreds.push(deferred) // 将Handler实例放入上一个then()前返回的Promise实例的_deferrends数组，由于上一个Handler实例的promise指向上一个Promise实例，因此上一个Handler实例也受到相应的影响
+    // console.log(self, 'push')
+    /*
+      Promise {
+        _state: 0,
+        _handled: false,
+        _value: undefined,
+        _deferreds: [
+          Handler {
+            onFulfilled: [Function (anonymous)],
+            onRejected: [Function (anonymous)],
+            promise: [Promise]
+          }
+        ]
+      }
+    */
+    return // 同步执行到此暂停，等待异步执行（执行前一个Promise的then里面的onResolve）
+  }
+
+  /* 如果不是上述情况，标记当前进行的promise._handled为true */
+  self._handled = true
+  // console.log(self)
+
+  /** 通过事件循环异步来做回调的处理
+   * 注意：这里的事件是异步执行的，第二个then会比这里的方法先执行
+   */
+  Promise._immediateFn(function () {
+    // console.log(deferred, '_immediateFn') // 注意：当有不少于2个.then()时，前一个.then()生成的Handler实例，其promise指向的Promise实例的_deferreds指向问题（后一个.then()里包含onFulfilled或onRejected回调函数，_deferreds不再指向空数组而是包含后一个Handler实例的数组）
+
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 根据上一个then()前的Promise实力的_state，获取onFulfilled或onRejected处理程序
+    // console.log(cb)
+
+    /* 如果没有onFulfilled或onRejected回调函数，则携带当前的_value值，等待下一个Promise对象的回调 */
+    if (cb === null) {
+      // console.log(deferred.promise, self._value)
+      ;(self._state === 1 ? resolve : reject)(deferred.promise, self._value)
+
+      /**
+       * resolve()或reject方法：等待下一个Promise对象的回调
+       * 参数deferred.promise：Handler实例的promise，指向上一个then()前的Promise实例
+       * 参数self._value：上一个then()前返回的Promise实例的_value属性值
+       */
+      // resolve(deferred.promise, self._value)
+      // reject(deferred.promise, self._value)
+
+      return
+    }
+
+    /* 如果有onFulfilled或onRejected回调函数，则执行自己的回调 */
+    var ret
+    try {
+      /**
+       * cb()方法：执行onFulfilled或onRejected处理程序
+       * 参数self._value：then()前返回的Promise实例的解决值/拒绝理由
+       */
+      ret = cb(self._value) // 执行回调，返回值赋给ret
+    } catch (e) {
+      /**
+       * reject()方法：处理下一个catch的回调方法
+       * 参数deferred.promise：创建的Handler实例的promise属性，指向新的Promise实例
+       * 参数e：错误信息
+       */
+      reject(deferred.promise, e)
+      return
+    }
+
+    /**
+     * resolve()方法：处理下一个then的回调方法
+     * 参数deferred.promise：Handler实例的promise，指向上一个then()前的Promise实例
+     * 参数ret：执行当前then回调的返回值
+     */
+    // console.log(deferred.promise, ret)
+    resolve(deferred.promise, ret)
+  })
+}
+
+/** finale()方法
+ * 参数self：（期约）实例
+ */
+function finale(self) {
+  // console.log(self, 'finale')
+
+  /* 如果_state的值为2（Promise执行reject()方法），且未提供回调函数（或未实现catch函数），则给出警告 */
+  if (self._state === 2 && self._deferreds.length === 0) {
+    /**
+     * 执行Promise构造函数的_immediateFn()方法
+     * 参数fn：要执行的警告方法
+     */
+    Promise._immediateFn(function () {
+      /* 如果未被处理过，则给出警告 */
+      if (!self._handled) {
+        /**
+         * 执行Promise构造函数的._unhandledRejectionFn()方法
+         * 参数self._value：拒绝理由
+         */
+        Promise._unhandledRejectionFn(self._value)
+      }
+    })
+  }
+
+  /* 循环self._deferreds，每一项都执行handle()方法 */
+  for (var i = 0, len = self._deferreds.length; i < len; i++) {
+    /**
+     * handle()方法
+     * 参数self：（期约）实例
+     * 参数self._deferreds[i]：当前的Handle实例对象
+     */
+    // console.log(self, self._deferreds[i])
+    handle(self, self._deferreds[i])
+  }
+
+  self._deferreds = null // 全部执行后，将_deferreds数组重置为null
+}
 
 new Promise((resolve, reject) => {
-  /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
-
-  reject(4) // 4，拒绝理由为基本类型
-  /* self为Promise { _state: 2, _handled: true, _value: 4, _deferreds: [] } */
-  reject({ val: 4 }) // { val: 4 }，拒绝理由为普通对象
-  /* self为Promise { _state: 2, _handled: true, _value: { val: 4 }, _deferreds: [] } */
-  throw Error('error!') // 'Error: error!'，抛出错误
-  /* self为Promise { _state: 2, _handled: true, _value: Error: error!, _deferreds: [] } */
-  reject(new Promise(() => {})) // 'Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }'，期约本身作为拒绝理由（需与resolve区分）
-  /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }, _deferreds: [] } */
-  reject(Promise.resolve(3)) // 'Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }'，同上，期约本身作为拒绝理由，与期约状态无关
-  /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }, _deferreds: [] } */
-}).catch((err) => {
-  console.log(err) // catch()前返回的Promise的拒绝理由
+  resolve(3)
 })
+  .then((res) => {
+    console.log(res)
+    return 4
+  })
+  .then((res) => {
+    console.log(res)
+    return 5
+  })

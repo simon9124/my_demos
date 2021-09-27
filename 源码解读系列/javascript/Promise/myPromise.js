@@ -483,10 +483,16 @@ Promise.prototype['catch'] = function (onRejected) {
 //   resolve(3)
 // })
 //   .then((res) => {
+//     /* 调用第1个then时，prom为当前then前返回的期约实例，是解决的期约实例，解决值为3
+//        在handle()里打印self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] }
+//        将继续异步执行处理程序 */
 //     return res
 //   })
 //   .then((res) => {
-//     console.log(res)
+//     /* 调用第2个then时，prom为当前then前返回的期约实例，是第1个then返回的prom，是一个新创建的、未解决的期约实例
+//     将当前then中生成的Handler实例放入当前then前返回的期约实例的_deferreds数组，然后暂停并返回
+//     此时handle()里打印self为Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {...} ] } */
+//     console.log(res) // 不打印res，第2个then及后面的处理程序，暂时还未实现
 //   })
 
 /** handle()方法：核心
