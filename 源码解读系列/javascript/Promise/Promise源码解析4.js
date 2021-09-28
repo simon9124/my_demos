@@ -375,7 +375,7 @@ Promise.prototype['catch'] = function (onRejected) {
  * 参数deferred：本次创建的Handler实例
  */
 function handle(self, deferred) {
-  console.log(self, 'handle')
+  // console.log(self, 'handle')
   // console.log(deferred)
   /* deferred为创建的Handler实例
     Handler {
@@ -513,14 +513,56 @@ function finale(self) {
   self._deferreds = null // 全部执行后，将_deferreds数组重置为null
 }
 
+/* 测试：完整的链式调用 */
 new Promise((resolve, reject) => {
   resolve(3)
 })
   .then((res) => {
-    console.log(res)
+    console.log(res) // 3
     return 4
   })
   .then((res) => {
-    console.log(res)
+    console.log(res) // 4
     return 5
   })
+
+/* 上述代码的完整调用流程：
+  1.new Promise((resolve, reject) => {
+      resolve(3)
+    })
+      执行new Promise，创建Promise实例，返回这个Promise实例
+      执行doResolve()，同步立即执行执行器函数(resolve, reject) => {resolve(3)}
+      执行resolve(3)，将Promise实例的_state赋为1、_value赋为3
+      执行finale()，Promise实例的_deferreds为[]，赋为null后执行结束
+    返回Promise实例：Promise { _state: 1, _handled: false, _value: 3, _deferreds: null }
+  2..then((res) => {
+      console.log(res)
+      return 4
+    })
+      执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
+      执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 4}，返回Handler实例
+      执行handle()，传入上一个then()前返回的Promise实例和Handler实例
+        上一个Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，将当前的onFulfilled处理程序放入异步线程1
+    返回Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }
+  3..then((res) => {
+      console.log(res)
+      return 5
+    })
+      执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
+      执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 5}，返回Handler实例
+      执行handle()，传入上一个then()前返回的Promise实例和Handler实例
+        上一个Promise实例的_state为0，将本次的Hander实例放入其_deferreds空数组，return后因为暂无后续.then()，同步线程暂停
+        上一个Promise实例变为：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {} ]  }，Handler为本次的Handler实例
+        重点来了：由于Handler实例的promise指向.then()中创建的Promise实例（prom），因此上一个Handler实例也受到影响，其promise指向的Promise实例（即上一个Promise实例）的_deferreds同样指向[ Handler {} ]
+      回到异步线程1，执行上一个Handler实例包装的onFulfilled处理程序，打印3，返回4
+      执行resolve()，传入上一个Handler实例的promise（指向已发生变化的Promise实例）和onFulfilled返回值（4），将_state赋为1、_value赋为4
+        此时已发生变化的Promise实例更新为Promise { _state: 1, _handled: false, _value: 4, _deferreds: [ Handler {} ]  }
+      执行finale()，传入更新的Promise，循环_deferreds数组
+      执行handle()，传入更新的Promise实例和本次的Handler实例
+        更新的Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，将当前的onFulfilled处理程序放入异步线程2（嵌套在异步线程1中）
+      由于没有同步线程了，直接来到异步线程2，执行本次Handler实例包装的onFulfilled处理程序，打印4，返回5
+      执行resolve()，传入本次Handler实例的promise（未发生变化，初始的Promise实例）和onFulfilled返回值（5），将_state赋为1、_value赋为5
+        此时Promise实例更新为Promise { _state: 1, _handled: false, _value: 5, _deferreds: []  }
+      执行finale()，传入更新的Promise，其_deferreds为[]，赋为null后执行结束
+    返回Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }
+*/

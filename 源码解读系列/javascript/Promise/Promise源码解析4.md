@@ -199,3 +199,61 @@ function finale(self) {
   - 调用第 2 个`then`，第 2 个`then`前返回的`Promise`实例的`_state`为 0，将第 2 个`Handle`实例放入第 2 个`then`前返回的`Promise`实例的`_deferreds`数组后返回（因此改变了第 1 个`Handle`）
   - 进入异步线程 1，执行第 1 个`then`的处理方法后，再次调用`resolve()`、`finale()`，`_deferreds`数组不为空因此调用`handle()`，`Promise._immediateFn`放入异步线程 2
   - 进入异步线程 2，执行第 2 个`then`的处理方法后，再次调用`resolve()`、`finale()`，`_deferreds`数组为空全部结束
+- 如果上述流程还不明晰，下面会用测试例子一步一步的详解
+
+## 完整的链式调用 - 阶段测试
+
+```js
+new Promise((resolve, reject) => {
+  resolve(3)
+})
+  .then((res) => {
+    console.log(res)
+    return 4
+  })
+  .then((res) => {
+    console.log(res)
+    return 5
+  })
+```
+
+- 根据源码，上述代码的完整调用流程为：
+  - `new Promise((resolve, reject) => {resolve(3)})`
+    - 执行`new Promise`，创建`Promise`实例，返回这个`Promise`实例
+    - 执行`doResolve()`，**同步立即执行执行器函数**`(resolve, reject) => {resolve(3)}`
+    - 执行`resolve(3)`，将`Promise`实例的`_state`赋为 1、`_value`赋为 3
+    - 执行`finale()`，`Promise`实例的`_deferreds`为`[]`，赋为`null`后执行结束
+    - 返回的`Promise`实例：`Promise { _state: 1, _handled: false, _value: 3, _deferreds: null }`
+  - `.then((res) => {console.log(res);return 4})`
+    - 执行`Promise.prototype.then`，创建新`Promise`实例，传入空方法作为执行器函数，返回这个新的`Promise`实例
+    - 执行`new Handler`，包装当前的`onFulfilled`处理程序`(res) => {console.log(res);return 4}`，返回`Handler`实例
+    - 执行`handle()`，传入上一个`then()`前返回的`Promise`实例和`Handler`实例
+      - 上一个`Promise`实例的`_state`为 1，将其`_handled`赋为`true`，执行`Promise._immediateFn()`，将当前的`onFulfilled`处理程序放入**异步线程 1**
+    - 返回`Promise`实例：`Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }`
+  - `.then((res) => {console.log(res);return 5})`
+    - 执行`Promise.prototype.then`，创建新`Promise`实例，传入空方法作为执行器函数，返回这个新的`Promise`实例
+    - 执行`new Handler`，包装当前的`onFulfilled`处理程序`(res) => {console.log(res);return 5}`，返回`Handler`实例
+    - 执行`handle()`，传入上一个`then()`前返回的`Promise`实例和`Handler`实例
+      - 上一个`Promise`实例的`_state`为 0，将本次的`Hander`实例放入其`_deferreds`空数组，`return`后因为暂无后续`.then()`，**同步线程暂停**
+      - 上一个`Promise`实例变为：`Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {} ] }`，`Handler`为本次的 `Handler`实例
+      - **重点来了**：由于`Handler`实例的`promise`指向`.then()`中创建的`Promise`实例（`prom`），因此**上一个`Handler`实例也受到影响，其`promise`指向的`Promise`实例（即上一个`Promise`实例）的`_deferreds`同样指向`[ Handler {} ]`**
+    - **回到异步线程 1**，执行上一个`Handler`实例包装的`onFulfilled`处理程序，打印 3，返回 4
+    - 执行`resolve()`，传入上一个`Handler`实例的`promise`（指向已发生变化的`Promise`实例）和`onFulfilled`返回值（4），将`_state`赋为 1、`_value`赋为 4
+      - 此时已发生变化的`Promise`实例更新为`Promise { _state: 1, _handled: false, _value: 4, _deferreds: [ Handler {} ] }`
+    - 执行`finale()`，传入更新的`Promise`，循环`_deferreds`数组
+    - 执行`handle()`，传入更新的`Promise`实例和本次的`Handler`实例
+      - 更新的`Promise`实例的`_state`为 1，将其`_handled`赋为`true`，执行`Promise._immediateFn()`，将当前的`onFulfilled`处理程序放入**异步线程 2**（嵌套在异步线程 1 中）
+    - 由于**没有同步线程了，直接来到异步线程 2**，执行本次`Handler`实例包装的`onFulfilled`处理程序，打印 4，返回 5
+    - 执行`resolve()`，传入本次`Handler`实例的`promise`（未发生变化，初始的`Promise`实例）和`onFulfilled`返回值（5），将`_state`赋为 1、`_value`赋为 5
+      - 此时`Promise`实例更新为`Promise { _state: 1, _handled: false, _value: 5, _deferreds: [] }`
+    - 执行`finale()`，传入更新的`Promise`，其`_deferreds`为`[]`，赋为`null`后执行结束
+    - 返回`Promise`实例：`Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }`
+- 再次总结：
+  - `new Promise`的**执行器函数**是**同步**的，最先执行
+  - 无论多少个`.then`，其**创建新`Promise`实例、创建`Handle`实例及`handle()`方法的前半部分（直至`Promise._immediateFn`前）**都是**同步**的，依次执行
+  - 后面的`.then`会改变前面返回的`Promise`实例，从而改变前面生成的`Handle`实例
+  - 同步执行完毕后，执行首个`.then`中`handle()`中的异步方法`Promise._immediateFn`，开启异步线程
+    - 在异步线程的最后，执行`resolve()`方法再执行`finale()`方法
+    - **此时传入的`Promise`实例的`_deferreds`不再是空数组，而是放入了下一个`.then`中的处理方法**
+    - 进而再次执行`handle()`方法及其中的`Promise._immediateFn`
+      - 在**异步线程中嵌套新的异步线程**，直至最终执行完毕
