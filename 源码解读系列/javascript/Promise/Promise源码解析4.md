@@ -1,7 +1,7 @@
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB1.md" target="_blank">Promise 源码解读 1</a><br>
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB2.md" target="_blank">Promise 源码解读 2</a><br>
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB3.md" target="_blank">Promise 源码解读 3</a><br>
-<a href="" target="_blank">Promise 源码解读 4</a><br>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%904.md" target="_blank">Promise 源码解读 4</a><br>
 
 <a href="" target="_blank">完整代码+注释</a>，可对照阅读
 
@@ -201,7 +201,7 @@ function finale(self) {
   - 进入异步线程 2，执行第 2 个`then`的处理方法后，再次调用`resolve()`、`finale()`，`_deferreds`数组为空全部结束
 - 如果上述流程还不明晰，下面会用测试例子一步一步的详解
 
-## 完整的链式调用 - 阶段测试
+## 多个 then 的链式调用 - 阶段测试
 
 ```js
 new Promise((resolve, reject) => {
@@ -257,3 +257,59 @@ new Promise((resolve, reject) => {
     - **此时传入的`Promise`实例的`_deferreds`不再是空数组，而是放入了下一个`.then`中的处理方法**
     - 进而再次执行`handle()`方法及其中的`Promise._immediateFn`
       - 在**异步线程中嵌套新的异步线程**，直至最终执行完毕
+
+## then 与 catch 交替的链式调用 - 阶段测试
+
+```js
+Promise.resolve(1)
+  .catch((err) => {
+    console.log(3) // 不打印，resolve后面不执行onRejected处理程序
+    return 3
+  })
+  .then((res) => {
+    console.log(res) // 1
+  })
+
+Promise.reject(1)
+  .then((res) => {
+    console.log(2) // 不打印，reject后面不执行onResolved处理程序
+    return 2
+  })
+  .catch((err) => {
+    console.log(err) // 1
+  })
+```
+
+- `resolve`后面不会执行`onRejected`处理程序，`reject`后面不执行`onResolved`处理程序
+
+## 中间的 then 或 catch 没有回调 - 阶段测试
+
+```js
+new Promise((resolve, reject) => {
+  resolve(3)
+})
+  .then() // 没有回调，等待下个Promise的回调
+  .then((res) => {
+    console.log(res)
+  })
+
+new Promise((resolve, reject) => {
+  reject(4)
+})
+  .catch() // 没有回调，等待下个Promise的回调
+  .catch((res) => {
+    console.log(res)
+  })
+```
+
+- 携带当前的`_value`值，等待下一个`Promise`对象的回调
+  - `handle()`方法里`Promise._immediateFn`里的`cb===null`，根据`then`前`Promise`对象的类型（解决/拒绝），调用`resolve()`或`reject()`方法
+
+## 实现结果总结
+
+- 已实现：
+  - 多个`then`(`catch`)的链式调用
+  - `then`与`catch`交替的链式调用
+  - 中间的`then`或`catch`没有回调的链式调用
+
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%904.js" target="_blank">截至本节的代码 →</a>

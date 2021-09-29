@@ -641,18 +641,20 @@ function finale(self) {
 /* 测试：完整的链式调用 */
 // Promise.resolve(1)
 //   .catch((err) => {
+//     console.log(3) // 不打印，resolve后面不执行onRejected处理程序
 //     return 3
 //   })
 //   .then((res) => {
-//     console.log(res)
+//     console.log(res) // 1
 //   })
 
 // Promise.reject(1)
 //   .then((res) => {
+//     console.log(2) // 不打印，reject后面不执行onResolved处理程序
 //     return 2
 //   })
 //   .catch((err) => {
-//     console.log(err)
+//     console.log(err) // 1
 //   })
 
 // new Promise((resolve, reject) => {
@@ -714,7 +716,7 @@ function finale(self) {
 // })
 //   .then() // 没有回调，等待下个Promise的回调
 //   .then((res) => {
-//     console.log(res)
+//     console.log(res) // 3
 //   })
 
 // new Promise((resolve, reject) => {
@@ -722,7 +724,7 @@ function finale(self) {
 // })
 //   .catch() // 没有回调，等待下个Promise的回调
 //   .catch((res) => {
-//     console.log(res)
+//     console.log(res) // 4
 //   })
 
 /** Promise构造函数的all()方法
