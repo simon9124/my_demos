@@ -166,31 +166,6 @@ function finale(self) {
   }
 }
 
-/** 测试：new Promise
- * 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并
- */
-// new Promise((resolve, reject) => {
-//   resolve(3) // 'resolve:3'，解决值为基本类型，
-//   /* self为Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] } */
-//   reject(3) // 'reject:3'，拒绝值为基本类型
-//   /* self为Promise { _state: 2, _handled: false, _value: 3, _deferreds: [] } */
-//   resolve({ val: 3 }) // 'resolve:[object Object]'，解决值为普通对象
-//   /* self为Promise { _state: 1, _handled: false, _value: { val: 3 }, _deferreds: [] } */
-//   resolve(new Promise(() => {})) // 'resolve value is Promise'，解决值为期约实例
-//   /* self为Promise { _state: 3, _handled: false, _value: Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }, _deferreds: [] } */
-//   resolve({
-//     // 解决值为thenable对象，self为{ value: 3, then: [Function: then] }
-//     value: 3,
-//     then: function () {
-//       /* 在resolve()方法里，指定then方法体内的this。如不指定，则调用后this指向全局对象window，this.value指向undefined */
-//       console.log(this) // { value: 3, then: [Function: then] }，this指向解决值本身
-//       console.log(this.value) // 3
-//     },
-//   })
-//   console.log('next coding...') // 'next coding...'，只要不抛出错误，均不影响后续代码执行
-//   throw Error('error!') // 抛出错误
-// })
-
 /** Promise构造函数的resolve属性，指向函数
  * 参数value：解决值
  */
@@ -216,31 +191,11 @@ Promise.reject = function (value) {
   })
 }
 
-/* 测试：Promise.resolve和Promise.reject */
-// Promise.resolve(3) // 'resolve:3'，解决值为基本类型
-// /* self为Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] } */
-// Promise.resolve({ val: 3 }) // 'resolve:[object Object]'，解决值为普通对象
-// /* self为Promise { _state: 1, _handled: false, _value: { val: 3 }, _deferreds: [] } */
-// Promise.resolve(Promise.resolve(3)) // 'resolve:3'，解决值为期约实例
-// /* self为Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] } */
-// Promise.resolve({
-//   // 解决值为thenable对象
-//   value: 3,
-//   then: function () {
-//     console.log(this) // { value: 3, then: [Function: then] }，this指向解决值本身
-//     console.log(this.value) // 3
-//   },
-// })
-// Promise.reject(3) // 'reject:3'，拒绝理由为基本类型
-// /* self为Promise { _state: 2, _handled: false, _value: 3, _deferreds: [] } */
-// Promise.reject(Promise.resolve(3)) // 'reject:[object Object]'，拒绝理由为期约实例（此处与Promise.resolve()区分）
-// /* self为Promise { _state: 2, _handled: false, _value: Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }, _deferreds: [] } */
-
-/** Promise构造函数的_immediateFn()方法
+/** Promise构造函数的_immediateFn属性，指向函数
  * 参数fn：要执行的方法（**注意：是异步调用**）
  */
 var setTimeoutFunc = setTimeout
-var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null
+var setImmediateFunc = typeof setImmediate !== 'undefined' ? setImmediate : null // 判断浏览器是否有setImmediate方法
 
 Promise._immediateFn =
   typeof setImmediateFunc === 'function' // 判断setImmediateFunc是否为函数对象
@@ -291,14 +246,6 @@ function finale(self) {
     })
   }
 }
-
-/* 测试：浏览器警告 */
-// new Promise((resolve, reject) => {
-//   reject(2) // Possible Unhandled Promise Rejection: 2
-// })
-// Promise.reject(3) // Possible Unhandled Promise Rejection: 3
-// Promise.resolve(Promise.reject(4)) // Possible Unhandled Promise Rejection: 4
-// Promise.reject(Promise.reject(5)) // Possible Unhandled Promise Rejection: Promise { _state: 2, _handled: false, _value: 5, _deferreds: [] }
 
 /** Promise原型的then属性，指向函数
  * 参数onFulfilled：onResolved处理程序，在期约兑现时执行的回调
@@ -379,7 +326,7 @@ function handle(self, deferred) {
   self._handled = true
   console.log(self)
 
-  /** 通过事件循环异步来做回调的处理（注意：这里是异步的！） **/
+  /* 通过事件循环异步来做回调的处理（注意：这里是异步的！） */
   Promise._immediateFn(function () {
     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected // 获取onFulfilled或onRejected处理程序
 
@@ -398,56 +345,6 @@ function handle(self, deferred) {
   })
 }
 
-/* 测试：Promise.prototype.then */
-// new Promise((resolve, reject) => {}).then(() => {
-//   console.log(3) // then前是未解决的期约，期约解决前不会执行处理程序
-// })
-// /* 执行到handle()时，self._state为0，将Handler实例放入实例的_deferrends数组，不再执行后续操作，self为：
-//   Promise {
-//     _state: 0,
-//     _handled: false,
-//     _value: undefined,
-//     _deferreds: [
-//       Handler {
-//         onFulfilled: [Function (anonymous)],
-//         onRejected: null,
-//         promise: Promise {_state: 0, _handled: false, _value: undefined, _deferreds: []}
-//       }
-//     ]
-//   }
-// */
-
-// new Promise((resolve, reject) => {
-//   /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
-
-//   resolve(3) // 打印res为3，解决值为基本类型
-//   /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
-//   resolve({ val: 3 }) // 打印res为{ val: 3 }，解决值为普通对象
-//   /* self为Promise { _state: 1, _handled: true, _value: { val: 3 }, _deferreds: [] } */
-//   resolve(new Promise(() => {})) // 不打印res，解决值为pending的期约实例
-//   /* self与new Promise((resolve, reject) => {}).then()基本相同，onFulfilled不再是null*/
-//   resolve(Promise.resolve(3)) // 打印res为3，解决值为fullfilled的期约实例，将fullfilled的解决值赋给self
-//   /* self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] } */
-//   resolve({
-//     // 解决值为thenable对象
-//     value: 3,
-//     then: function () {
-//       console.log(this) // { value: 3, then: [Function: then] }
-//       console.log(this.value) // 3
-//     },
-//   })
-//   /* self与resolve(new Promise(() => {}))相同 */
-// }).then((res) => {
-//   console.log(res) // then()前返回的Promise的解决值
-// })
-
-// new Promise((resolve, reject) => {
-//   reject(3) // 打印res为3
-//   /* self为Promise { _state: 2, _handled: true, _value: 3, _deferreds: [] } */
-// }).then(null, (err) => {
-//   console.log(err) // then()前返回的Promise的拒绝理由
-// })
-
 /** Promise原型的catch属性，指向函数
  * 参数onRejected：onRejected处理程序，在期约拒绝时执行的回调
  * 支持无限链式回调，每个catch()方法返回新的Promise实例
@@ -455,45 +352,6 @@ function handle(self, deferred) {
 Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected)
 }
-
-/* 测试：Promise.prototype.catch */
-// new Promise((resolve, reject) => {}).catch(() => {
-//   console.log(3) // catch前是未解决的期约，期约解决前不会执行处理程序（同then）
-// })
-
-// new Promise((resolve, reject) => {
-//   /* 实际执行首个resolve或reject后，后续的resolve或reject不会再执行，这里仅把测试结果合并 */
-
-//   reject(4) // 4，拒绝理由为基本类型
-//   /* self为Promise { _state: 2, _handled: true, _value: 4, _deferreds: [] } */
-//   reject({ val: 4 }) // { val: 4 }，拒绝理由为普通对象
-//   /* self为Promise { _state: 2, _handled: true, _value: { val: 4 }, _deferreds: [] } */
-//   throw Error('error!') // 'Error: error!'，抛出错误
-//   /* self为Promise { _state: 2, _handled: true, _value: Error: error!, _deferreds: [] } */
-//   reject(new Promise(() => {})) // 'Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }'，期约本身作为拒绝理由（需与resolve区分）
-//   /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }, _deferreds: [] } */
-//   reject(Promise.resolve(3)) // 'Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }'，同上，期约本身作为拒绝理由，与期约状态无关
-//   /* self为Promise { _state: 2, _handled: true, _value: Promise { _state: 1, _handled: false, _value: 3, _deferreds: [] }, _deferreds: [] } */
-// }).catch((err) => {
-//   console.log(err) // catch()前返回的Promise的拒绝理由
-// })
-
-/* 暂时还未实现：不少于2个的.then()链式调用 */
-// new Promise((resolve, reject) => {
-//   resolve(3)
-// })
-//   .then((res) => {
-//     /* 调用第1个then时，prom为当前then前返回的期约实例，是解决的期约实例，解决值为3
-//        在handle()里打印self为Promise { _state: 1, _handled: true, _value: 3, _deferreds: [] }
-//        将继续异步执行处理程序 */
-//     return res
-//   })
-//   .then((res) => {
-//     /* 调用第2个then时，prom为当前then前返回的期约实例，是第1个then返回的prom，是一个新创建的、未解决的期约实例
-//     将当前then中生成的Handler实例放入当前then前返回的期约实例的_deferreds数组，然后暂停并返回
-//     此时handle()里打印self为Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {...} ] } */
-//     console.log(res) // 不打印res，第2个then及后面的处理程序，暂时还未实现
-//   })
 
 /** handle()方法：核心
  * 参数self：上一个then()前返回的Promise实例
@@ -526,7 +384,7 @@ function handle(self, deferred) {
   if (self._state === 0) {
     self._deferreds.push(deferred) // 将Handler实例放入上一个then()前返回的Promise实例的_deferrends数组，由于上一个Handler实例的promise指向上一个Promise实例，因此上一个Handler实例也受到相应的影响
     // console.log(self, 'push')
-    /* 
+    /*
       Promise {
         _state: 0,
         _handled: false,
@@ -637,95 +495,6 @@ function finale(self) {
 
   self._deferreds = null // 全部执行后，将_deferreds数组重置为null
 }
-
-/* 测试：完整的链式调用 */
-// Promise.resolve(1)
-//   .catch((err) => {
-//     console.log(3) // 不打印，resolve后面不执行onRejected处理程序
-//     return 3
-//   })
-//   .then((res) => {
-//     console.log(res) // 1
-//   })
-
-// Promise.reject(1)
-//   .then((res) => {
-//     console.log(2) // 不打印，reject后面不执行onResolved处理程序
-//     return 2
-//   })
-//   .catch((err) => {
-//     console.log(err) // 1
-//   })
-
-// new Promise((resolve, reject) => {
-//   resolve(3)
-// })
-//   .then((res) => {
-//     console.log(res)
-//     return 4
-//   })
-//   .then((res) => {
-//     console.log(res)
-//     return 5
-//   })
-
-/* 上述代码的完整调用流程：
-  1.new Promise((resolve, reject) => {
-      resolve(3)
-    })
-      执行new Promise，创建Promise实例，返回这个Promise实例
-      执行doResolve()，同步立即执行执行器函数(resolve, reject) => {resolve(3)}
-      执行resolve(3)，将Promise实例的_state赋为1、_value赋为3
-      执行finale()，Promise实例的_deferreds为[]，赋为null后执行结束
-    返回Promise实例：Promise { _state: 1, _handled: false, _value: 3, _deferreds: null }
-  2..then((res) => {
-      console.log(res)
-      return 4
-    })
-      执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
-      执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 4}，返回Handler实例
-      执行handle()，传入上一个then()前返回的Promise实例和Handler实例
-        上一个Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，将当前的onFulfilled处理程序放入异步线程1
-    返回Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }
-  3..then((res) => {
-      console.log(res)
-      return 5
-    })
-      执行Promise.prototype.then，创建新Promise实例，传入空方法作为执行器函数，返回这个新的Promise实例
-      执行new Handler，包装当前的onFulfilled处理程序(res) => {console.log(res);return 5}，返回Handler实例
-      执行handle()，传入上一个then()前返回的Promise实例和Handler实例
-        上一个Promise实例的_state为0，将本次的Hander实例放入其_deferreds空数组，return后因为暂无后续.then()，同步线程暂停
-        上一个Promise实例变为：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [ Handler {} ]  }，Handler为本次的Handler实例
-        重点来了：由于Handler实例的promise指向.then()中创建的Promise实例（prom），因此上一个Handler实例也受到影响，其promise指向的Promise实例（即上一个Promise实例）的_deferreds同样指向[ Handler {} ]
-      回到异步线程1，执行上一个Handler实例包装的onFulfilled处理程序，打印3，返回4
-      执行resolve()，传入上一个Handler实例的promise（指向已发生变化的Promise实例）和onFulfilled返回值（4），将_state赋为1、_value赋为4
-        此时已发生变化的Promise实例更新为Promise { _state: 1, _handled: false, _value: 4, _deferreds: [ Handler {} ]  }
-      执行finale()，传入更新的Promise，循环_deferreds数组
-      执行handle()，传入更新的Promise实例和本次的Handler实例
-        更新的Promise实例的_state为1，将其_handled赋为true，执行Promise._immediateFn()，将当前的onFulfilled处理程序放入异步线程2（嵌套在异步线程1中）
-      由于没有同步线程了，直接来到异步线程2，执行本次Handler实例包装的onFulfilled处理程序，打印4，返回5
-      执行resolve()，传入本次Handler实例的promise（未发生变化，初始的Promise实例）和onFulfilled返回值（5），将_state赋为1、_value赋为5
-        此时Promise实例更新为Promise { _state: 1, _handled: false, _value: 5, _deferreds: []  }
-      执行finale()，传入更新的Promise，其_deferreds为[]，赋为null后执行结束
-    返回Promise实例：Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] }
-*/
-
-/* 中间的.then()或catch()没有回调测试 */
-// new Promise((resolve, reject) => {
-//   resolve(3)
-// })
-//   .then() // 没有回调，等待下个Promise的回调
-//   .then((res) => {
-//     console.log(res) // 3
-//   })
-
-// new Promise((resolve, reject) => {
-//   reject(4)
-// })
-//   .catch() // 没有回调，等待下个Promise的回调
-//   .catch((res) => {
-//     console.log(res) // 4
-//   })
 
 /* isArray方法：判断对象是否为数组 */
 function isArray(x) {
@@ -1090,64 +859,64 @@ Promise.allSettled = function (arr) {
 }
 
 /* 测试：Promise.allSettled */
-// setTimeout(
-//   console.log,
-//   0,
-//   Promise.allSettled(), // 参数不是数组
-//   /* Promise { _state: 2, _handled: false, _value: 'TypeError: undefined undefined is not iterable(cannot read property Symbol(Symbol.iterator))', _deferreds: null } */
-//   Promise.allSettled([]), // 参数是空数组
-//   /* Promise { _state: 1, _handled: false, _value: [], _deferreds: null } */
-//   Promise.allSettled([3, 2, 1]), // 参数是数组，数组的每项都不是Promise对象
-//   /*
-//     Promise {
-//       _state: 1,
-//       _handled: false,
-//       _value: [
-//         { status: 'fulfilled', value: 3 },
-//         { status: 'fulfilled', value: 2 },
-//         { status: 'fulfilled', value: 1 }
-//       ],
-//       _deferreds: null
-//     }
-//   */
-//   Promise.allSettled([
-//     Promise.resolve(3),
-//     Promise.resolve(2),
-//     Promise.resolve(1),
-//   ]), // 参数是数组，每项都是解决的Promise对象
-//   /*
-//     Promise {
-//       _state: 1,
-//       _handled: false,
-//       _value: [
-//         { status: 'fulfilled', value: 3 },
-//         { status: 'fulfilled', value: 2 },
-//         { status: 'fulfilled', value: 1 }
-//       ],
-//       _deferreds: null
-//     }
-//   */
-//   Promise.allSettled([
-//     Promise.resolve(1),
-//     Promise.reject(2),
-//     Promise.resolve(3),
-//   ]), // 参数是数组，每项都是Promise对象，有拒绝的期约
-//   /*
-//     Promise {
-//       _state: 1,
-//       _handled: false,
-//       _value: [
-//         { status: 'fulfilled', value: 1 },
-//         { status: 'rejected', reason: 2 },
-//         { status: 'fulfilled', value: 3 }
-//       ],
-//       _deferreds: null
-//     }
-//   */
-//   Promise.allSettled([
-//     Promise.resolve(2),
-//     new Promise(() => {}),
-//     Promise.resolve(1),
-//   ]) // 参数是数组，每项都是Promise对象，有待定的期约
-//   /* Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] } */
-// )
+setTimeout(
+  console.log,
+  0,
+  Promise.allSettled(), // 参数不是数组
+  /* Promise { _state: 2, _handled: false, _value: 'TypeError: undefined undefined is not iterable(cannot read property Symbol(Symbol.iterator))', _deferreds: null } */
+  Promise.allSettled([]), // 参数是空数组
+  /* Promise { _state: 1, _handled: false, _value: [], _deferreds: null } */
+  Promise.allSettled([3, 2, 1]), // 参数是数组，数组的每项都不是Promise对象
+  /* 
+    Promise {
+      _state: 1,
+      _handled: false,
+      _value: [
+        { status: 'fulfilled', value: 3 },
+        { status: 'fulfilled', value: 2 },
+        { status: 'fulfilled', value: 1 }
+      ],
+      _deferreds: null
+    }
+  */
+  Promise.allSettled([
+    Promise.resolve(3),
+    Promise.resolve(2),
+    Promise.resolve(1),
+  ]), // 参数是数组，每项都是解决的Promise对象
+  /* 
+    Promise {
+      _state: 1,
+      _handled: false,
+      _value: [
+        { status: 'fulfilled', value: 3 },
+        { status: 'fulfilled', value: 2 },
+        { status: 'fulfilled', value: 1 }
+      ],
+      _deferreds: null
+    }
+  */
+  Promise.allSettled([
+    Promise.resolve(1),
+    Promise.reject(2),
+    Promise.resolve(3),
+  ]), // 参数是数组，每项都是Promise对象，有拒绝的期约
+  /* 
+    Promise {
+      _state: 1,
+      _handled: false,
+      _value: [
+        { status: 'fulfilled', value: 1 },
+        { status: 'rejected', reason: 2 },
+        { status: 'fulfilled', value: 3 }
+      ],
+      _deferreds: null
+    }
+  */
+  Promise.allSettled([
+    Promise.resolve(2),
+    new Promise(() => {}),
+    Promise.resolve(1),
+  ]) // 参数是数组，每项都是Promise对象，有待定的期约
+  /* Promise { _state: 0, _handled: false, _value: undefined, _deferreds: [] } */
+)
