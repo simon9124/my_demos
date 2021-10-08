@@ -4,7 +4,7 @@
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB4.md" target="_blank">Promise 源码解读 4</a><br>
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB5.md" target="_blank">Promise 源码解读 5</a><br>
 
-<a href="" target="_blank">完整代码+注释</a>，可对照阅读
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E5%AE%8C%E6%95%B4%E6%BA%90%E7%A0%81%2B%E6%B3%A8%E9%87%8A.js" target="_blank">完整代码+注释</a>，可对照阅读
 
 `Promise`源码解读系列的最后 1 篇，详解`Promise`构造函数的最后几个方法及`.finally`，封装`isArray`判断对象是否为数组：
 
@@ -489,4 +489,4 @@ setTimeout(
 - 实现`Promise`构造函数方法：`Promise,all`、`Promise.race`、`Promise.allSettled`
 - 实现`Promise`原型方法：`Promise.prototype.finally`
 
-<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%905.js" target="_blank">截至本节的代码 →</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB5.js" target="_blank">截至本节的代码 →</a>

@@ -8,7 +8,7 @@
 
 如果对`Promise`还不熟悉，<a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC11%E7%AB%A0%20%E6%9C%9F%E7%BA%A6%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0/11.2.%E6%9C%9F%E7%BA%A6.md" target="_blank">请先移步</a>
 
-<a href="" target="_blank">完整代码+注释</a>，可对照阅读
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E5%AE%8C%E6%95%B4%E6%BA%90%E7%A0%81%2B%E6%B3%A8%E9%87%8A.js" target="_blank">完整代码+注释</a>，可对照阅读
 
 ## Promise 构造函数 - 源码
 

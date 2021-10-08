@@ -4,7 +4,7 @@
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB4.md" target="_blank">Promise 源码解读 4</a><br>
 <a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB5.md" target="_blank">Promise 源码解读 5</a><br>
 
-<a href="" target="_blank">完整代码+注释</a>，可对照阅读
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E5%AE%8C%E6%95%B4%E6%BA%90%E7%A0%81%2B%E6%B3%A8%E9%87%8A.js" target="_blank">完整代码+注释</a>，可对照阅读
 
 ## 多个 then 串联 - 遗留的问题
 
@@ -313,4 +313,4 @@ new Promise((resolve, reject) => {
   - `then`与`catch`交替的链式调用
   - 中间的`then`或`catch`没有回调的链式调用
 
-<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%904.js" target="_blank">截至本节的代码 →</a>
+<a href="https://github.com/simon9124/my_demos/blob/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise/Promise%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB4.js" target="_blank">截至本节的代码 →</a>
