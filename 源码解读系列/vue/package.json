@@ -1,0 +1,13 @@
+{
+  "name": "vue-study",
+  "version": "1.0.0",
+  "description": "study codes of Vue.js @ 2.6.14",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
+  },
+  "author": "simon9124",
+  "license": "ISC"
+}
