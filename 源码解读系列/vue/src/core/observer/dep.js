@@ -11,6 +11,7 @@ export default class Dep {
 
   addSub(sub) {
     this.subs.push(sub)
+    // console.log(this.subs)
   }
   // 删除一个依赖
   removeSub(sub) {
@@ -18,20 +19,18 @@ export default class Dep {
   }
   // 添加一个依赖
   depend() {
-    // window.target是一个依赖对象（vscode是node运行环境，无法识别全局对象window，这里将window改为global）
-    // if (window.target) {
-    //   this.addSub(window.target)
-    // }
-    if (global.target) {
-      this.addSub(global.target)
+    // console.log('添加依赖')
+    if (Dep.target) {
+      this.addSub(Dep.target) // Dep.target即Watcher实例
     }
   }
   // 通知所有依赖更新
   notify() {
+    // console.log('依赖更新')
     const subs = this.subs.slice()
-    // 遍历所有依赖（即watcher实例）
+    // 遍历所有依赖（即Watcher实例）
     for (let i = 0, l = subs.length; i < l; i++) {
-      subs[i].update() // 执行依赖的update()方法（Watch类中的update()方法）
+      subs[i].update() // 执行依赖的update()方法（Watcher类中的update()方法）
     }
   }
 }
@@ -46,4 +45,19 @@ export function remove(arr, item) {
       return arr.splice(index, 1)
     }
   }
+}
+
+/**
+ * 添加依赖
+ * @param { Watcher } target Watcher实例
+ */
+export function pushTarget(target) {
+  Dep.target = target // 将Watcher实例赋给全局的唯一对象Dep（将Watch添加到依赖中）
+}
+
+/**
+ * 释放依赖
+ */
+export function popTarget() {
+  Dep.target = undefined // 释放
 }

@@ -1,28 +1,33 @@
 /* @flow */
 
+import { pushTarget, popTarget } from './dep.js'
+
 /**
  * Watcher类：变化侦测
  * 当数据发生变化时，通知Watcher实例，由Watcher实例去做真实的更新操作
+ * @param {  } vm
+ * @param { String } expOrFn 字符串路径，形如'data.a.b.c'
+ * @param { Function } cb 回调函数
  */
 export default class Watcher {
   constructor(vm, expOrFn, cb) {
     this.vm = vm
     this.cb = cb
     this.getter = parsePath(expOrFn)
-    this.value = this.get() // 在构造函数中调用this.get()方法
+    this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
   }
   get() {
-    // window.target = this
-    global.target = this // 将实例本身赋给全局的一个唯一对象（将Watch添加到依赖中）
+    pushTarget(this) // 将Watcher实例赋给全局的唯一对象Dep（将Watch添加到依赖中）
     const vm = this.vm
-    let value = this.getter.call(vm, vm) // 将this的getter方法利用call绑定到vm，参数为vm，并调用this.getter() -→ 获取被依赖的数据
-    window.target = undefined // 释放
+    // 将this的getter方法利用call绑定到vm，参数为vm，并调用this.getter()
+    let value = this.getter.call(vm, vm) // 获取被依赖的数据，触发该数据的getter → 触发dep.depend() → 取到Dep.target的值并将其存入依赖数组中
+    popTarget() // 释放
     return value
   }
   update() {
     const oldValue = this.value
     this.value = this.get()
-    this.cb.call(this.vm, this.value, oldValue) // 更新视图/调用回调
+    this.cb.call(this.vm, this.value, oldValue) // 调用数据变化的更新回调函数，从而更新视图
   }
 }
 
