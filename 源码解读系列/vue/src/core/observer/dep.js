@@ -19,8 +19,8 @@ export default class Dep {
   }
   // 添加一个依赖
   depend() {
-    // console.log('添加依赖')
     if (Dep.target) {
+      // console.log('添加依赖')
       this.addSub(Dep.target) // Dep.target即Watcher实例
     }
   }
@@ -47,12 +47,17 @@ export function remove(arr, item) {
   }
 }
 
+// The current target watcher being evaluated.
+// This is globally unique because only one watcher
+// can be evaluated at a time.
+Dep.target = null // 在Dep类上定义target属性
+
 /**
  * 添加依赖
- * @param { Watcher } target Watcher实例
+ * @param { Watcher } _target Watcher实例
  */
-export function pushTarget(target) {
-  Dep.target = target // 将Watcher实例赋给全局的唯一对象Dep（将Watch添加到依赖中）
+export function pushTarget(_target) {
+  Dep.target = _target // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher添加到依赖中）
 }
 
 /**
