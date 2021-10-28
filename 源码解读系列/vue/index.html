@@ -93,7 +93,8 @@
                 this.exp = options.exp
                 this.data = options.data
                 el.innerHTML = this.data[this.exp]
-                let observer = new Observer()
+                // let observer = new Observer()
+                let observer = new Observer(this.data)
                 observer.defineReactive(this.data)
                 new Watcher(this, this.exp, function(val) {
                     el.innerHTML = val

@@ -20,7 +20,7 @@ export default class Dep {
   // 添加一个依赖
   depend() {
     if (Dep.target) {
-      // console.log('添加依赖')
+      // console.log('向依赖中添加Watcher实例')
       this.addSub(Dep.target) // Dep.target即Watcher实例
     }
   }

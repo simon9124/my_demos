@@ -5,7 +5,7 @@ import { pushTarget, popTarget } from './dep.js'
 /**
  * Watcher类：变化侦测
  * 当数据发生变化时，通知Watcher实例，由Watcher实例去做真实的更新操作
- * @param { Component } vm 当前实例对象
+ * @param { Component } vm 要监测的对象
  * @param { String } expOrFn 字符串路径，形如'data.a.b.c'
  * @param { Function } cb 回调函数
  */
@@ -14,13 +14,16 @@ export default class Watcher {
     this.vm = vm
     this.cb = cb
     this.getter = parsePath(expOrFn)
+    // this.expOrFn = expOrFn
     this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
   }
   get() {
     pushTarget(this) // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher添加到依赖中）
     const vm = this.vm
-    // 将this.getter利用call绑定到vm，并调用this.getter()即parsePath(expOrFn)，参数为vm
+    // 将this.getter利用call绑定到vm，并调用this.getter()即parsePath(expOrFn)，参数为vm → 相当于parsePath(this.expOrFn)(vm)
+    // let value = parsePath(this.expOrFn)(vm)
     let value = this.getter.call(vm, vm) // 获取被依赖的数据 → 触发该数据的getter → 触发dep.depend()，将Dep.target（Watcher）添加到依赖数组中
+    // console.log(value)
     popTarget() // 释放
     return value
   }
