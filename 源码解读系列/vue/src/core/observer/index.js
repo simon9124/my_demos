@@ -78,6 +78,6 @@ let car = new Observer({
   },
 }).value
 car.price
-car.price = 5000
+// car.price = 5000
 // car.child.user = 'Mark'
 // console.log(car)

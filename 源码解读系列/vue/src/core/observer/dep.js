@@ -10,8 +10,11 @@ export default class Dep {
   }
 
   addSub(sub) {
-    this.subs.push(sub)
-    // console.log(this.subs)
+    if (!this.subs.some((item) => item.id === sub.id)) {
+      // console.log('向依赖中添加Watcher实例')
+      this.subs.push(sub)
+      // console.log('subs', this.subs)
+    }
   }
   // 删除一个依赖
   removeSub(sub) {
@@ -20,7 +23,6 @@ export default class Dep {
   // 添加一个依赖
   depend() {
     if (Dep.target) {
-      // console.log('向依赖中添加Watcher实例')
       this.addSub(Dep.target) // Dep.target即Watcher实例
     }
   }
