@@ -213,9 +213,9 @@
                 el.innerHTML = parsePath(this.exp)(this.data)
                 let observer = new Observer(this.data) // 实例化Observer类，把this.data转化成可观测对象 → 监听this.data
                 // 实例化Watcher类，将Watcher实例添加到依赖中
-                new Watcher(this, `data.${this.exp}`, function(val) {
-                    // console.log(val);
-                    el.innerHTML = val
+                new Watcher(this, `data.${this.exp}`, function(newVal, oldVal) {
+                    console.log(`${this.exp}被修改了：${oldVal}=>${newVal}`);
+                    el.innerHTML = newVal
                 })
                 return this
             }
