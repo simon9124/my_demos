@@ -25,7 +25,7 @@
           }
 
           addSub(sub) {
-            if(!this.subs.some(item=>item.id===sub.id)){
+            if(!this.subs.some(item=>item.id===sub.id)){ // 如果不在依赖集合中，则添加
               console.log('向依赖中添加Watcher实例')
               this.subs.push(sub)
               console.log('subs',this.subs)
@@ -156,7 +156,7 @@
             }
           }
 
-          // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法
+          // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法 → 让对象变得可观测
           walk(obj) {
             const keys = Object.keys(obj)
             for (let i = 0; i < keys.length; i++) {

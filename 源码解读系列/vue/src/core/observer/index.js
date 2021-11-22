@@ -2,6 +2,11 @@
 
 import Dep from './dep.js' // 依赖管理器
 import { def } from '../util/lang.js' // Define a property
+import { hasProto } from '../util/env.js' // 判断__proto__是否可用（有些浏览器不支持该属性）
+import { arrayMethods } from './array.js' // 继承自Array原型的对象，包含改变数组的7个同名方法
+
+const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
+// console.log(arrayKeys) // ['push','pop','shift','unshift','splice','sort','reverse',]
 
 /**
  * Observer类：通过递归的方式把一个对象的所有属性都转化成可观测对象
@@ -15,19 +20,43 @@ export class Observer {
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
       // value为数组
-      // ...
+      const augment = hasProto ? protoAugment : copyAugment
+      augment(value, arrayMethods, arrayKeys)
     } else {
       // value不为数组
       this.walk(value)
     }
   }
 
-  // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法
+  // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法 → 让对象变得可观测
   walk(obj) {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
       defineReactive(obj, keys[i])
     }
+  }
+}
+
+/**
+ * 用__proto__重写实例的原型（浏览器支持__proto__）
+ * @param { target } obj 目标实例
+ * @param { src } obj 要重写的原型
+ */
+function protoAugment(target, src) {
+  /* eslint-disable no-proto */
+  target.__proto__ = src
+  /* eslint-enable no-proto */
+}
+
+/**
+ * Augment a target Object or Array by defining
+ * hidden properties.
+ */
+/* istanbul ignore next */
+function copyAugment(target, src, keys) {
+  for (let i = 0, l = keys.length; i < l; i++) {
+    const key = keys[i]
+    def(target, key, src[key])
   }
 }
 
@@ -70,14 +99,15 @@ function defineReactive(obj, key, val) {
   })
 }
 
-let car = new Observer({
-  brand: 'BMW',
-  price: 3000,
-  child: {
-    user: 'Tom',
-  },
-}).value
-car.price
+/* 测试：监听对象 */
+// let car = new Observer({
+//   brand: 'BMW',
+//   price: 3000,
+//   child: {
+//     user: 'Tom',
+//   },
+// }).value
+// car.price
 // car.price = 5000
 // car.child.user = 'Mark'
 // console.log(car)

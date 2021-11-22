@@ -65,18 +65,3 @@ export function parsePath(path) {
     return obj
   }
 }
-
-// const data = { a: { b: { c: 2 } } }
-// console.log(parsePath('a.b.c')(data))
-
-const vm = {
-  data: {
-    count: 123,
-  },
-}
-const expOrFn = 'data.count'
-const cb = () => {
-  console.log('next')
-}
-const watcher = new Watcher(vm, expOrFn, cb)
-console.log(watcher)
