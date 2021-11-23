@@ -4,8 +4,13 @@ import Dep from './dep.js' // 依赖管理器
 import { def } from '../util/lang.js' // Define a property
 import { hasProto } from '../util/env.js' // 判断__proto__是否可用（有些浏览器不支持该属性）
 import { arrayMethods } from './array.js' // 继承自Array原型的对象，包含改变数组的7个同名方法
+import VNode from '../vdom/vnode.js'
+import {
+  isObject, // 判断是否为对象（且排除null）
+  hasOwn, // 检查属性是否存在于对象本身
+} from '../../shared/util.js'
 
-const arrayKeys = Object.getOwnPropertyNames(arrayMethods)
+const arrayKeys = Object.getOwnPropertyNames(arrayMethods) // Array要重写的属性组成的数组
 // console.log(arrayKeys) // ['push','pop','shift','unshift','splice','sort','reverse',]
 
 /**
@@ -38,9 +43,9 @@ export class Observer {
 }
 
 /**
- * 用__proto__重写实例的原型（浏览器支持__proto__）
- * @param { target } obj 目标实例
- * @param { src } obj 要重写的原型
+ * 重写实例的原型（浏览器支持__proto__）
+ * @param { Object } target 目标实例
+ * @param { Object } src 要重写的原型
  */
 function protoAugment(target, src) {
   /* eslint-disable no-proto */
@@ -49,14 +54,15 @@ function protoAugment(target, src) {
 }
 
 /**
- * Augment a target Object or Array by defining
- * hidden properties.
+ * 重写实例的原型（浏览器不支持__proto__）
+ * @param { Object } target 目标实例
+ * @param { Object } src 要重写的原型
+ * @param { Array } keys 要重写的属性组成的数组
  */
-/* istanbul ignore next */
 function copyAugment(target, src, keys) {
   for (let i = 0, l = keys.length; i < l; i++) {
     const key = keys[i]
-    def(target, key, src[key])
+    def(target, key, src[key]) // 分别重写目标实例的这些方法
   }
 }
 
@@ -75,8 +81,10 @@ function defineReactive(obj, key, val) {
     // 如果val的类型是对象，则对其再次执行new Observer，即实现递归
     new Observer(val)
   }
-  const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
 
+  const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
+  let childOb = observe(val)
+  console.log(childOb)
   /* 访问器属性 */
   Object.defineProperty(obj, key, {
     enumerable: true, // 能否通过for-in循环返回
@@ -99,15 +107,42 @@ function defineReactive(obj, key, val) {
   })
 }
 
+/**
+ * 尝试为value创建一个0bserver实例：
+ *    如果创建成功，直接返回新创建的Observer实例
+ *    如果value已经存在一个Observer实例，则直接返回它
+ * @param { Object } value 目标对象
+ */
+export function observe(value, asRootData) {
+  if (!isObject(value) || value instanceof VNode) {
+    // 如果value不是对象或者value是VNode类，则返回undefined
+    return
+  }
+  let ob
+  if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
+    // 如果value包含__ob__属性 或 value.__ob__是Observer的实例（value已经被转化成响应式，避免重复操作）
+    ob = value.__ob__
+  } else {
+    ob = new Observer(value)
+  }
+  return ob
+}
+
 /* 测试：监听对象 */
-// let car = new Observer({
-//   brand: 'BMW',
-//   price: 3000,
-//   child: {
-//     user: 'Tom',
-//   },
-// }).value
+let car = new Observer({
+  brand: 'BMW',
+  price: 3000,
+  child: {
+    user: 'Tom',
+  },
+}).value
 // car.price
 // car.price = 5000
 // car.child.user = 'Mark'
 // console.log(car)
+
+/* 测试：监听数组 */
+// let arr = new Observer([1, 2, 3]).value
+// arr.push(4) // 'push'
+// arr.reverse() // 'reverse'
+// console.log(arr) // [ 4, 3, 2, 1 ]
