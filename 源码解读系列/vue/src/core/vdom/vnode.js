@@ -4,34 +4,6 @@
  * VNode类：
  */
 export default class VNode {
-  tag
-  data
-  children
-  text
-  elm
-  ns
-  context // rendered in this component's scope
-  key
-  componentOptions
-  componentInstance // component instance
-  parent // component placeholder node
-
-  // strictly internal
-  raw // contains raw HTML? (server only)
-  isStatic // hoisted static node
-  isRootInsert // necessary for enter transition check
-  isComment // empty comment placeholder?
-  isCloned // is a cloned node?
-  isOnce // is a v-once node?
-  asyncFactory // async component factory function
-  asyncMeta
-  isAsyncPlaceholder
-  ssrContext
-  fnContext // real context vm for functional nodes
-  fnOptions // for SSR caching
-  devtoolsMeta // used to store functional render context for devtools
-  fnScopeId // functional scope id support
-
   constructor(
     tag,
     data,

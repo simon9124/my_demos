@@ -73,18 +73,22 @@ function copyAugment(target, src, keys) {
  * @param { Any } val 对象的某个key的值
  */
 function defineReactive(obj, key, val) {
+  const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
+
   if (arguments.length === 2) {
     // 如果只传了obj和key，那么val = obj[key]
     val = obj[key]
+    // console.log(val)
   }
   if (typeof val === 'object') {
     // 如果val的类型是对象，则对其再次执行new Observer，即实现递归
     new Observer(val)
   }
 
-  const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
-  let childOb = observe(val)
-  console.log(childOb)
+  // console.log(val)
+  // let childOb = observe(val)
+  // console.log('defineReactive', val, childOb)
+
   /* 访问器属性 */
   Object.defineProperty(obj, key, {
     enumerable: true, // 能否通过for-in循环返回
@@ -92,6 +96,7 @@ function defineReactive(obj, key, val) {
     // get:读取属性时调用的函数
     get() {
       // console.log(`${key}被读取了`)
+      // if (childOb)
       dep.depend() // 在getter中收集依赖，调用dep实例的depend()方法
       return val
     },
@@ -111,31 +116,35 @@ function defineReactive(obj, key, val) {
  * 尝试为value创建一个0bserver实例：
  *    如果创建成功，直接返回新创建的Observer实例
  *    如果value已经存在一个Observer实例，则直接返回它
- * @param { Object } value 目标对象
+ * @param { Object } value 当前传入数据
  */
 export function observe(value, asRootData) {
+  console.log('observe', value) // 已被重写为obj[key]
+
   if (!isObject(value) || value instanceof VNode) {
-    // 如果value不是对象或者value是VNode类，则返回undefined
+    // 如果value不是对象 或者 value是VNode类，则返回undefined
     return
   }
+
   let ob
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     // 如果value包含__ob__属性 或 value.__ob__是Observer的实例（value已经被转化成响应式，避免重复操作）
-    ob = value.__ob__
+    ob = value.__ob__ // ob被重写为value.__ob__
   } else {
-    ob = new Observer(value)
+    // 如果value不包含__ob__属性（对象内层的对象）
+    ob = new Observer(value) // 再次创建Observer实例
   }
   return ob
 }
 
 /* 测试：监听对象 */
-let car = new Observer({
-  brand: 'BMW',
-  price: 3000,
-  child: {
-    user: 'Tom',
-  },
-}).value
+// let car = new Observer({
+//   brand: 'BMW',
+//   price: 3000,
+//   child: {
+//     user: 'Tom',
+//   },
+// }).value
 // car.price
 // car.price = 5000
 // car.child.user = 'Mark'

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h2 id="test"></h2>
+    <button id="but">+1</button>
+    <script type="module">
+
+        /**
+         * Dep类：依赖管理器
+         * 用于存储收集到的依赖
+         */
+        class Dep {
+          constructor() {
+            this.subs = [] // 依赖数组
+          }
+
+          addSub(sub) {
+            if(!this.subs.some(item=>item.id===sub.id)){ // 如果不在依赖集合中，则添加
+              console.log('向依赖中添加Watcher实例')
+              this.subs.push(sub)
+              console.log('subs',this.subs)
+            }
+          }
+          // 删除一个依赖
+          removeSub(sub) {
+            remove(this.subs, sub)
+          }
+          // 添加一个依赖
+          depend() {
+            if (Dep.target) {
+              this.addSub(Dep.target) // Dep.target即Watcher实例
+            }
+          }
+          // 通知所有依赖更新
+          notify() {
+            // console.log('依赖更新')
+            const subs = this.subs.slice()
+            // 遍历所有依赖（即Watcher实例）
+            for (let i = 0, l = subs.length; i < l; i++) {
+              subs[i].update() // 执行依赖的update()方法（Watcher类中的update()方法）
+            }
+          }
+        }     
+
+        // The current target watcher being evaluated.
+        // This is globally unique because only one watcher
+        // can be evaluated at a time.
+        Dep.target = null // 在Dep类上定义target属性
+
+        /**
+         * 添加依赖
+         * @param { Watcher } _target Watcher实例
+         */
+        function pushTarget(_target) {
+          Dep.target = _target // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher添加到依赖中）
+        }
+
+        /**
+         * 释放依赖
+         */
+        function popTarget() {
+          Dep.target = null // 释放
+        }
+
+        /**
+         * Parse simple path.
+         * 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
+         * 例如：
+         * data = {a:{b:{c:2}}}
+         * parsePath('a.b.c')(data)  // 2
+         */
+        const bailRE = /[^\w.$]/
+        function parsePath(path) {
+          if (bailRE.test(path)) {
+            return
+          }
+          const segments = path.split('.')
+          // console.log(segments);
+          return function (obj) {
+            // console.log(obj);
+            for (let i = 0; i < segments.length; i++) {
+              if (!obj) return
+              obj = obj[segments[i]] // 在这里触发数据的getter
+            }
+            return obj
+          }
+        }
+
+        let uid = 0;
+
+        /**
+         * Watcher类：变化侦测
+         * 当数据发生变化时，通知Watcher实例，由Watcher实例去做真实的更新操作
+         * @param { Component } vm 当前实例对象
+         * @param { String } expOrFn 字符串路径，形如'data.a.b.c'
+         * @param { Function } cb 回调函数
+         */
+        class Watcher {
+          constructor(vm, expOrFn, cb) {
+            // console.log(vm); // 要监测的对象
+            this.vm = vm
+            this.cb = cb
+            this.getter = parsePath(expOrFn)
+            // this.expOrFn = expOrFn
+            this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
+            this.id = ++uid // 唯一id，确保相同的Watcher实例只被添加1次
+          }
+          get() {
+            pushTarget(this) // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher添加到依赖中）
+            const vm = this.vm
+            // 将this.getter利用call绑定到vm，并调用this.getter()即parsePath(expOrFn)，参数为vm → 相当于parsePath(this.expOrFn)(vm)
+            // let value = parsePath(this.expOrFn)(vm)
+            // let value = this.getter(vm)
+            let value = this.getter.call(vm, vm) // 获取被依赖的数据 → 触发该数据的getter → 触发dep.depend()，将Dep.target（Watcher）添加到依赖数组中
+            // console.log(value);
+            popTarget() // 释放
+            // console.log(Dep.target);
+            return value
+          }
+          update() {
+            const oldValue = this.value
+            this.value = this.get() // 获取监听到的变化后的值
+            // console.log(this.value);
+            // 将this.cb利用call绑定到this.vm，并调用this.cb()即回调函数（第二个参数oldValue暂时还用不到）
+            this.cb.call(this.vm, this.value, oldValue) // 调用数据变化的回调函数，从而更新视图
+            // this.cb(this.value)
+          }
+        }
+
+        /**
+         * Observer类：通过递归的方式把一个对象的所有属性都转化成可观测对象
+         * 把Object数据中的所有属性（包括子属性）都转换成getter/seter的形式来侦测变化
+         * @param { Object/Array } value 监测对象
+         */
+        class Observer {
+          constructor(value) {
+            this.value = value
+            // 给value新增一个__ob__属性，值为该value的Observer实例（相当于为value打上标记，表示它已经被转化成响应式了，避免重复操作）
+            // def(value, '__ob__', this)
+            if (Array.isArray(value)) {
+              // value为数组
+              // ...
+            } else {
+              // value不为数组
+              this.walk(value)
+            }
+          }
+
+          // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法 → 让对象变得可观测
+          walk(obj) {
+            const keys = Object.keys(obj)
+            for (let i = 0; i < keys.length; i++) {
+              defineReactive(obj, keys[i])
+            }
+          }
+        }
+
+        /**
+         * 使一个对象转化成可观测对象
+         * @param { Object } obj 对象
+         * @param { String } key 对象的key
+         * @param { Any } val 对象的某个key的值
+         */
+        function defineReactive(obj, key, val) {
+          // console.log(obj, key, val); // {count: 123} "count" undefined
+          if (arguments.length === 2) {
+            // 如果只传了obj和key，那么val = obj[key]
+            val = obj[key]
+          }
+          if (typeof val === 'object') {
+            // 如果val的类型是对象，则对其再次执行new Observer，即实现递归
+            new Observer(val)
+          }
+          const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
+
+          /* 访问器属性 */
+          Object.defineProperty(obj, key, {
+            enumerable: true, // 能否通过for-in循环返回
+            configurable: true, // 能否配置（delete 删除、修改特性、改为访问器属性）
+            // get:读取属性时调用的函数
+            get() {
+              // console.log(`${key}被读取了`)
+              dep.depend() // 在getter中收集依赖，调用dep实例的depend()方法
+              return val
+            },
+            // set:写入属性时调用的函数
+            set(newVal) {
+              if (val === newVal) {
+                return
+              }
+              // console.log(`${key}被修改了：${val}=>${newVal}`)
+              val = newVal
+              dep.notify() // 在setter中通知依赖更新，调用dep实例的notify()方法
+            },
+          })
+        }
+
+        class Vue {
+            constructor(options = {}) {
+                this.el = options.el // 当前实例对象
+                this.exp = options.exp // 字符串路径
+                this.data = options.data // 整个data对象
+                el.innerHTML = parsePath(this.exp)(this.data)
+                let observer = new Observer(this.data) // 实例化Observer类，把this.data转化成可观测对象 → 监听this.data
+                // 实例化Watcher类，将Watcher实例添加到依赖中
+                new Watcher(this, `data.${this.exp}`, function(newVal, oldVal) {
+                    console.log(`${this.exp}被修改了：${oldVal}=>${newVal}`);
+                    el.innerHTML = newVal
+                })
+                return this
+            }
+        }
+        let el = document.getElementById("test")
+        let vue = new Vue({
+            el: el,
+            exp: 'count',
+            data: {
+                count: 123
+            }
+        })
+        let but = document.getElementById("but")
+        but.addEventListener('click', () => {
+            vue.data.count += 1
+        })
+
+    </script>
+</body>
+
+</html>

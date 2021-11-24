@@ -1,6 +1,7 @@
 /* @flow */
 
-import { pushTarget, popTarget } from './dep.js'
+import { parsePath } from '../util/lang.js' // 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
+import { pushTarget, popTarget } from './dep.js' // 添加&释放 依赖
 
 let uid = 0
 
@@ -39,29 +40,5 @@ export default class Watcher {
     // console.log(this.value)
     // 将this.cb利用call绑定到this.vm，并调用this.cb()即回调函数
     this.cb.call(this.vm, this.value, oldValue) // 调用数据变化的回调函数，从而更新视图
-  }
-}
-
-/**
- * Parse simple path.
- * 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
- * 例如：
- * data = {a:{b:{c:2}}}
- * parsePath('a.b.c')(data)  // 2
- */
-const bailRE = /[^\w.$]/
-export function parsePath(path) {
-  if (bailRE.test(path)) {
-    return
-  }
-  const segments = path.split('.')
-  // console.log(segments)
-  return function (obj) {
-    // console.log(obj)
-    for (let i = 0; i < segments.length; i++) {
-      if (!obj) return
-      obj = obj[segments[i]] // 在这里触发数据的getter
-    }
-    return obj
   }
 }
