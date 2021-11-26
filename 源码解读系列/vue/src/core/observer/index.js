@@ -73,6 +73,7 @@ function copyAugment(target, src, keys) {
  * @param { Any } val 对象的某个key的值
  */
 function defineReactive(obj, key, val) {
+  // console.log(key)
   const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
 
   if (arguments.length === 2) {
@@ -80,13 +81,13 @@ function defineReactive(obj, key, val) {
     val = obj[key]
     // console.log(val)
   }
-  if (typeof val === 'object') {
-    // 如果val的类型是对象，则对其再次执行new Observer，即实现递归
-    new Observer(val)
-  }
-
+  // if (typeof val === 'object') {
+  //   // 如果val的类型是对象，则对其再次执行new Observer，即实现递归
+  //   new Observer(val)
+  // }
   // console.log(val)
-  // let childOb = observe(val)
+
+  let childOb = observe(val) // 源码在这里实现递归
   // console.log('defineReactive', val, childOb)
 
   /* 访问器属性 */
@@ -95,9 +96,8 @@ function defineReactive(obj, key, val) {
     configurable: true, // 能否配置（delete 删除、修改特性、改为访问器属性）
     // get:读取属性时调用的函数
     get() {
-      // console.log(`${key}被读取了`)
-      // if (childOb)
-      dep.depend() // 在getter中收集依赖，调用dep实例的depend()方法
+      console.log(`${key}被读取了`)
+      if (childOb) dep.depend() // （childOb不是undefined）在getter中收集依赖，调用dep实例的depend()方法
       return val
     },
     // set:写入属性时调用的函数
@@ -105,7 +105,7 @@ function defineReactive(obj, key, val) {
       if (val === newVal) {
         return
       }
-      // console.log(`${key}被修改了：${val}=>${newVal}`)
+      console.log(`${key}被修改了：${val}=>${newVal}`)
       val = newVal
       dep.notify() // 在setter中通知依赖更新，调用dep实例的notify()方法
     },
@@ -119,7 +119,7 @@ function defineReactive(obj, key, val) {
  * @param { Object } value 当前传入数据
  */
 export function observe(value, asRootData) {
-  console.log('observe', value) // 已被重写为obj[key]
+  // console.log('observe', value) // 已被重写为obj[key]
 
   if (!isObject(value) || value instanceof VNode) {
     // 如果value不是对象 或者 value是VNode类，则返回undefined
@@ -132,7 +132,7 @@ export function observe(value, asRootData) {
     ob = value.__ob__ // ob被重写为value.__ob__
   } else {
     // 如果value不包含__ob__属性（对象内层的对象）
-    ob = new Observer(value) // 再次创建Observer实例
+    ob = new Observer(value) // 再次执行new Observer（在这里实现递归）
   }
   return ob
 }

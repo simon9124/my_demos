@@ -1,7 +1,7 @@
 /* @flow */
 
 import { parsePath } from '../util/lang.js' // 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
-import { pushTarget, popTarget } from './dep.js' // 添加&释放 依赖
+import { pushTarget, popTarget } from './dep.js' // 添加依赖 & 释放依赖
 
 let uid = 0
 
@@ -14,10 +14,10 @@ let uid = 0
  */
 export default class Watcher {
   constructor(vm, expOrFn, cb) {
-    // console.log(vm); // 要监测的对象
+    // console.log(vm) // 要监测的对象
     this.vm = vm
     this.cb = cb
-    this.getter = parsePath(expOrFn)
+    this.getter = parsePath(expOrFn) // 在parsePath方法中触发数据的getter，详见parsePath方法源码
     // this.expOrFn = expOrFn
     this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
     this.id = ++uid // 唯一id，确保相同的Watcher实例只被添加1次
@@ -30,10 +30,10 @@ export default class Watcher {
     // let value = this.getter(vm)
     let value = this.getter.call(vm, vm) // 获取被依赖的数据 → 触发该数据的getter → 触发dep.depend()，将Dep.target（Watcher）添加到依赖数组中
     // console.log(value)
-    popTarget() // 释放
-    // console.log(Dep.target)
+    popTarget() // 释放（Dep.target置为null）
     return value
   }
+  // 更新依赖：从Dep类中调用notify()来通知
   update() {
     const oldValue = this.value
     this.value = this.get() // 获取监听到的变化后的值
