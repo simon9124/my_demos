@@ -21,6 +21,7 @@ const arrayKeys = Object.getOwnPropertyNames(arrayMethods) // Array要重写的�
 export class Observer {
   constructor(value) {
     this.value = value
+    this.dep = new Dep() // 实例化一个依赖管理器，用来收集依赖（数组）
     // 给value新增一个__ob__属性，值为该value的Observer实例（相当于为value打上标记，表示它已经被转化成响应式了，避免重复操作）
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
@@ -74,7 +75,7 @@ function copyAugment(target, src, keys) {
  */
 function defineReactive(obj, key, val) {
   // console.log(key)
-  const dep = new Dep() // 实例化一个依赖管理器，生成一个依赖管理数组dep
+  const dep = new Dep() // 实例化一个依赖管理器，用来收集对象的依赖
 
   if (arguments.length === 2) {
     // 如果只传了obj和key，那么val = obj[key]
@@ -88,7 +89,7 @@ function defineReactive(obj, key, val) {
   // console.log(val)
 
   let childOb = observe(val) // 源码在这里实现递归
-  // console.log('defineReactive', val, childOb)
+  // console.log('defineReactive', key, val, childOb)
 
   /* 访问器属性 */
   Object.defineProperty(obj, key, {
@@ -97,7 +98,12 @@ function defineReactive(obj, key, val) {
     // get:读取属性时调用的函数
     get() {
       console.log(`${key}被读取了`)
-      if (childOb) dep.depend() // （childOb不是undefined）在getter中收集依赖，调用dep实例的depend()方法
+      dep.depend() // 在getter中收集依赖（对象），调用dep实例的depend()方法
+      if (childOb) {
+        console.log('Observer实例的dep属性调用depend()', childOb)
+        // 如果childOb非undefined（而是Observer实例），则对其dep属性也调用depend()方法（收集数组依赖）
+        childOb.dep.depend()
+      }
       return val
     },
     // set:写入属性时调用的函数
@@ -107,7 +113,7 @@ function defineReactive(obj, key, val) {
       }
       console.log(`${key}被修改了：${val}=>${newVal}`)
       val = newVal
-      dep.notify() // 在setter中通知依赖更新，调用dep实例的notify()方法
+      dep.notify() // 在setter中通知依赖更新（对象），调用dep实例的notify()方法
     },
   })
 }
@@ -122,13 +128,13 @@ export function observe(value, asRootData) {
   // console.log('observe', value) // 已被重写为obj[key]
 
   if (!isObject(value) || value instanceof VNode) {
-    // 如果value不是对象 或者 value是VNode类，则返回undefined
+    // 如果value不是对象 或者 value是VNode的实例，则返回undefined
     return
   }
 
   let ob
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
-    // 如果value包含__ob__属性 或 value.__ob__是Observer的实例（value已经被转化成响应式，避免重复操作）
+    // 如果value包含__ob__属性 且 value.__ob__是Observer的实例（value已经被转化成响应式，避免重复操作）
     ob = value.__ob__ // ob被重写为value.__ob__
   } else {
     // 如果value不包含__ob__属性（对象内层的对象）
@@ -142,12 +148,12 @@ export function observe(value, asRootData) {
 //   brand: 'BMW',
 //   price: 3000,
 //   child: {
-//     user: 'Tom',
+//     count: 100,
 //   },
 // }).value
 // car.price
 // car.price = 5000
-// car.child.user = 'Mark'
+// car.child.count = 101
 // console.log(car)
 
 /* 测试：监听数组 */

@@ -26,6 +26,9 @@ methodsToPatch.forEach(function (method) {
   def(arrayMethods, method, function mutator(...args) {
     console.log(method)
     const result = original.apply(this, args) // 执行同名的原生方法
+    const ob = this.__ob__
+    // console.log(ob)
+    ob.dep.notify() // 通知依赖更新（数组）
     return result
   })
 })

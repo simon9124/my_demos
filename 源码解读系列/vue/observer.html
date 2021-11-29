@@ -35,25 +35,30 @@
         let el = document.getElementById("test")
         let vue = new Vue({
             el: el,
-            exp: 'child.count', // 要监听的key的路径
+            exp: 'arr', // 要监听的key的路径
             data: {
               brand: 'BMW',
               price: 3000,
               child: {
                 count: 100,
               },
+              arr:[1, 2, 3]
             }
         })
         // console.log(vue);
         let but = document.getElementById("but")
         but.addEventListener('click', () => {
-            var segments = `data.${vue.exp}`.split('.')
-            let obj = vue
-            for (let i = 0; i < segments.length -1; i++) {
-              obj = obj[segments[i]]
-            }
-            // console.log(obj); // 最内层要监听的对象
-            obj[segments[segments.length-1]] += 1
+            /* 测试：监听对象 */
+            // var segments = `data.${vue.exp}`.split('.')
+            // let obj = vue
+            // for (let i = 0; i < segments.length -1; i++) {
+            //   obj = obj[segments[i]]
+            // }
+            // // console.log(obj); // 最内层要监听的对象
+            // obj[segments[segments.length-1]] += 1
+            // vue.data.price += 1
+            /* 测试：监听数组 */
+            vue.data.arr.push(4)
         })
 
     </script>
