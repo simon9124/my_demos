@@ -100,7 +100,7 @@ function defineReactive(obj, key, val) {
       console.log(`${key}被读取了`)
       dep.depend() // 在getter中收集依赖（对象），调用dep实例的depend()方法
       if (childOb) {
-        console.log('Observer实例的dep属性调用depend()', childOb)
+        // console.log('Observer实例的dep属性调用depend()', childOb)
         // 如果childOb非undefined（而是Observer实例），则对其dep属性也调用depend()方法（收集数组依赖）
         childOb.dep.depend()
       }

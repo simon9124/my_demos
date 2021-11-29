@@ -24,7 +24,7 @@ methodsToPatch.forEach(function (method) {
   const original = arrayProto[method] // 缓存原生方法
   /* 将改变数组自身的7个方法进行封装 */
   def(arrayMethods, method, function mutator(...args) {
-    console.log(method)
+    console.log('拦截数组方法', method)
     const result = original.apply(this, args) // 执行同名的原生方法
     const ob = this.__ob__
     // console.log(ob)
