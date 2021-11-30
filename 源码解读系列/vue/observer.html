@@ -10,8 +10,14 @@
 </head>
 
 <body>
-    <h2 id="test"></h2>
-    <button id="but">+1</button>
+    <div id="test">
+      <h2 id="testPlus"></h2>
+      <button id="plus">+1</button>
+      <h2 id="testPush">123</h2>
+      <button id="push">push</button>
+      <button id="reverse">reverse</button>
+      <button id="sort">sort</button>
+    </div>
     <script type="module">
         import { Observer } from './src/core/observer/index.js' // Observer类：将Object数据中的所有属性（包括子属性）都转换成getter/seter的形式来侦测变化
         import Watcher from './src/core/observer/watcher.js' // Watcher类：当数据发生变化时，通知Watcher实例，由Watcher实例去做真实的更新操作
@@ -20,14 +26,20 @@
         class Vue {
             constructor(options = {}) {
                 this.el = options.el // 当前实例对象
-                this.exp = options.exp // 字符串路径
+                this.objExp = options.objExp // 字符串路径 - 对象
+                this.arrExp = options.arrExp // 字符串路径 - 数组
                 this.data = options.data // 整个data对象
-                el.innerHTML = parsePath(this.exp)(this.data)
+                document.getElementById("testPlus").innerHTML = parsePath(this.objExp)(this.data)
+                document.getElementById("testPush").innerHTML = parsePath(this.arrExp)(this.data)
                 let observer = new Observer(this.data) // 实例化Observer类，把this.data转化成可观测对象 → 监听this.data
-                // 实例化Watcher类，将Watcher实例添加到依赖中
-                new Watcher(this, `data.${this.exp}`, function(newVal, oldVal) {
-                    console.log(`${this.exp}被修改了：${oldVal}=>${newVal}`);
-                    el.innerHTML = newVal
+                /* 实例化Watcher类，将Watcher实例添加到依赖中 */
+                new Watcher(this, `data.${this.objExp}`, function(newVal, oldVal) {
+                    console.log(`${this.objExp}被修改了：${oldVal}=>${newVal}`);
+                    document.getElementById("testPlus").innerHTML = newVal
+                })
+                new Watcher(this, `data.${this.arrExp}`, function(newVal, oldVal) {
+                    console.log(`${this.arrExp}被修改了：${oldVal}=>${newVal}`);
+                    document.getElementById("testPush").innerHTML = newVal
                 })
                 return this
             }
@@ -35,31 +47,56 @@
         let el = document.getElementById("test")
         let vue = new Vue({
             el: el,
-            exp: 'arr', // 要监听的key的路径
+            objExp: 'child.count', // 要监听的key的路径 - 对象
+            arrExp: 'arr', // 要监听的key的路径 - 数组
             data: {
               brand: 'BMW',
               price: 3000,
               child: {
                 count: 100,
               },
-              arr:[1, 2, 3]
+              arr: [1, 2, 3]
             }
         })
         // console.log(vue);
-        let but = document.getElementById("but")
-        but.addEventListener('click', () => {
-            /* 测试：监听对象 */
-            // var segments = `data.${vue.exp}`.split('.')
-            // let obj = vue
-            // for (let i = 0; i < segments.length -1; i++) {
-            //   obj = obj[segments[i]]
-            // }
-            // // console.log(obj); // 最内层要监听的对象
-            // obj[segments[segments.length-1]] += 1
-            // vue.data.price += 1
-            /* 测试：监听数组 */
-            vue.data.arr.push(4)
-            vue.data.arr.reverse()
+
+        function setListnerObj(exp,type) {
+            var segments = `data.${exp}`.split('.')
+            let obj = vue
+            for (let i = 0; i < segments.length -1; i++) {
+              obj = obj[segments[i]]
+            }
+            // console.log(obj); // 最内层要监听的对象
+            let val = obj[segments[segments.length-1]] 
+            switch (type) {
+              case 'plus':
+                obj[segments[segments.length-1]] += 1
+                break;
+              case 'push':
+                val.push(val.length + 1)
+                break;
+              case 'reverse':
+                val.reverse()
+                break;
+              case 'sort':
+                val.sort()
+                break;
+              default:
+                break;
+            }
+        }
+
+        document.getElementById("plus").addEventListener('click', () => {
+            setListnerObj(vue.objExp, 'plus')
+        })
+        document.getElementById("push").addEventListener('click', () => {
+            setListnerObj(vue.arrExp, 'push')
+        })
+        document.getElementById("reverse").addEventListener('click', () => {
+            setListnerObj(vue.arrExp, 'reverse')
+        })
+        document.getElementById("sort").addEventListener('click', () => {
+            setListnerObj(vue.arrExp, 'sort')
         })
 
     </script>

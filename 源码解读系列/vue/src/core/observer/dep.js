@@ -12,7 +12,7 @@ export default class Dep {
   addSub(sub) {
     if (!this.subs.some((item) => item.id === sub.id)) {
       this.subs.push(sub)
-      console.log('向依赖中添加Watcher实例：subs', this.subs)
+      // console.log('向依赖中添加Watcher实例：subs', this.subs)
     }
   }
   // 删除一个依赖
