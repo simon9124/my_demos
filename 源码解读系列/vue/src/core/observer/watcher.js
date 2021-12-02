@@ -1,6 +1,7 @@
 /* @flow */
 
 import { parsePath } from '../util/lang.js' // 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
+import { traverse } from './traverse.js' // 深度监听
 import { pushTarget, popTarget } from './dep.js' // 添加依赖 & 释放依赖
 
 let uid = 0
@@ -13,10 +14,20 @@ let uid = 0
  * @param { Function } cb 回调函数
  */
 export default class Watcher {
-  constructor(vm, expOrFn, cb) {
+  constructor(vm, expOrFn, cb, options) {
     // console.log(vm) // 要监测的对象
     this.vm = vm
-    this.cb = cb
+    if (options) {
+      this.deep = !!options.deep
+      this.user = !!options.user
+      this.lazy = !!options.lazy
+      this.sync = !!options.sync
+      this.before = options.before
+    } else {
+      this.deep = this.user = this.lazy = this.sync = false
+    }
+    console.log('深度监听：', this.deep)
+    this.cb = cb // 回调方法
     this.getter = parsePath(expOrFn) // 在parsePath方法中触发数据的getter，详见parsePath方法源码
     // this.expOrFn = expOrFn
     this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
@@ -30,6 +41,7 @@ export default class Watcher {
     // let value = this.getter(vm)
     let value = this.getter.call(vm, vm) // 获取被依赖的数据 → 触发该数据的getter → 触发dep.depend()，将Dep.target（Watcher）添加到依赖数组中
     // console.log(value)
+    if (this.deep) traverse(value) // 深度监听
     popTarget() // 释放（Dep.target置为null）
     return value
   }
@@ -37,7 +49,6 @@ export default class Watcher {
   update() {
     const oldValue = this.value
     this.value = this.get() // 获取监听到的变化后的值
-    // console.log(this.value)
     // 将this.cb利用call绑定到this.vm，并调用this.cb()即回调函数
     this.cb.call(this.vm, this.value, oldValue) // 调用数据变化的回调函数，从而更新视图
   }

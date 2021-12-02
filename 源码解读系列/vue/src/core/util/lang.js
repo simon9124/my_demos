@@ -44,13 +44,15 @@ export function parsePath(path) {
     return
   }
   const segments = path.split('.')
-  // console.log(segments)
+  // console.log('segments', segments)
   return function (obj) {
-    // console.log(obj)
+    // console.log(obj) // 原监听对象
     for (let i = 0; i < segments.length; i++) {
       if (!obj) return
       obj = obj[segments[i]] // 在这里触发数据的getter
+      // console.log('obj', obj)
     }
+    // console.log('obj', obj) // 路径处理后，要监听的对象
     return obj
   }
 }

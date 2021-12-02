@@ -28,6 +28,7 @@ export class Observer {
       // value为数组
       const augment = hasProto ? protoAugment : copyAugment
       augment(value, arrayMethods, arrayKeys)
+      this.observeArray(value) // 将数组中的所有元素都转化为可被侦测的响应式
     } else {
       // value不为数组
       this.walk(value)
@@ -39,6 +40,13 @@ export class Observer {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
       defineReactive(obj, keys[i])
+    }
+  }
+
+  // 原型方法observeArray：实现深度监测
+  observeArray(items) {
+    for (let i = 0, l = items.length; i < l; i++) {
+      observe(items[i])
     }
   }
 }
@@ -75,20 +83,23 @@ function copyAugment(target, src, keys) {
  */
 function defineReactive(obj, key, val) {
   // console.log(key)
-  const dep = new Dep() // 实例化一个依赖管理器，用来收集对象的依赖
+
+  const dep = new Dep() // 实例化一个依赖管理器，用来收集对象的依赖（让data的每个属性都注册一个dep对象）
+  // 读取该属性时，触发getter并调用dep.depend()，将相应的Watcher实例添加到依赖数组中
+  // 修改该属性时，触发setter并调用dep.notify()，调用依赖数组中每个Watcher实例的update()方法
 
   if (arguments.length === 2) {
     // 如果只传了obj和key，那么val = obj[key]
     val = obj[key]
     // console.log(val)
   }
-  // if (typeof val === 'object') {
-  //   // 如果val的类型是对象，则对其再次执行new Observer，即实现递归
-  //   new Observer(val)
-  // }
-  // console.log(val)
+  if (typeof val === 'object') {
+    // 如果val的类型是对象，则对其再次执行new Observer，即实现递归（对象的深度监测）
+    new Observer(val)
+  }
+  // console.log('defineReactive', key, val)
 
-  let childOb = observe(val) // 源码在这里实现递归
+  // let childOb = observe(val) // 源码在这里实现递归（对象的深度监测）
   // console.log('defineReactive', key, val, childOb)
 
   /* 访问器属性 */
@@ -99,11 +110,11 @@ function defineReactive(obj, key, val) {
     get() {
       console.log(`${key}被读取了`)
       dep.depend() // 在getter中收集依赖（对象），调用dep实例的depend()方法
-      if (childOb) {
-        // console.log('Observer实例的dep属性调用depend()', childOb)
-        // 如果childOb非undefined（而是Observer实例），则对其dep属性也调用depend()方法（收集数组依赖）
-        childOb.dep.depend()
-      }
+      // if (childOb) {
+      //   // console.log('Observer实例的dep属性调用depend()', childOb)
+      //   // 如果childOb非undefined（而是Observer实例），则对其dep属性也调用depend()方法（收集数组依赖）
+      //   childOb.dep.depend()
+      // }
       return val
     },
     // set:写入属性时调用的函数
@@ -111,8 +122,13 @@ function defineReactive(obj, key, val) {
       if (val === newVal) {
         return
       }
-      console.log(`${key}被修改了：${val}=>${newVal}`)
+      console.log(
+        `${key}被修改了：${
+          typeof val === 'string' ? val : JSON.stringify(val)
+        }=>${typeof newVal === 'string' ? newVal : JSON.stringify(newVal)}`
+      )
       val = newVal
+      // childOb =  observe(newVal)
       dep.notify() // 在setter中通知依赖更新（对象），调用dep实例的notify()方法
     },
   })

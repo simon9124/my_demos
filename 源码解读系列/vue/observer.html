@@ -28,19 +28,38 @@
                 this.el = options.el // 当前实例对象
                 this.objExp = options.objExp // 字符串路径 - 对象
                 this.arrExp = options.arrExp // 字符串路径 - 数组
+                this.objExpDeep = options.objExpDeep // 字符串路径 - 深度对象
+                this.arrExpDeep = options.arrExpDeep // 字符串路径 - 深度数组
                 this.data = options.data // 整个data对象
-                document.getElementById("testPlus").innerHTML = parsePath(this.objExp)(this.data)
-                document.getElementById("testPush").innerHTML = parsePath(this.arrExp)(this.data)
-                let observer = new Observer(this.data) // 实例化Observer类，把this.data转化成可观测对象 → 监听this.data
+
+                /* 实例化Observer类，把this.data转化成可观测对象 → 监听this.data */
+                let observer = new Observer(this.data) 
+                
                 /* 实例化Watcher类，将Watcher实例添加到依赖中 */
-                new Watcher(this, `data.${this.objExp}`, function(newVal, oldVal) {
-                    console.log(`${this.objExp}被修改了：${oldVal}=>${newVal}`);
-                    document.getElementById("testPlus").innerHTML = newVal
-                })
-                new Watcher(this, `data.${this.arrExp}`, function(newVal, oldVal) {
-                    console.log(`${this.arrExp}被修改了：${oldVal}=>${newVal}`);
-                    document.getElementById("testPush").innerHTML = newVal
-                })
+
+                /* 1.监听对象 */
+                // document.getElementById("testPlus").innerHTML = parsePath(this.objExp)(this.data)
+                // new Watcher(this, `data.${this.objExp}`, function(newVal, oldVal) {
+                //     console.log(`${this.objExp}被修改了：${oldVal}=>${newVal}`);
+                //     document.getElementById("testPlus").innerHTML = newVal
+                // })
+
+                /* 2.监听数组 */
+                // document.getElementById("testPush").innerHTML = parsePath(this.arrExp)(this.data)
+                // new Watcher(this, `data.${this.arrExp}`, function(newVal, oldVal) {
+                //     console.log(`${this.arrExp}被修改了：${oldVal}=>${newVal}`);
+                //     document.getElementById("testPush").innerHTML = newVal
+                // })
+                
+                /* 3.深度监听 - 对象 */
+                document.getElementById("testPlus").innerHTML = parsePath(this.objExpDeep)(this.data).count
+                new Watcher(this, `data.${this.objExpDeep}`, function(newVal, oldVal) {
+                    console.log(`${this.objExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
+                    document.getElementById("testPlus").innerHTML = newVal.count
+                }, {deep: true})
+
+                /* 4.深度监听 - 数组 */
+
                 return this
             }
         }
@@ -49,6 +68,8 @@
             el: el,
             objExp: 'child.count', // 要监听的key的路径 - 对象
             arrExp: 'arr', // 要监听的key的路径 - 数组
+            objExpDeep: 'child', // 要深度监听的key的路径 - 对象
+            arrExpDeep: 'child', // 要深度监听的key的路径 - 数组
             data: {
               brand: 'BMW',
               price: 3000,
@@ -86,8 +107,10 @@
             }
         }
 
+        // 监听对象
         document.getElementById("plus").addEventListener('click', () => {
-            setListnerObj(vue.objExp, 'plus')
+            // setListnerObj(vue.objExp, 'plus') // 非深度监听
+            vue.data.child.count++ // 深度监听
         })
         document.getElementById("push").addEventListener('click', () => {
             setListnerObj(vue.arrExp, 'push')
