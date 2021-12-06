@@ -12,16 +12,17 @@ let uid = 0
  * @param { Component } vm 要监测的对象
  * @param { String } expOrFn 字符串路径，形如'data.a.b.c'
  * @param { Function } cb 回调函数
+ * @param { Object } options 配置项
  */
 export default class Watcher {
   constructor(vm, expOrFn, cb, options) {
     // console.log(vm) // 要监测的对象
     this.vm = vm
     if (options) {
-      this.deep = !!options.deep
+      this.deep = !!options.deep // 是否深度监听
       this.user = !!options.user
-      this.lazy = !!options.lazy
-      this.sync = !!options.sync
+      this.lazy = !!options.lazy // 是否懒执行
+      this.sync = !!options.sync // 是否同步更新数据
       this.before = options.before
     } else {
       this.deep = this.user = this.lazy = this.sync = false

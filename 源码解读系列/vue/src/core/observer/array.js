@@ -24,10 +24,10 @@ methodsToPatch.forEach(function (method) {
   const original = arrayProto[method] // 缓存原生方法
   /* 将改变数组自身的7个方法进行封装 */
   def(arrayMethods, method, function mutator(...args) {
-    console.log('拦截数组方法', method)
+    console.log('拦截数组方法', method, this)
     const result = original.apply(this, args) // 执行同名的原生方法
     const ob = this.__ob__
-    // console.log(ob)
+    // console.log(ob) // 对应的childOb（即Observer实例），其dep属性为Dep实例（即依赖管理器）
     ob.dep.notify() // 通知依赖更新（数组）
     return result
   })

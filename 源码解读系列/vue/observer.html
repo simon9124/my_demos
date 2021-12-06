@@ -13,7 +13,7 @@
     <div id="test">
       <h2 id="testPlus"></h2>
       <button id="plus">+1</button>
-      <h2 id="testPush">123</h2>
+      <h2 id="testPush"></h2>
       <button id="push">push</button>
       <button id="reverse">reverse</button>
       <button id="sort">sort</button>
@@ -52,13 +52,18 @@
                 // })
                 
                 /* 3.深度监听 - 对象 */
-                document.getElementById("testPlus").innerHTML = parsePath(this.objExpDeep)(this.data).count
-                new Watcher(this, `data.${this.objExpDeep}`, function(newVal, oldVal) {
-                    console.log(`${this.objExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
-                    document.getElementById("testPlus").innerHTML = newVal.count
-                }, {deep: true})
+                // document.getElementById("testPlus").innerHTML = parsePath(this.objExpDeep)(this.data).count
+                // new Watcher(this, `data.${this.objExpDeep}`, function(newVal, oldVal) {
+                //     console.log(`${this.objExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
+                //     document.getElementById("testPlus").innerHTML = newVal.count
+                // }, {deep: true})
 
                 /* 4.深度监听 - 数组 */
+                // document.getElementById("testPush").innerHTML = parsePath(this.arrExpDeep)(this.data)[0].age
+                new Watcher(this, `data.${this.arrExpDeep}`, function(newVal, oldVal) {
+                    console.log(`${this.arrExpDeep}被修改了：${oldVal}=>${newVal}`);
+                    document.getElementById("testPush").innerHTML = newVal
+                })
 
                 return this
             }
@@ -69,14 +74,15 @@
             objExp: 'child.count', // 要监听的key的路径 - 对象
             arrExp: 'arr', // 要监听的key的路径 - 数组
             objExpDeep: 'child', // 要深度监听的key的路径 - 对象
-            arrExpDeep: 'child', // 要深度监听的key的路径 - 数组
+            arrExpDeep: 'arrobj', // 要深度监听的key的路径 - 数组
             data: {
               brand: 'BMW',
               price: 3000,
               child: {
-                count: 100,
+                count: 100
               },
-              arr: [1, 2, 3]
+              arr: [1, 2, 3],
+              arrobj: [{name: 'Nicholas', age: 50},{name: 'Greg', age: 27}]
             }
         })
         // console.log(vue);
@@ -112,8 +118,11 @@
             // setListnerObj(vue.objExp, 'plus') // 非深度监听
             vue.data.child.count++ // 深度监听
         })
+
+        // 监听数组
         document.getElementById("push").addEventListener('click', () => {
-            setListnerObj(vue.arrExp, 'push')
+            // setListnerObj(vue.arrExp, 'push') // 非深度监听
+            vue.data.arrobj[0].age++ // 深度监听
         })
         document.getElementById("reverse").addEventListener('click', () => {
             setListnerObj(vue.arrExp, 'reverse')
