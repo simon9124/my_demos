@@ -34,7 +34,8 @@ export class Observer {
       // value为数组
       const augment = hasProto ? protoAugment : copyAugment
       augment(value, arrayMethods, arrayKeys) // 重写数组的原型
-      this.observeArray(value) // 将数组中的所有元素都转化为可被侦测的响应式
+      this.observeArray(value) // 将数组中的子元素转化为响应式
+      // console.log(value)
     } else {
       // value不为数组
       this.walk(value)
@@ -120,6 +121,9 @@ function defineReactive(obj, key, val) {
         //   childOb
         // )
         childOb.dep.depend() // 若childOb非undefined（而是Observer实例），则对其dep属性（Dep实例）调用depend()方法（收集数组依赖）
+        if (Array.isArray(val)) {
+          dependArray(val)
+        }
       }
       return val
     },
@@ -163,6 +167,20 @@ export function observe(value, asRootData) {
     ob = new Observer(value) // 再次执行new Observer（实现递归），将value转化成响应式的，ob被重写为Observer实例
   }
   return ob
+}
+
+/**
+ * Collect dependencies on array elements when the array is touched, since
+ * we cannot intercept array element access like property getters.
+ */
+function dependArray(value) {
+  for (let e, i = 0, l = value.length; i < l; i++) {
+    e = value[i]
+    e && e.__ob__ && e.__ob__.dep.depend()
+    if (Array.isArray(e)) {
+      dependArray(e)
+    }
+  }
 }
 
 /* 测试：监听对象 */

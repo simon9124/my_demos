@@ -2,7 +2,8 @@
 
 // import { _Set as Set, isObject } from '../util/index'
 // import type { SimpleSet } from '../util/index'
-// import VNode from '../vdom/vnode'
+import VNode from '../vdom/vnode.js'
+import { isObject } from '../../shared/util.js' // 判断是否为对象（且排除null）
 
 const seenObjects = new Set()
 
@@ -21,9 +22,13 @@ function _traverse(val, seen) {
   // console.log(val)
   let i, keys
   const isA = Array.isArray(val)
-  // if ((!isA && !isObject(val)) || Object.isFrozen(val) || val instanceof VNode) {
-  //   return
-  // }
+  if (
+    (!isA && !isObject(val)) ||
+    Object.isFrozen(val) ||
+    val instanceof VNode
+  ) {
+    return
+  }
   // if (val.__ob__) {
   //   const depId = val.__ob__.dep.id
   //   if (seen.has(depId)) {
@@ -38,8 +43,8 @@ function _traverse(val, seen) {
   } else {
     // val不是数组
     keys = Object.keys(val)
-    // console.log(keys)
     i = keys.length
+    // console.log(val, keys)
     while (i--) _traverse(val[keys[i]], seen) // 在这里触发数据的getter
   }
 }

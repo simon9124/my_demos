@@ -1,11 +1,14 @@
 /* @flow */
 
+let uid = 0
+
 /**
  * Dep类：依赖管理器
  * 用于存储收集到的依赖
  */
 export default class Dep {
   constructor() {
+    this.id = uid++
     this.subs = [] // 依赖数组
   }
 
