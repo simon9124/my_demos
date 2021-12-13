@@ -34,7 +34,7 @@ export class Observer {
       // value为数组
       const augment = hasProto ? protoAugment : copyAugment
       augment(value, arrayMethods, arrayKeys) // 重写数组的原型
-      this.observeArray(value) // 将数组中的子元素转化为响应式
+      this.observeArray(value) // 将数组的子元素转化为响应式（添加__ob__属性）
       // console.log(value)
     } else {
       // value不为数组
@@ -50,7 +50,7 @@ export class Observer {
     }
   }
 
-  // 原型方法observeArray：实现深度监测
+  // 原型方法observeArray：将数组的子元素全部转化为响应式
   observeArray(items) {
     for (let i = 0, l = items.length; i < l; i++) {
       observe(items[i])
@@ -98,8 +98,17 @@ function defineReactive(obj, key, val) {
     修改该属性时，触发setter并调用dep.notify()，调用依赖中每个Watcher实例的update()方法
   */
 
-  if (arguments.length === 2) {
-    // 如果只传了obj和key，那么val = obj[key]
+  const property = Object.getOwnPropertyDescriptor(obj, key) // 获取当前属性的属性描述符
+  if (property && property.configurable === false) {
+    return // 若属性不可配置，则返回undefined
+  }
+
+  const getter = property && property.get // 如果已经为属性设定了getter方法，获取之
+  const setter = property && property.set // 如果已经为属性设定了setter方法，获取之
+  // console.log(property, getter, setter)
+
+  if ((!getter || setter) && arguments.length === 2) {
+    // 如果未设定getter和setter方法，且只传了obj和key，那么val = obj[key]
     val = obj[key]
     // console.log(val)
   }
@@ -111,34 +120,42 @@ function defineReactive(obj, key, val) {
   Object.defineProperty(obj, key, {
     enumerable: true, // 能否通过for-in循环返回
     configurable: true, // 能否配置（delete 删除、修改特性、改为访问器属性）
-    // get:读取属性时调用的函数
+    /* get:读取属性时调用的函数 */
     get() {
-      console.log(`${key}被读取了`)
-      // dep.depend() // 调用Dep实例的depend()方法（收集对象依赖）
-      if (childOb) {
-        // console.log(
-        //   `${key}对应的childOb（即Observer实例）的dep属性调用depend()`,
-        //   childOb
-        // )
-        childOb.dep.depend() // 若childOb非undefined（而是Observer实例），则对其dep属性（Dep实例）调用depend()方法（收集数组依赖）
-        if (Array.isArray(val)) {
-          dependArray(val)
+      const value = getter ? getter.call(obj) : val // 若属性有getter方法则执行并获取返回值，若没有则获取val
+      if (Dep.target) {
+        // 确保先有Watcher实例（Dep.target），再监听
+        console.log(`${key}被读取了`)
+        dep.depend() // 调用Dep实例的depend()方法（收集对象依赖）
+        if (childOb) {
+          // console.log(
+          //   `${key}对应的childOb（即Observer实例）的dep属性调用depend()`,
+          //   childOb
+          // )
+          childOb.dep.depend() // 若childOb非undefined（而是Observer实例），则对其dep属性（Dep实例）调用depend()方法（收集数组依赖）
+          if (Array.isArray(value)) {
+            dependArray(value) // 若value是数组，则调用dependArray方法（递归，收集内嵌数组的依赖）
+          }
+          // console.log(childOb)
         }
       }
-      return val
+      return value
     },
-    // set:写入属性时调用的函数
+    /* set:写入属性时调用的函数 */
     set(newVal) {
-      if (val === newVal) {
+      const value = getter ? getter.call(obj) : val // 若属性有getter方法则执行并获取返回值，若没有则获取val
+      // console.log(value, val, newVal)
+      if (value === newVal) {
         return
       }
       console.log(
         `${key}被修改了：${
-          typeof val === 'string' ? val : JSON.stringify(val)
+          typeof value === 'string' ? value : JSON.stringify(value)
         }=>${typeof newVal === 'string' ? newVal : JSON.stringify(newVal)}`
       )
       val = newVal
       // childOb = observe(newVal)
+      // console.log(childOb)
       dep.notify() // 在setter中通知依赖更新（对象），调用dep实例的notify()方法
     },
   })
@@ -170,15 +187,15 @@ export function observe(value, asRootData) {
 }
 
 /**
- * Collect dependencies on array elements when the array is touched, since
- * we cannot intercept array element access like property getters.
+ * 递归：子数组的__ob__属性（Observer实例）的dep属性（Dep实例）调用depend()方法（收集子数组依赖）
+ * @param { Array } value 多维数组
  */
 function dependArray(value) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]
     e && e.__ob__ && e.__ob__.dep.depend()
     if (Array.isArray(e)) {
-      dependArray(e)
+      dependArray(e) // 递归
     }
   }
 }

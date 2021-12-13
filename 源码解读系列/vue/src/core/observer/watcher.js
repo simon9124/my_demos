@@ -29,10 +29,14 @@ export default class Watcher {
     }
     console.log('深度监听：', this.deep)
     this.cb = cb // 回调方法
+    this.id = ++uid // 唯一id，确保相同的Watcher实例只被添加1次
+    this.deps = [] // 依赖集合 - 缓存
+    this.newDeps = [] // 依赖集合 - 当前
+    this.depIds = new Set() // 依赖id集合 - 缓存
+    this.newDepIds = new Set() // 依赖id集合 - 当前
     this.getter = parsePath(expOrFn) // 在parsePath方法中触发数据的getter，详见parsePath方法源码
     // this.expOrFn = expOrFn
     this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
-    this.id = ++uid // 唯一id，确保相同的Watcher实例只被添加1次
   }
   get() {
     pushTarget(this) // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher添加到依赖中）
@@ -43,9 +47,55 @@ export default class Watcher {
     let value = this.getter.call(vm, vm) // 获取被依赖的数据 → 触发该数据的getter → 触发dep.depend()，将Dep.target（Watcher）添加到依赖数组中
     // console.log(value)
     if (this.deep) traverse(value) // 深度监听
-    popTarget() // 释放（Dep.target置为null）
+    popTarget() // 将Watcher从依赖中释放（Dep.target置为null）
+    this.cleanupDeps() // 清空相关依赖收集（depIds和newDepIds数据互换，deps和newDeps数据互换）
     return value
   }
+
+  /* 添加依赖 */
+  addDep(dep) {
+    // console.log(dep)
+    const id = dep.id
+    if (!this.newDepIds.has(id)) {
+      // 外层has()：控制newDepIds，首次添加依赖不重复
+      this.newDepIds.add(id)
+      this.newDeps.push(dep)
+      if (!this.depIds.has(id)) {
+        // 内层has()：控制depIds，数据变化后，添加依赖不重复
+        dep.addSub(this)
+      }
+    }
+  }
+
+  /* 清空相关依赖收集 */
+  cleanupDeps() {
+    // console.log(this.depIds, this.newDepIds)
+    // console.log(this.deps, this.newDeps)
+
+    let i = this.deps.length
+    while (i--) {
+      const dep = this.deps[i]
+      // console.log(dep, this.newDepIds)
+      if (!this.newDepIds.has(dep.id)) {
+        dep.removeSub(this) // 删除多余的依赖
+      }
+    }
+
+    /* depIds和newDepIds数据互换，并清空newDepIds */
+    let tmp = this.depIds
+    this.depIds = this.newDepIds
+    this.newDepIds = tmp
+    this.newDepIds.clear()
+    // console.log(this.depIds, this.newDepIds, tmp)
+
+    /* deps和newDeps数据互换，并清空newDeps */
+    tmp = this.deps
+    this.deps = this.newDeps
+    this.newDeps = tmp
+    this.newDeps.length = 0
+    // console.log(this.deps, this.newDeps, tmp)
+  }
+
   // 更新依赖：从Dep类中调用notify()来通知
   update() {
     const oldValue = this.value

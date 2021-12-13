@@ -86,7 +86,8 @@
               price: 3000,
               child: {
                 // count: 100
-                count: '100'
+                // count: '100'
+                count: [1, 2, 3]
               },
               arr: [1, 2, 3],
               // arrDeep: [{name: 'Nicholas', age: 50},{name: 'Greg', age: 27}]
@@ -124,14 +125,15 @@
         // 监听对象
         document.getElementById("plus").addEventListener('click', () => {
             // setListnerObj(vue.objExp, 'plus') // 非深度监听
-            vue.data.child.count += 1 // 深度监听
+            // vue.data.child.count += 1 // 深度监听 - 对象嵌套对象
+            vue.data.child.count.push(vue.data.child.count.length+1) // 深度监听 - 对象嵌套数组
         })
 
         // 监听数组
         document.getElementById("push").addEventListener('click', () => {
             // setListnerObj(vue.arrExp, 'push') // 非深度监听
             // vue.data.arrDeep[0].age += 1 // 深度监听 - 数组对象
-            vue.data.arrDeep[1].push(vue.data.arrDeep[1].length+1) // 深度监听 - 二维数组
+            vue.data.arrDeep[1].push(vue.data.arrDeep[1].length+1) // 深度监听 - 多维数组
         })
         document.getElementById("reverse").addEventListener('click', () => {
             setListnerObj(vue.arrExp, 'reverse')
