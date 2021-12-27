@@ -55,7 +55,7 @@ export function remove(arr, item) {
 Dep.target = null // 在Dep类上定义target属性
 
 /**
- * 添加依赖
+ * 注册依赖
  * @param { Watcher } _target Watcher实例
  */
 export function pushTarget(_target) {

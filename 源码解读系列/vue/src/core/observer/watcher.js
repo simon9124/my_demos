@@ -39,7 +39,7 @@ export default class Watcher {
     this.value = this.get() // 实例化Watcher类时，在构造函数中调用this.get()方法
   }
   get() {
-    pushTarget(this) // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher添加到依赖中）
+    pushTarget(this) // 将Watcher实例赋给全局的唯一对象Dep的target属性（将Watcher注册到依赖中）
     const vm = this.vm
     // 将this.getter利用call绑定到vm，并调用this.getter()即parsePath(expOrFn)，参数为vm → 相当于parsePath(this.expOrFn)(vm)
     // let value = parsePath(this.expOrFn)(vm)

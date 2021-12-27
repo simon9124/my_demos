@@ -42,7 +42,7 @@ export class Observer {
     }
   }
 
-  // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法 → 让对象变得可观测（因此要求vue的data必须是一个对象）
+  // 原型方法walk：循环该对象的key，针对每个key执行defineReactive()方法 → 让对象变得可观测（因此要求vue的data必须返回一个对象）
   walk(obj) {
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
@@ -156,7 +156,7 @@ function defineReactive(obj, key, val) {
       val = newVal
       // childOb = observe(newVal)
       // console.log(childOb)
-      dep.notify() // 在setter中通知依赖更新（对象），调用dep实例的notify()方法
+      dep.notify() // 调用dep实例的notify()方法（通知对象依赖更新）
     },
   })
 }
