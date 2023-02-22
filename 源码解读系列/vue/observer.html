@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="shortcut icon" type="image/x-icon" href="./logo.ico">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" type="image/x-icon" href="./logo.ico" />
     <title>Vue-变化侦测</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <div id="test">
       <h2 id="testPlus"></h2>
       <button id="plus">+1</button>
@@ -19,130 +18,139 @@
       <button id="sort">sort</button>
     </div>
     <script type="module">
-        import { Observer } from './src/core/observer/index.js' // Observer类：将Object数据中的所有属性（包括子属性）都转换成getter/seter的形式来侦测变化
-        import Watcher from './src/core/observer/watcher.js' // Watcher类：当数据发生变化时，通知Watcher实例，由Watcher实例去做真实的更新操作
-        import { parsePath } from './src/core/util/lang.js' // 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
+      import { Observer } from "./src/core/observer/index.js"; // Observer类：将Object数据中的所有属性（包括子属性）都转换成getter/seter的形式来侦测变化
+      import Watcher from "./src/core/observer/watcher.js"; // Watcher类：当数据发生变化时，通知Watcher实例，由Watcher实例去做真实的更新操作
+      import { parsePath } from "./src/core/util/lang.js"; // 把一个形如'data.a.b.c'的字符串路径所表示的值，从真实的data对象中取出来
 
-        class Vue {
-            constructor(options = {}) {
-                this.el = options.el // 当前实例对象
-                this.objExp = options.objExp // 字符串路径 - 对象
-                this.arrExp = options.arrExp // 字符串路径 - 数组
-                this.objExpDeep = options.objExpDeep // 字符串路径 - 深度对象
-                this.arrExpDeep = options.arrExpDeep // 字符串路径 - 深度数组
-                this.data = options.data // 整个data对象
+      class Vue {
+        constructor(options = {}) {
+          this.el = options.el; // 当前实例对象
+          this.objExp = options.objExp; // 字符串路径 - 对象
+          this.arrExp = options.arrExp; // 字符串路径 - 数组
+          this.objExpDeep = options.objExpDeep; // 字符串路径 - 深度对象
+          this.arrExpDeep = options.arrExpDeep; // 字符串路径 - 深度数组
+          this.data = options.data; // 整个data对象
 
-                /* 实例化Observer类，把this.data转化成可观测对象 → 监听this.data */
-                let observer = new Observer(this.data) 
-                
-                /* 实例化Watcher类，将Watcher实例添加到依赖中 */
+          /* 实例化Observer类，把this.data转化成可观测对象 → 监听this.data */
+          let observer = new Observer(this.data);
 
-                /* 1.监听对象 */
-                // document.getElementById("testPlus").innerHTML = parsePath(this.objExp)(this.data)
-                // new Watcher(this, `data.${this.objExp}`, function(newVal, oldVal) {
-                //     console.log(`${this.objExp}被修改了：${oldVal}=>${newVal}`);
-                //     document.getElementById("testPlus").innerHTML = newVal
-                // })
+          /* 实例化Watcher类，将Watcher实例添加到依赖中 */
 
-                /* 2.监听数组 */
-                // document.getElementById("testPush").innerHTML = parsePath(this.arrExp)(this.data)
-                // new Watcher(this, `data.${this.arrExp}`, function(newVal, oldVal) {
-                //     console.log(`${this.arrExp}被修改了：${oldVal}=>${newVal}`);
-                //     document.getElementById("testPush").innerHTML = newVal
-                // })
-                
-                /* 3.深度监听 - 对象 */
-                // document.getElementById("testPlus").innerHTML = parsePath(this.objExpDeep)(this.data).count
-                // new Watcher(this, `data.${this.objExpDeep}`, function(newVal, oldVal) {
-                //     console.log(`${this.objExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
-                //     document.getElementById("testPlus").innerHTML = newVal.count
-                // }, {deep: true})
+          /* 1.监听对象 */
+          // document.getElementById("testPlus").innerHTML = parsePath(this.objExp)(this.data)
+          // new Watcher(this, `data.${this.objExp}`, function(newVal, oldVal) {
+          //     console.log(`${this.objExp}被修改了：${oldVal}=>${newVal}`);
+          //     document.getElementById("testPlus").innerHTML = newVal
+          // })
 
-                /* 4.深度监听 - 数组 */
-                // document.getElementById("testPush").innerHTML = parsePath(this.arrExpDeep)(this.data)[0].age
-                // new Watcher(this, `data.${this.arrExpDeep}`, function(newVal, oldVal) {
-                //     console.log(`${this.arrExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
-                //     document.getElementById("testPush").innerHTML = newVal[0].age
-                // }, {deep: true})
+          /* 2.监听数组 */
+          // document.getElementById("testPush").innerHTML = parsePath(this.arrExp)(this.data)
+          // new Watcher(this, `data.${this.arrExp}`, function(newVal, oldVal) {
+          //     console.log(`${this.arrExp}被修改了：${oldVal}=>${newVal}`);
+          //     document.getElementById("testPush").innerHTML = newVal
+          // })
 
-                document.getElementById("testPush").innerHTML = parsePath(this.arrExpDeep)(this.data)[1]
-                new Watcher(this, `data.${this.arrExpDeep}`, function(newVal, oldVal) {
-                    console.log(`${this.arrExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
-                    document.getElementById("testPush").innerHTML = newVal[1]
-                }, {deep: true})
+          /* 3.深度监听 - 对象 */
+          // document.getElementById("testPlus").innerHTML = parsePath(this.objExpDeep)(this.data).count
+          // new Watcher(this, `data.${this.objExpDeep}`, function(newVal, oldVal) {
+          //     console.log(`${this.objExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
+          //     document.getElementById("testPlus").innerHTML = newVal.count
+          // }, {deep: true})
 
-                return this
-            }
+          /* 4.深度监听 - 数组 */
+          // document.getElementById("testPush").innerHTML = parsePath(this.arrExpDeep)(this.data)[0].age
+          // new Watcher(this, `data.${this.arrExpDeep}`, function(newVal, oldVal) {
+          //     console.log(`${this.arrExpDeep}被修改了：${JSON.stringify(oldVal)}=>${JSON.stringify(newVal)}`);
+          //     document.getElementById("testPush").innerHTML = newVal[0].age
+          // }, {deep: true})
+
+          document.getElementById("testPush").innerHTML = parsePath(
+            this.arrExpDeep
+          )(this.data)[1];
+          new Watcher(
+            this,
+            `data.${this.arrExpDeep}`,
+            function (newVal, oldVal) {
+              console.log(
+                `${this.arrExpDeep}被修改了：${JSON.stringify(
+                  oldVal
+                )}=>${JSON.stringify(newVal)}`
+              );
+              document.getElementById("testPush").innerHTML = newVal[1];
+            },
+            { deep: true }
+          );
+
+          return this;
         }
-        let el = document.getElementById("test")
-        let vue = new Vue({
-            el: el,
-            objExp: 'child.count', // 要监听的key的路径 - 对象
-            arrExp: 'arr', // 要监听的key的路径 - 数组
-            objExpDeep: 'child', // 要深度监听的key的路径 - 对象
-            arrExpDeep: 'arrDeep', // 要深度监听的key的路径 - 数组
-            data: {
-              brand: 'BMW',
-              price: 3000,
-              child: {
-                // count: 100
-                // count: '100'
-                count: [1, 2, 3]
-              },
-              arr: [1, 2, 3],
-              // arrDeep: [{name: 'Nicholas', age: 50},{name: 'Greg', age: 27}]
-              arrDeep: [[],[1,2,3]]
-            }
-        })
-        // console.log(vue);
+      }
+      let el = document.getElementById("test");
+      let vue = new Vue({
+        el: el,
+        objExp: "child.count", // 要监听的key的路径 - 对象
+        arrExp: "arr", // 要监听的key的路径 - 数组
+        objExpDeep: "child", // 要深度监听的key的路径 - 对象
+        arrExpDeep: "arrDeep", // 要深度监听的key的路径 - 数组
+        data: {
+          brand: "BMW",
+          price: 3000,
+          child: {
+            // count: 100
+            // count: '100'
+            count: [1, 2, 3],
+          },
+          arr: [1, 2, 3],
+          // arrDeep: [{name: 'Nicholas', age: 50},{name: 'Greg', age: 27}]
+          arrDeep: [[], [1, 2, 3]],
+        },
+      });
+      // console.log(vue);
 
-        function setListnerObj(exp,type) {
-            var segments = `data.${exp}`.split('.')
-            let obj = vue
-            for (let i = 0; i < segments.length -1; i++) {
-              obj = obj[segments[i]]
-            }
-            // console.log(obj); // 最内层要监听的对象
-            let val = obj[segments[segments.length-1]] 
-            switch (type) {
-              case 'plus':
-                obj[segments[segments.length-1]] += 1
-                break;
-              case 'push':
-                val.push(val.length + 1)
-                break;
-              case 'reverse':
-                val.reverse()
-                break;
-              case 'sort':
-                val.sort()
-                break;
-              default:
-                break;
-            }
+      function setListnerObj(exp, type) {
+        var segments = `data.${exp}`.split(".");
+        let obj = vue;
+        for (let i = 0; i < segments.length - 1; i++) {
+          obj = obj[segments[i]];
         }
+        // console.log(obj); // 最内层要监听的对象
+        let val = obj[segments[segments.length - 1]];
+        switch (type) {
+          case "plus":
+            obj[segments[segments.length - 1]] += 1;
+            break;
+          case "push":
+            val.push(val.length + 1);
+            break;
+          case "reverse":
+            val.reverse();
+            break;
+          case "sort":
+            val.sort();
+            break;
+          default:
+            break;
+        }
+      }
 
-        // 监听对象
-        document.getElementById("plus").addEventListener('click', () => {
-            // setListnerObj(vue.objExp, 'plus') // 非深度监听
-            // vue.data.child.count += 1 // 深度监听 - 对象嵌套对象
-            vue.data.child.count.push(vue.data.child.count.length+1) // 深度监听 - 对象嵌套数组
-        })
+      // 监听对象
+      document.getElementById("plus").addEventListener("click", () => {
+        // setListnerObj(vue.objExp, 'plus') // 非深度监听
+        // vue.data.child.count += 1 // 深度监听 - 对象嵌套对象
+        vue.data.child.count.push(vue.data.child.count.length + 1); // 深度监听 - 对象嵌套数组
+      });
 
-        // 监听数组
-        document.getElementById("push").addEventListener('click', () => {
-            // setListnerObj(vue.arrExp, 'push') // 非深度监听
-            // vue.data.arrDeep[0].age += 1 // 深度监听 - 数组对象
-            vue.data.arrDeep[1].push(vue.data.arrDeep[1].length+1) // 深度监听 - 多维数组
-        })
-        document.getElementById("reverse").addEventListener('click', () => {
-            setListnerObj(vue.arrExp, 'reverse')
-        })
-        document.getElementById("sort").addEventListener('click', () => {
-            setListnerObj(vue.arrExp, 'sort')
-        })
-
+      // 监听数组
+      document.getElementById("push").addEventListener("click", () => {
+        // setListnerObj(vue.arrExp, 'push') // 非深度监听
+        // vue.data.arrDeep[0].age += 1 // 深度监听 - 数组对象
+        vue.data.arrDeep[1].push(vue.data.arrDeep[1].length + 1); // 深度监听 - 多维数组
+      });
+      document.getElementById("reverse").addEventListener("click", () => {
+        setListnerObj(vue.arrExp, "reverse");
+      });
+      document.getElementById("sort").addEventListener("click", () => {
+        setListnerObj(vue.arrExp, "sort");
+      });
     </script>
-</body>
-
+  </body>
 </html>
