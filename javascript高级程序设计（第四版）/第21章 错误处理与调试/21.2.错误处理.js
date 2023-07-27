@@ -259,3 +259,30 @@ let url2 = addQueryStringArg(
   "https://www.taobao.com"
 );
 console.log(url2); // https://www.baidu.com?keyWord=https%3A%2F%2Fwww.taobao.com，与服务器通信的正确url格式
+
+/* 区分重大与非重大错误 */
+
+let mods = [
+  {
+    name: "mod1",
+    init: () => {
+      const a = 1;
+      a = 2;
+      console.log("mod1 init");
+    }, // mod1的init方法里有错误
+  },
+  {
+    name: "mod2",
+    init: () => {
+      console.log("mod2 init");
+    },
+  },
+];
+for (let mod of mods) {
+  // mod.init(); // 不好，只要有一个mod的init方法出错，影响后续
+  try {
+    mod.init(); // 'mod2 init'，mod2照常运行
+  } catch (error) {
+    console.log(error); // TypeError: Assignment to constant variable.
+  }
+}
