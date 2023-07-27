@@ -54,11 +54,13 @@
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC11%E7%AB%A0%20%E6%9C%9F%E7%BA%A6%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0/11.1.%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B.md">11.1.异步编程</a><br>
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC11%E7%AB%A0%20%E6%9C%9F%E7%BA%A6%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0/11.2.%E6%9C%9F%E7%BA%A6.md">11.2.期约</a><br>
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC11%E7%AB%A0%20%E6%9C%9F%E7%BA%A6%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0/11.3.%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0.md">11.3.异步函数</a><br>
+- 第 21 章：错误处理与调试
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC21%E7%AB%A0%20%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E4%B8%8E%E8%B0%83%E8%AF%95/21.2.%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86.md">21.12.错误处理</a><br>
 
 #### 源码解读系列：
+
 - javascript
   - <a href="https://github.com/simon9124/my_demos/tree/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise">Promise</a><br>
-  
 
 #### CSS 盒子模型：
 
@@ -82,8 +84,8 @@
 <a href="https://segmentfault.com/a/1190000020465443" target="_blank">配置代理，解决 vue-cli 3.x 的跨域问题</a><br>
 <a href="https://segmentfault.com/a/1190000021991082#shareToWeibo">vue 动态渲染 svg、添加点击事件</a><br>
 <a href="https://segmentfault.com/a/1190000022406208#shareToWeibo">解决 vue 开发环境中一直发 http://localhost:8080/sockjs-node/info?t=xxx 请求</a><br>
-<a href="https://segmentfault.com/a/1190000023434447">手摸手，封装一个vue分页组件</a><br>
-<a href="https://segmentfault.com/a/1190000039375540">实战：vue仿dos命令界面</a><br>
+<a href="https://segmentfault.com/a/1190000023434447">手摸手，封装一个 vue 分页组件</a><br>
+<a href="https://segmentfault.com/a/1190000039375540">实战：vue 仿 dos 命令界面</a><br>
 
 #### 小程序：
 
