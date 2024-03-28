@@ -1,0 +1,83 @@
+<!-- Vue虚拟Dom： https://juejin.cn/post/6844903895467032589 -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>virtualDomVue2</title>
+  </head>
+
+  <body>
+    <!--  <div id="virtual-dom">
+      <p>Virtual DOM</p>
+      <ul id="list">
+          <li class="item">Item 1</li>
+          <li class="item">Item 2</li>
+          <li class="item">Item 3</li>
+      </ul>
+      <div>Hello World</div>
+    </div> -->
+    <script type="module">
+      import { createElement } from "./create-element.js";
+      import { diff } from "./diff.js";
+      import { patch } from "./patch.js";
+
+      /* vnode1 */
+      let elNode = createElement("div", { id: "virtual-dom", color: "red" }, [
+        createElement("p", {}, ["Virtual DOM"]),
+        createElement("ul", { id: "list" }, [
+          createElement("li", { class: "item" }, ["Item 1"]),
+          createElement("li", { class: "item" }, ["Item 2"]),
+          createElement("li", { class: "item" }, ["Item 3"]),
+        ]),
+        createElement("div", {}, ["Hello World"]),
+      ]);
+      // console.log(elNode);
+      /* 
+        VNode {
+        tagName: 'div',
+        props: { id: 'virtual-dom' },
+        children: [
+            VNode { tagName: 'p', props: {}, children: ['Virtual DOM'], count: 1 },
+            VNode {
+            tagName: 'ul',
+            props: { id: 'list' },
+            children: [
+                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 1'], count: 1 },
+                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 2'], count: 1 },
+                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 3'], count: 1 },
+            ],
+            count: 6
+            },
+            VNode { tagName: 'div', props: {}, children: ['Hello World'], count: 1 }
+        ],
+        count: 11
+        }
+        */
+
+      let elRoot = elNode.render();
+      document.body.appendChild(elRoot);
+
+      /* vnode2 */
+      let elNodeNew = createElement("div", { id: "virtual-dom2" }, [
+        createElement("p", { color: "red" }, ["New Virtual DOM"]),
+        createElement("ul", { id: "list" }, [
+          createElement("li", { class: "item", height: 30 }, ["Item 1"]),
+          createElement("li", { class: "item" }, ["Item 2"]),
+          createElement("li", { class: "item" }, ["Item 3"]),
+          createElement("li", { class: "item" }, ["Item 4"]),
+        ]),
+        createElement("div", {}, ["Hello World"]),
+      ]);
+      // console.log(elNodeNew);
+      setTimeout(function () {
+        var patches = diff(elNode, elNodeNew);
+        console.log(patches);
+        patch(elRoot, patches);
+        elNode = elNodeNew;
+      }, 1000);
+    </script>
+  </body>
+</html>

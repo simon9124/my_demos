@@ -1,23 +1,23 @@
 /* 对当前差异的节点数据进行DOM操作 */
 
-var utils = require("./util");
+import { utils } from "./util.js";
 
-var REPLACE = 0; // 整体重置
-var REORDER = 1; // 重新排序
-var PROPS = 2; // 更新属性
-var TEXT = 3; // 更新文字
+let REPLACE = 0; // 整体重置
+let REORDER = 1; // 重新排序
+let PROPS = 2; // 更新属性
+let TEXT = 3; // 更新文字
 
-function patch(node, patches) {
-  var walker = { index: 0 };
+export function patch(node, patches) {
+  let walker = { index: 0 };
   deepWalk(node, walker, patches);
 }
 
 function deepWalk(node, walker, patches) {
-  var currentPatches = patches[walker.index];
+  let currentPatches = patches[walker.index];
   // node.childNodes 返回指定元素的子元素集合，包括HTML节点，所有属性，文本节点。
-  var len = node.childNodes ? node.childNodes.length : 0;
-  for (var i = 0; i < len; i++) {
-    var child = node.childNodes[i];
+  let len = node.childNodes ? node.childNodes.length : 0;
+  for (let i = 0; i < len; i++) {
+    let child = node.childNodes[i];
     walker.index++;
     // 深度复制 递归遍历
     deepWalk(child, walker, patches);
@@ -31,7 +31,7 @@ function applyPatches(node, currentPatches) {
   utils.each(currentPatches, function (currentPatch) {
     switch (currentPatch.type) {
       case REPLACE: // 整体重置
-        var newNode =
+        let newNode =
           typeof currentPatch.node === "string"
             ? document.createTextNode(currentPatch.node) // 字符串节点
             : currentPatch.node.render(); // dom节点
@@ -59,11 +59,11 @@ function applyPatches(node, currentPatches) {
 
 // 设置属性
 function setProps(node, props) {
-  for (var key in props) {
+  for (let key in props) {
     if (props[key] === void 0) {
       node.removeAttribute(key); // 没有属性->移除属性
     } else {
-      var value = props[key];
+      let value = props[key];
       utils.setAttr(node, key, value); // 有属性->重新赋值
     }
   }
@@ -71,19 +71,19 @@ function setProps(node, props) {
 
 // 对子节点进行排序
 function reorderChildren(node, moves) {
-  var staticNodeList = utils.toArray(node.childNodes);
-  var maps = {};
+  let staticNodeList = utils.toArray(node.childNodes);
+  let maps = {};
   utils.each(staticNodeList, function (node) {
     // 如果是元素节点
     if (node.nodeType === 1) {
-      var key = node.getAttribute("key");
+      let key = node.getAttribute("key");
       if (key) {
         maps[key] = node;
       }
     }
   });
   utils.each(moves, function (move) {
-    var index = move.index;
+    let index = move.index;
     if (move.type === 0) {
       // remove Item
       if (staticNodeList[index] === node.childNodes[index]) {
@@ -92,7 +92,7 @@ function reorderChildren(node, moves) {
       staticNodeList.splice(index, 1);
     } else if (move.type === 1) {
       // insert item
-      var insertNode = maps[move.item.key]
+      let insertNode = maps[move.item.key]
         ? maps[move.item.key].cloneNode(true)
         : typeof move.item === "object"
         ? move.item.render()
@@ -107,5 +107,3 @@ patch.REPLACE = REPLACE;
 patch.REORDER = REORDER;
 patch.PROPS = PROPS;
 patch.TEXT = TEXT;
-
-module.exports = patch;

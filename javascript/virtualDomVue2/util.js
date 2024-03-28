@@ -1,6 +1,6 @@
 /* 提供一些公用的方法 */
 
-var obj = {
+let obj = {
   type: function (obj) {
     return Object.prototype.toString.call(obj).replace(/\[object\s|\]/g, "");
   },
@@ -17,7 +17,7 @@ var obj = {
     return this.type(list) === "String";
   },
   each: function (array, fn) {
-    for (var i = 0, len = array.length; i < len; i++) {
+    for (let i = 0, len = array.length; i < len; i++) {
       fn(array[i], i);
     }
   },
@@ -25,8 +25,8 @@ var obj = {
     if (!arrayLike) {
       return [];
     }
-    var newList = [];
-    for (var i = 0, len = arrayLike.length; i < len; i++) {
+    let newList = [];
+    for (let i = 0, len = arrayLike.length; i < len; i++) {
       newList.push(arrayLike[i]);
     }
     return newList;
@@ -37,7 +37,7 @@ var obj = {
         node.style.cssText = value;
         break;
       case "value":
-        var tagName = node.tagName || "";
+        let tagName = node.tagName || "";
         tagName = tagName.toLowerCase();
         if (tagName === "input" || tagName === "textarea") {
           node.value = value;
@@ -51,4 +51,5 @@ var obj = {
     }
   },
 };
-module.exports = obj;
+
+export { obj as utils };
