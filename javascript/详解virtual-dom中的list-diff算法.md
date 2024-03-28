@@ -312,3 +312,5 @@ function listDiff(oldList, newList, key) {
 - 需要有**key**作为排序关键
 - 将列表**使用算法**和**不使用算法**的分成两部分
 - 核心方法，记录列表进行指定排序的完整操作
+
+<a href="https://github.com/simon9124/my_demos/blob/master/javascript/%E8%AF%A6%E8%A7%A3virtual-dom%E4%B8%AD%E7%9A%84list-diff%E7%AE%97%E6%B3%95.js" target="_blank">相关代码 →</a>
