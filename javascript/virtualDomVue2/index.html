@@ -74,6 +74,10 @@
       // console.log(elNodeNew);
       setTimeout(function () {
         var patches = diff(elNode, elNodeNew);
+        /* 流程
+          1.最外层节点进行比较：div与div标签相同但属性不同 -> 记录新属性{ id: "virtual-dom2" }，index为0
+          2.
+         */
         console.log(patches);
         patch(elRoot, patches);
         elNode = elNodeNew;

@@ -7,7 +7,7 @@
  * @return {Object} - {moves: <Array>}
  *                  - moves is a list of actions that telling how to remove and insert
  */
-function listDiff(oldList, newList, key) {
+export function listDiff(oldList, newList, key) {
   let oldMap = makeKeyIndexAndFree(oldList, key); // { keyIndex: { a: 0, b: 1, c: 2, d: 3, e: 4 }, free: [{ key: 3 }] }
   let newMap = makeKeyIndexAndFree(newList, key); // { keyIndex: { c: 0, a: 1, b: 2, e: 3, f: 4 }, free: [{ value: 4 }] }
   let newFree = newMap.free;
@@ -73,9 +73,9 @@ function listDiff(oldList, newList, key) {
 
     if (simulateItem) {
       if (itemKey === simulateItemKey) {
-        // 新旧集合中 key-value 相等，而且位置相同
+        // 新旧集合中 key-value 相等，而且位置相同：不做任何操作
         // 或者是(undefined === undefined)新旧集合中都没有设置 key
-        // 不做任何操作
+        // 此处与《详解virtual-dom中的list-diff算法.md》加以区分：此处无需考虑二者的key均为undefined的情况，因为已经在前一步进行过属性比较了
         j++; // 跳过此项，newList的下一项与simulateList的下一项继续做比对
       } else {
         if (!oldKeyIndex.hasOwnProperty(itemKey)) {
@@ -130,7 +130,7 @@ function listDiff(oldList, newList, key) {
     simulateList.splice(index, 1);
   }
 
-  console.log(moves);
+  // console.log(moves);
   /* 
   [
     { index: 3, type: 0 },

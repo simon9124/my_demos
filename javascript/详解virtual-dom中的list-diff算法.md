@@ -217,6 +217,7 @@ function listDiff(oldList, newList, key) {
       if (itemKey === simulateItemKey && itemKey) {
         // 新旧集合中 key-value 相等，而且位置相同：不做任何操作
         // 此处源码没有&&itemKey，会自动忽略二者都是undefined的情况，导致没有将newList的该项追加到moves中
+        // 此处与vue源码加以区分：单独使用时需追加&&itemKey，而在vue源码中已经在前一步进行过属性比较了，无需考虑二者均为undefined的情况
         j++; // 跳过此项，newList的下一项与simulateList的下一项继续做比对
       } else {
         if (!oldKeyIndex.hasOwnProperty(itemKey)) {

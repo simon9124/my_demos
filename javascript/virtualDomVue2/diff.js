@@ -13,6 +13,7 @@ export function diff(oldTree, newTree) {
 
 // 对两棵树进行深度优先遍历
 function deepWalk(oldNode, newNode, index, patches) {
+  console.log(oldNode, newNode);
   let currentPatch = [];
   if (newNode === null) {
     // 节点被删除掉（真正的DOM节点时，将删除执行重新排序，所以不需要做任何事）
@@ -30,6 +31,7 @@ function deepWalk(oldNode, newNode, index, patches) {
     if (propsPatches) {
       currentPatch.push({ type: patch.PROPS, props: propsPatches }); // type为2
     }
+    // console.log(currentPatch);
     // 比较子节点，如果子节点有'ignore'属性，则不需要比较
     if (!isIgnoreChildren(newNode)) {
       diffChildren(
@@ -52,26 +54,26 @@ function deepWalk(oldNode, newNode, index, patches) {
 
 // 顺序比较子元素的变化
 function diffChildren(oldChildren, newChildren, index, patches, currentPatch) {
-  // console.log(oldChildren, newChildren);
-  let diffs = listDiff(oldChildren, newChildren, "key");
-  // console.log(diffs);
-  // newChildren = diffs.children;
-  // if (diffs.moves.length) {
-  //   let recorderPatch = { type: patch.REORDER, moves: diffs.moves };
-  //   currentPatch.push(recorderPatch);
-  // }
-  // let leftNode = null;
-  // let currentNodeIndex = index;
-  // utils.each(oldChildren, function (child, i) {
-  //   let newChild = newChildren[i];
-  //   currentNodeIndex =
-  //     leftNode && leftNode.count
-  //       ? currentNodeIndex + leftNode.count + 1
-  //       : currentNodeIndex + 1;
-  //   // 递归
-  //   deepWalk(child, newChild, currentNodeIndex, patches);
-  //   leftNode = child;
-  // });
+  console.log(oldChildren, newChildren, index);
+  let diffs = listDiff(oldChildren, newChildren, "key"); // 新旧节点按照字符串'key'来比较
+  console.log(diffs);
+  newChildren = diffs.children; // diffs.children同listDiff方法中的simulateList，即要操作的相似列表
+  if (diffs.moves.length) {
+    let recorderPatch = { type: patch.REORDER, moves: diffs.moves };
+    currentPatch.push(recorderPatch);
+  }
+  let leftNode = null;
+  let currentNodeIndex = index;
+  utils.each(oldChildren, function (child, i) {
+    // 遍历 oldChildren
+    let newChild = newChildren[i];
+    currentNodeIndex =
+      leftNode && leftNode.count
+        ? currentNodeIndex + leftNode.count + 1
+        : currentNodeIndex + 1; // 首次遍历时，leftNode为null，currentNodeIndex被赋值为1
+    deepWalk(child, newChild, currentNodeIndex, patches); // 递归
+    leftNode = child;
+  });
 }
 
 // 比较属性的变化
