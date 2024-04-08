@@ -79,9 +79,8 @@
           2.
          */
         console.log(patches);
-        patch(elRoot, patches);
-        elNode = elNodeNew;
-      }, 1000);
+        patch(elRoot, patches); // 执行patch方法
+      }, 1000); // 1秒后，由elNode变化成elNodeNew，但elRoot本身没有重新挂载
     </script>
   </body>
 </html>

@@ -48,8 +48,9 @@ function deepWalk(oldNode, newNode, index, patches) {
   }
   // console.log(currentPatch);
   if (currentPatch.length) {
-    patches[index] = currentPatch;
+    patches[index] = currentPatch; // 把对应的currentPatch存储到patches对象内中的对应项
   }
+  // console.log(patches);
 }
 
 // 顺序比较子元素的变化
@@ -69,7 +70,7 @@ function diffChildren(oldChildren, newChildren, index, patches, currentPatch) {
     let newChild = newChildren[i];
     currentNodeIndex =
       leftNode && leftNode.count
-        ? currentNodeIndex + leftNode.count + 1
+        ? currentNodeIndex + leftNode.count + 1 // 非首次遍历时，leftNode为上一次遍历的子节点
         : currentNodeIndex + 1; // 首次遍历时，leftNode为null，currentNodeIndex被赋值为1
     deepWalk(child, newChild, currentNodeIndex, patches); // 递归
     leftNode = child;

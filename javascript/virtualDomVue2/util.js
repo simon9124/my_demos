@@ -34,19 +34,21 @@ let obj = {
   setAttr: function (node, key, value) {
     switch (key) {
       case "style":
-        node.style.cssText = value;
+        node.style.cssText = value; // 更新样式
         break;
       case "value":
         let tagName = node.tagName || "";
         tagName = tagName.toLowerCase();
         if (tagName === "input" || tagName === "textarea") {
-          node.value = value;
+          // 输入框 或 文本域
+          node.value = value; // 更新绑定值
         } else {
-          node.setAttribute(key, value);
+          // 其余
+          node.setAttribute(key, value); // 更新属性
         }
         break;
       default:
-        node.setAttribute(key, value);
+        node.setAttribute(key, value); // 更新属性
         break;
     }
   },
