@@ -56,11 +56,32 @@
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC11%E7%AB%A0%20%E6%9C%9F%E7%BA%A6%E4%B8%8E%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0/11.3.%E5%BC%82%E6%AD%A5%E5%87%BD%E6%95%B0.md">11.3.异步函数</a><br>
 - 第 21 章：错误处理与调试
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC21%E7%AB%A0%20%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E4%B8%8E%E8%B0%83%E8%AF%95/21.2.%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86.md">21.12.错误处理</a><br>
+- 第 23 章：JSON
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript%E9%AB%98%E7%BA%A7%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%EF%BC%88%E7%AC%AC%E5%9B%9B%E7%89%88%EF%BC%89/%E7%AC%AC23%E7%AB%A0%20JSON/23.JSON.md">23.JSON</a><br>
 
 #### 源码解读系列：
 
 - javascript
   - <a href="https://github.com/simon9124/my_demos/tree/master/%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB%E7%B3%BB%E5%88%97/javascript/Promise">Promise</a><br>
+- vue
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript/%E4%BB%8E%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F%E5%88%B0vue2.x%E6%BA%90%E7%A0%81%E7%9A%84%E5%8F%98%E5%8C%96%E4%BE%A6%E6%B5%8B.md">从发布订阅模式到 vue2.x 源码的变化侦测</a><br>
+  - <a href="https://github.com/simon9124/my_demos/blob/master/javascript/%E8%AF%A6%E8%A7%A3virtual-dom%E4%B8%AD%E7%9A%84list-diff%E7%AE%97%E6%B3%95.md">详解 virtual-dom 中的 list-diff 算法</a><br>
+
+#### javascript 系列：
+
+<a href="https://segmentfault.com/a/1190000017246671" target="_blank">vue 项目如何做到每 30 秒刷新 1 次接口？</a><br>
+<a href="https://segmentfault.com/a/1190000019342040" target="_blank">详解 ES6 中的 class——基本概念</a><br>
+
+#### vue 全家桶：
+
+<a href="https://segmentfault.com/a/1190000015167686" target="_blank">vue 从弃坑到抗战——动手搭建本地环境</a><br>
+<a href="https://segmentfault.com/a/1190000015550213" target="_blank">.finally is not a function —— 解决低版本浏览器 axios 不支持 finally</a><br>
+<a href="https://segmentfault.com/a/1190000016512967" target="_blank">vue 项目如何监听窗口变化，达到页面自适应？</a><br>
+<a href="https://segmentfault.com/a/1190000020465443" target="_blank">配置代理，解决 vue-cli 3.x 的跨域问题</a><br>
+<a href="https://segmentfault.com/a/1190000021991082#shareToWeibo">vue 动态渲染 svg、添加点击事件</a><br>
+<a href="https://segmentfault.com/a/1190000022406208#shareToWeibo">解决 vue 开发环境中一直发 http://localhost:8080/sockjs-node/info?t=xxx 请求</a><br>
+<a href="https://segmentfault.com/a/1190000023434447">手摸手，封装一个 vue 分页组件</a><br>
+<a href="https://segmentfault.com/a/1190000039375540">实战：vue 仿 dos 命令界面</a><br>
 
 #### CSS 盒子模型：
 
@@ -76,25 +97,9 @@
 
 <a href="http://blog.csdn.net/simon9124/article/details/79080839" target="_blank">图文详解 JS 冒泡排序，看完秒懂！</a><br>
 
-#### vue 全家桶：
-
-<a href="https://segmentfault.com/a/1190000015167686" target="_blank">vue 从弃坑到抗战——动手搭建本地环境</a><br>
-<a href="https://segmentfault.com/a/1190000015550213" target="_blank">.finally is not a function —— 解决低版本浏览器 axios 不支持 finally</a><br>
-<a href="https://segmentfault.com/a/1190000016512967" target="_blank">vue 项目如何监听窗口变化，达到页面自适应？</a><br>
-<a href="https://segmentfault.com/a/1190000020465443" target="_blank">配置代理，解决 vue-cli 3.x 的跨域问题</a><br>
-<a href="https://segmentfault.com/a/1190000021991082#shareToWeibo">vue 动态渲染 svg、添加点击事件</a><br>
-<a href="https://segmentfault.com/a/1190000022406208#shareToWeibo">解决 vue 开发环境中一直发 http://localhost:8080/sockjs-node/info?t=xxx 请求</a><br>
-<a href="https://segmentfault.com/a/1190000023434447">手摸手，封装一个 vue 分页组件</a><br>
-<a href="https://segmentfault.com/a/1190000039375540">实战：vue 仿 dos 命令界面</a><br>
-
 #### 小程序：
 
 <a href="https://segmentfault.com/a/1190000023537329" target="_blank">解决 mpvue 经典 bug：同路由切换时，上次的数据会保留</a><br>
-
-#### javascript 系列：
-
-<a href="https://segmentfault.com/a/1190000017246671" target="_blank">vue 项目如何做到每 30 秒刷新 1 次接口？</a><br>
-<a href="https://segmentfault.com/a/1190000019342040" target="_blank">详解 ES6 中的 class——基本概念</a><br>
 
 #### git 攻略：
 
