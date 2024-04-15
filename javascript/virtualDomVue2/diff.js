@@ -32,7 +32,7 @@ function deepWalk(oldNode, newNode, index, patches) {
       currentPatch.push({ type: patch.PROPS, props: propsPatches }); // type为2
     }
     // console.log(currentPatch);
-    // 比较子节点，如果子节点有'ignore'属性，则不需要比较
+    // 比较子节点，如果新节点有'ignore'属性，则不需要比较
     if (!isIgnoreChildren(newNode)) {
       diffChildren(
         oldNode.children,
@@ -72,7 +72,7 @@ function diffChildren(oldChildren, newChildren, index, patches, currentPatch) {
       leftNode && leftNode.count
         ? currentNodeIndex + leftNode.count + 1 // 非首次遍历时，leftNode为上一次遍历的子节点
         : currentNodeIndex + 1; // 首次遍历时，leftNode为null，currentNodeIndex被赋值为1
-    deepWalk(child, newChild, currentNodeIndex, patches); // 递归
+    deepWalk(child, newChild, currentNodeIndex, patches); // 递归遍历，直至最内层
     leftNode = child;
   });
 }

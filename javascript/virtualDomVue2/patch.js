@@ -8,24 +8,23 @@ let PROPS = 2; // 更新属性
 let TEXT = 3; // 更新文字
 
 export function patch(node, patches) {
-  let walker = { index: 0 };
+  let walker = { index: 0 }; // 从key为0开始遍历patches
   deepWalk(node, walker, patches);
 }
 
 function deepWalk(node, walker, patches) {
-  // console.log(node, walker, patches);
+  console.log(node, walker, patches);
   let currentPatches = patches[walker.index];
   let len = node.childNodes ? node.childNodes.length : 0; // node.childNodes返回包含指定节点的子节点的集合，包括HTML节点、所有属性、文本节点
-  // console.log(node.childNodes, len);
+  console.log(node.childNodes, len);
   for (let i = 0; i < len; i++) {
     let child = node.childNodes[i];
     walker.index++;
-    // 深度复制 递归遍历
-    deepWalk(child, walker, patches);
+    deepWalk(child, walker, patches); // 递归遍历，直至最内层（node.childNodes.length为0）
   }
   // console.log(currentPatches);
   if (currentPatches) {
-    applyPatches(node, currentPatches);
+    applyPatches(node, currentPatches); // 在patches中有对应的操作，则执行
   }
 }
 
@@ -75,9 +74,9 @@ function setProps(node, props) {
 
 // 对子节点进行排序
 function reorderChildren(node, moves) {
-  console.log(node, moves);
+  // console.log(node, moves);
   let staticNodeList = utils.toArray(node.childNodes);
-  console.log(staticNodeList);
+  // console.log(staticNodeList);
   let maps = {};
   utils.each(staticNodeList, function (node) {
     // 如果是元素节点
@@ -116,9 +115,9 @@ patch.PROPS = PROPS;
 patch.TEXT = TEXT;
 
 /* 核心方法
-document.createTextNode(txt)
-node.setAttribute(key, value) // 替换属性
-node.removeAttribute(key) // 移除属性
+document.createTextNode(txt) // 创建文本节点
+node.setAttribute(key, value) // 设置节点属性
+node.removeAttribute(key) // 移除节点属性
 parentNode.replaceChild(newNode, node) // 替换子节点
 parentNode.removeChild(node) // 移除子节点
 parentNode.insertBefore(node, existNode) // 追加子节点

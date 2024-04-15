@@ -8,12 +8,12 @@
   </head>
 
   <body>
-    <!--  <div id="virtual-dom">
+    <!--  <div id="virtual-dom" style="color:red">
       <p>Virtual DOM</p>
       <ul id="list">
-          <li class="item">Item 1</li>
-          <li class="item">Item 2</li>
-          <li class="item">Item 3</li>
+        <li class="item">Item 1</li>
+        <li class="item">Item 2</li>
+        <li class="item">Item 3</li>
       </ul>
       <div>Hello World</div>
     </div> -->
@@ -23,46 +23,54 @@
       import { patch } from "./patch.js";
 
       /* vnode1 */
-      let elNode = createElement("div", { id: "virtual-dom", color: "red" }, [
-        createElement("p", {}, ["Virtual DOM"]),
-        createElement("ul", { id: "list" }, [
-          createElement("li", { class: "item" }, ["Item 1"]),
-          createElement("li", { class: "item" }, ["Item 2"]),
-          createElement("li", { class: "item" }, ["Item 3"]),
-        ]),
-        createElement("div", {}, ["Hello World"]),
-      ]);
-      // console.log(elNode);
-      /* 
+      let elNode = createElement(
+        "div",
+        { id: "virtual-dom", style: "color:red" },
+        [
+          createElement("p", ["Virtual DOM"]), // 没有props
+          createElement("ul", { id: "list" }, [
+            createElement("li", { class: "item" }, ["Item 1"]),
+            createElement("li", { class: "item" }, ["Item 2"]),
+            createElement("li", { class: "item" }, ["Item 3"]),
+          ]),
+          createElement("div", ["Hello World"]),
+        ]
+      );
+      console.log(elNode);
+      /*
         VNode {
-        tagName: 'div',
-        props: { id: 'virtual-dom' },
-        children: [
-            VNode { tagName: 'p', props: {}, children: ['Virtual DOM'], count: 1 },
+          tagName: 'div',
+          props: { id: 'virtual-dom' },
+          children: [
+            VNode {  tagName: 'p', props: {}, children: ['Virtual DOM'], count: 1, key: undefined },
             VNode {
-            tagName: 'ul',
-            props: { id: 'list' },
-            children: [
-                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 1'], count: 1 },
-                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 2'], count: 1 },
-                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 3'], count: 1 },
-            ],
-            count: 6
+              tagName: 'ul',
+              props: { id: 'list' },
+              children: [
+                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 1'], count: 1, key: undefined },
+                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 2'], count: 1, key: undefined },
+                VNode { tagName: 'li', props: { class: 'item' }, children: ['Item 3'], count: 1, key: undefined },
+              ],
+              count: 6,
+              key: undefined
             },
-            VNode { tagName: 'div', props: {}, children: ['Hello World'], count: 1 }
-        ],
-        count: 11
+            VNode { tagName: 'div', props: {}, children: ['Hello World'], count: 1, key: undefined }
+          ],
+          count: 11,
+          key: undefined
         }
-        */
+      */
 
-      let elRoot = elNode.render();
+      let elRoot = elNode.render(); // 调用VNode原型上的render方法，创建相应节点
       document.body.appendChild(elRoot);
 
       /* vnode2 */
       let elNodeNew = createElement("div", { id: "virtual-dom2" }, [
         createElement("p", { color: "red" }, ["New Virtual DOM"]),
         createElement("ul", { id: "list" }, [
-          createElement("li", { class: "item", height: 30 }, ["Item 1"]),
+          createElement("li", { class: "item", style: "height: 30px" }, [
+            "Item 1",
+          ]),
           createElement("li", { class: "item" }, ["Item 2"]),
           createElement("li", { class: "item" }, ["Item 3"]),
           createElement("li", { class: "item" }, ["Item 4"]),
@@ -70,15 +78,11 @@
         createElement("div", {}, ["Hello World"]),
       ]);
       // console.log(elNodeNew);
-      setTimeout(function () {
-        var patches = diff(elNode, elNodeNew);
-        /* 流程
-          1.最外层节点进行比较：div与div标签相同但属性不同 -> 记录新属性{ id: "virtual-dom2" }，index为0
-          2.
-         */
+      setTimeout(() => {
+        let patches = diff(elNode, elNodeNew);
         console.log(patches);
         patch(elRoot, patches); // 执行patch方法
-      }, 1000); // 1秒后，由elNode变化成elNodeNew，但elRoot本身没有重新挂载
+      }, 1000); // 1秒后，由elNode变化成elNodeNew，elRoot本身没有重新挂载，实现虚拟dom更新
     </script>
   </body>
 </html>
