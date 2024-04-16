@@ -66,6 +66,7 @@
 - vue
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript/%E4%BB%8E%E5%8F%91%E5%B8%83%E8%AE%A2%E9%98%85%E6%A8%A1%E5%BC%8F%E5%88%B0vue2.x%E6%BA%90%E7%A0%81%E7%9A%84%E5%8F%98%E5%8C%96%E4%BE%A6%E6%B5%8B.md">从发布订阅模式到 vue2.x 源码的变化侦测</a><br>
   - <a href="https://github.com/simon9124/my_demos/blob/master/javascript/%E8%AF%A6%E8%A7%A3virtual-dom%E4%B8%AD%E7%9A%84list-diff%E7%AE%97%E6%B3%95.md">详解 virtual-dom 中的 list-diff 算法</a><br>
+  - <a href="https://github.com/simon9124/my_demos/tree/master/javascript">手写一个Virtual DOM及源码解析</a><br>
 
 #### javascript 系列：
 
